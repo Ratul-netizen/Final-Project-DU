@@ -224,7 +224,7 @@ c2-framework/
 │   ├── dns_tunnel.py
 │   ├── credential_dump.py
 │   └── priv_esc.py
-├── server/
+├── C2_Server/
 │   ├── c2_server.py
 │   ├── shellcode_interface.py
 │   └── templates/
