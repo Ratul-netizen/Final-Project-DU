@@ -214,6 +214,8 @@ python server/shellcode_interface.py
 
 ```
 c2-framework/
+├── agent/
+│   └── agent.py
 ├── modules/
 │   ├── shellcode.py
 │   ├── evasion.py
