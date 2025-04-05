@@ -189,26 +189,20 @@ python server/shellcode_interface.py
 
 ## Dependencies
 
-- Flask 2.0.1
-- Cryptography 3.4.7
-- PyCryptodome 3.10.1
-- Requests 2.26.0
-- Python-dotenv 0.19.0
-- Pynput 1.7.3
-- OpenCV 4.8.1.78
-- NumPy 1.21.2
-- Pillow 9.5.0
-- Psutil 5.8.0
-- PyWin32 303 (Windows)
-- PyAutoGUI 0.9.53
+- Flask 3.0.2
+- Cryptography 42.0.5
+- PyCryptodome 3.20.0
+- Requests 2.31.0
+- Python-dotenv 1.0.1
+- Pynput 1.7.6
+- OpenCV 4.9.0.80
+- NumPy 2.2.3
+- Pillow 10.2.0
+- Psutil 5.9.8
+- PyAutoGUI 0.9.54
 - Keyboard 0.13.5
-- PyCryptodomeX 3.10.1
-- dnspython 2.1.0
-- pywin32-ctypes 0.2.2
-- pywin32-security 0.1.0
-- pywin32-netcon 0.1.0
-- pywin32-service 0.1.0
-- pywin32-serviceutil 0.1.0
+- PyCryptodomeX 3.20.0
+- dnspython 2.5.0
 
 ## Project Structure
 
