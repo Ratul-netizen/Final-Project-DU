@@ -195,7 +195,7 @@ python server/shellcode_interface.py
 - Requests 2.26.0
 - Python-dotenv 0.19.0
 - Pynput 1.7.3
-- OpenCV 4.5.3.56
+- OpenCV 4.8.1.78
 - NumPy 1.21.2
 - Pillow 9.5.0
 - Psutil 5.8.0
