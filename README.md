@@ -197,7 +197,7 @@ python server/shellcode_interface.py
 - Pynput 1.7.6
 - OpenCV 4.9.0.80
 - NumPy 2.2.3
-- Pillow 10.1.0
+- Pillow 9.5.0
 - Psutil 5.9.8
 - PyAutoGUI 0.9.54
 - Keyboard 0.13.5
