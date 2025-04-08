@@ -1,174 +1,161 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shellcode Generator</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         body {
-            background-color: #f8f9fa;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
         }
-        .card {
-            border: none;
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
-        }
-        .card-header {
-            background-color: #2c3e50;
-            color: white;
-            border-radius: 10px 10px 0 0 !important;
-        }
-        .btn-primary {
-            background-color: #3498db;
-            border: none;
-        }
-        .btn-primary:hover {
-            background-color: #2980b9;
-        }
-        .form-control:focus {
-            border-color: #3498db;
-            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
-        }
-        .shellcode-output {
-            background-color: #2c3e50;
-            color: #ecf0f1;
-            font-family: monospace;
-            padding: 15px;
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
             border-radius: 5px;
-            max-height: 200px;
-            overflow-y: auto;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .nav {
+            margin: 20px 0;
+            text-align: center;
+        }
+        .nav a {
+            margin: 0 10px;
+            text-decoration: none;
+            color: #0066cc;
+        }
+        .form-group {
+            margin: 15px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #0066cc;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0052a3;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
         }
     </style>
 </head>
 <body>
-    <div class="container py-5">
-        <div class="row justify-content-center">
-            <div class="col-md-8">
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <h4 class="mb-0"><i class="fas fa-code"></i> Shellcode Generator</h4>
-                    </div>
-                    <div class="card-body">
-                        <form id="shellcodeForm">
-                            <div class="mb-3">
-                                <label class="form-label">Shellcode Type</label>
-                                <select class="form-select" id="shellcodeType" required>
-                                    <option value="reverse_shell">Reverse Shell</option>
-                                    <option value="bind_shell">Bind Shell</option>
-                                    <option value="exec">Command Execution</option>
-                                </select>
-                            </div>
-                            
-                            <div id="reverseShellFields">
-                                <div class="mb-3">
-                                    <label class="form-label">Host</label>
-                                    <input type="text" class="form-control" id="host" placeholder="127.0.0.1">
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Port</label>
-                                    <input type="number" class="form-control" id="port" placeholder="4444">
-                                </div>
-                            </div>
-                            
-                            <div id="bindShellFields" style="display: none;">
-                                <div class="mb-3">
-                                    <label class="form-label">Port</label>
-                                    <input type="number" class="form-control" id="bindPort" placeholder="4444">
-                                </div>
-                            </div>
-                            
-                            <div id="execFields" style="display: none;">
-                                <div class="mb-3">
-                                    <label class="form-label">Command</label>
-                                    <input type="text" class="form-control" id="command" placeholder="whoami">
-                                </div>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label class="form-label">Encoding</label>
-                                <select class="form-select" id="encoding">
-                                    <option value="base64">Base64</option>
-                                    <option value="hex">Hex</option>
-                                    <option value="ascii">ASCII</option>
-                                </select>
-                            </div>
-                            
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-cog"></i> Generate Shellcode
-                            </button>
-                        </form>
-                    </div>
-                </div>
-                
-                <div class="card">
-                    <div class="card-header">
-                        <h4 class="mb-0"><i class="fas fa-terminal"></i> Output</h4>
-                    </div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <label class="form-label">Generated Shellcode</label>
-                            <div class="shellcode-output" id="shellcodeOutput"></div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Saved File</label>
-                            <div id="savedFile"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <div class="container">
+        <h1>Shellcode Generator</h1>
+        <div class="nav">
+            <a href="/">Dashboard</a>
+            <a href="/shellcode">Shellcode Generator</a>
         </div>
+        
+        <form id="shellcodeForm">
+            <div class="form-group">
+                <label for="shellcodeType">Shellcode Type:</label>
+                <select id="shellcodeType" required>
+                    <option value="reverse">Reverse Shell</option>
+                    <option value="bind">Bind Shell</option>
+                    <option value="exec">Command Execution</option>
+                </select>
+            </div>
+
+            <div class="form-group" id="hostGroup">
+                <label for="host">Host (for Reverse Shell):</label>
+                <input type="text" id="host" placeholder="e.g., 192.168.1.100">
+            </div>
+
+            <div class="form-group">
+                <label for="port">Port:</label>
+                <input type="number" id="port" required placeholder="e.g., 4444">
+            </div>
+
+            <div class="form-group" id="commandGroup" style="display: none;">
+                <label for="command">Command:</label>
+                <input type="text" id="command" placeholder="e.g., calc.exe">
+            </div>
+
+            <div class="form-group">
+                <label for="encoding">Encoding:</label>
+                <select id="encoding">
+                    <option value="base64">Base64</option>
+                    <option value="hex">Hex</option>
+                    <option value="ascii">ASCII</option>
+                </select>
+            </div>
+
+            <button type="submit">Generate Shellcode</button>
+        </form>
+
+        <div id="result"></div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         document.getElementById('shellcodeType').addEventListener('change', function() {
-            const reverseShellFields = document.getElementById('reverseShellFields');
-            const bindShellFields = document.getElementById('bindShellFields');
-            const execFields = document.getElementById('execFields');
-            
-            reverseShellFields.style.display = this.value === 'reverse_shell' ? 'block' : 'none';
-            bindShellFields.style.display = this.value === 'bind_shell' ? 'block' : 'none';
-            execFields.style.display = this.value === 'exec' ? 'block' : 'none';
+            const type = this.value;
+            document.getElementById('hostGroup').style.display = type === 'reverse' ? 'block' : 'none';
+            document.getElementById('commandGroup').style.display = type === 'exec' ? 'block' : 'none';
         });
 
-        document.getElementById('shellcodeForm').addEventListener('submit', async function(e) {
+        document.getElementById('shellcodeForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
             const type = document.getElementById('shellcodeType').value;
+            const port = document.getElementById('port').value;
             const encoding = document.getElementById('encoding').value;
-            let data = { type, encoding };
-            
-            if (type === 'reverse_shell') {
-                data.host = document.getElementById('host').value;
-                data.port = document.getElementById('port').value;
-            } else if (type === 'bind_shell') {
-                data.port = document.getElementById('bindPort').value;
+            const host = document.getElementById('host').value;
+            const command = document.getElementById('command').value;
+
+            const data = {
+                type: type,
+                port: port,
+                encoding: encoding
+            };
+
+            if (type === 'reverse') {
+                data.host = host;
             } else if (type === 'exec') {
-                data.command = document.getElementById('command').value;
+                data.command = command;
             }
-            
-            try {
-                const response = await fetch('/generate', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    document.getElementById('shellcodeOutput').textContent = result.shellcode;
-                    document.getElementById('savedFile').textContent = `Saved to: ${result.filename}`;
-                } else {
-                    alert('Error: ' + result.error);
-                }
-            } catch (error) {
-                alert('Error: ' + error.message);
-            }
+
+            fetch('/api/generate_shellcode', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('result').textContent = data.shellcode;
+            })
+            .catch(error => {
+                document.getElementById('result').textContent = 'Error generating shellcode: ' + error;
+            });
         });
     </script>
 </body>

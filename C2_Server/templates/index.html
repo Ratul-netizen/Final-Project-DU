@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>C2 Server Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .nav {
+            margin: 20px 0;
+            text-align: center;
+        }
+        .nav a {
+            margin: 0 10px;
+            text-decoration: none;
+            color: #0066cc;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .online {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .offline {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>C2 Server Dashboard</h1>
+        <div class="nav">
+            <a href="/">Dashboard</a>
+            <a href="/shellcode">Shellcode Generator</a>
+        </div>
+        <div id="agents-list">
+            <h2>Connected Agents</h2>
+            <div id="agents">
+                <!-- Agents will be listed here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Function to fetch and update agent list
+        function updateAgents() {
+            fetch('/api/agents')
+                .then(response => response.json())
+                .then(agents => {
+                    const agentsDiv = document.getElementById('agents');
+                    agentsDiv.innerHTML = agents.length > 0 
+                        ? agents.map(agent => `
+                            <div class="status online">
+                                Agent ID: ${agent.agent_id}<br>
+                                Last Seen: ${new Date(agent.last_seen).toLocaleString()}
+                            </div>
+                        `).join('')
+                        : '<p>No agents connected</p>';
+                });
+        }
+
+        // Update agents every 5 seconds
+        setInterval(updateAgents, 5000);
+        updateAgents(); // Initial update
+    </script>
+</body>
+</html> 

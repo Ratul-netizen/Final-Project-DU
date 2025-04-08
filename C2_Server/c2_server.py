@@ -48,6 +48,35 @@ results = {}
 def index():
     return render_template('index.html')
 
+@app.route('/shellcode')
+def shellcode():
+    return render_template('shellcode.html')
+
+@app.route('/api/generate_shellcode', methods=['POST'])
+def generate_shellcode():
+    data = request.get_json()
+    shellcode_type = data.get('type')
+    encoding = data.get('encoding', 'base64')
+    
+    try:
+        if shellcode_type == 'reverse':
+            host = data.get('host')
+            port = data.get('port')
+            shellcode = shellcode_gen.generate_reverse_shell(host, port)
+        elif shellcode_type == 'bind':
+            port = data.get('port')
+            shellcode = shellcode_gen.generate_bind_shell(port)
+        elif shellcode_type == 'exec':
+            command = data.get('command')
+            shellcode = shellcode_gen.generate_exec(command)
+        else:
+            return jsonify({'error': 'Invalid shellcode type'}), 400
+
+        encoded_shellcode = shellcode_gen.encode_shellcode(shellcode, encoding)
+        return jsonify({'shellcode': encoded_shellcode})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/agents', methods=['GET'])
 def list_agents():
     return jsonify(list(agents.values()))
