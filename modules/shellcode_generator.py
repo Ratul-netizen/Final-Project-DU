@@ -25,7 +25,6 @@ class ShellcodeGenerator:
         try:
             port = int(port)
             if self.os_type == 'Windows':
-                # Sample Windows shellcode stub (you'll replace with real one)
                 shellcode = b"\x90" * 100
             else:
                 shellcode = (
