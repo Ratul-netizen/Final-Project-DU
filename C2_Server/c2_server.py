@@ -6,7 +6,7 @@ import platform
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from flask import Flask, render_template, request, jsonify
-from modules.shellcode import ShellcodeGenerator
+from modules.shellcode_generator import ShellcodeGenerator
 from modules.dns_tunnel import DNSTunnel
 import threading
 import logging
