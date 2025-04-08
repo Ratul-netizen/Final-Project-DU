@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, jsonify
-from modules.shellcode import ShellcodeGenerator
+from modules.shellcode_generator import ShellcodeGenerator
 import os
 
 app = Flask(__name__)
