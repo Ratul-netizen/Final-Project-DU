@@ -21,9 +21,15 @@ A powerful and modular Command-and-Control framework with advanced post-exploita
    - Multiple encoding formats:
      - Base64
      - Hex
-     - ASCII
+     - Raw
+   - Platform support:
+     - Windows
+     - Linux
+     - macOS
+   - Encryption options:
+     - XOR encryption
+     - AES-256-CBC encryption
    - Automatic file saving
-   - Cross-platform support (Windows/Linux)
 
 3. **Post-Exploitation Modules**
    - Screenshot capture
