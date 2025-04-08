@@ -1,3 +1,9 @@
+import sys
+import os
+
+# Add the parent directory to the Python path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from flask import Flask, render_template, request, jsonify
 from modules.shellcode import ShellcodeGenerator
 from modules.evasion import Evasion
@@ -8,7 +14,6 @@ from modules.post_exploit import PostExploit
 from modules.dns_tunnel import DNSTunnel
 from modules.credential_dump import CredentialDump
 from modules.priv_esc import PrivilegeEscalation
-import os
 import threading
 import logging
 from datetime import datetime
