@@ -54,16 +54,21 @@ def shellcode():
 
 @app.route('/api/generate_shellcode', methods=['POST'])
 def generate_shellcode():
-    data = request.get_json()
-    shellcode_type = data.get('type')
-    encoding = data.get('encoding', 'base64')
-
     try:
+        print("[*] Received POST to /api/generate_shellcode")
+        data = request.get_json()
+        print("Payload:", data)
+
+        shellcode_type = data.get('type')
+        encoding = data.get('encoding', 'base64')
+        print("Shellcode Type:", shellcode_type, "| Encoding:", encoding)
+
         shellcode = None
 
         if shellcode_type == 'reverse':
             host = data.get('host')
             port = data.get('port')
+            print("Reverse shell requested → Host:", host, "| Port:", port)
 
             if not host or not port:
                 return jsonify({'error': 'Host and port are required for reverse shell'}), 400
@@ -77,6 +82,8 @@ def generate_shellcode():
 
         elif shellcode_type == 'bind':
             port = data.get('port')
+            print("Bind shell requested → Port:", port)
+
             if not port:
                 return jsonify({'error': 'Port is required for bind shell'}), 400
 
@@ -89,22 +96,28 @@ def generate_shellcode():
 
         elif shellcode_type == 'exec':
             command = data.get('command')
+            print("Exec shell requested → Command:", command)
+
             if not command:
                 return jsonify({'error': 'Command is required for exec'}), 400
 
             shellcode = shellcode_gen.generate_exec(command)
 
         else:
+            print("[!] Invalid shellcode type")
             return jsonify({'error': 'Invalid shellcode type'}), 400
 
         if shellcode is None:
+            print("[!] Shellcode generation failed")
             return jsonify({'error': 'Shellcode generation failed'}), 500
 
         encoded_shellcode = shellcode_gen.encode_shellcode(shellcode, encoding)
 
         if encoded_shellcode is None:
+            print("[!] Encoding shellcode failed")
             return jsonify({'error': 'Encoding failed'}), 500
 
+        print("[+] Shellcode generated and encoded successfully")
         return jsonify({
             'success': True,
             'shellcode': encoded_shellcode.decode() if isinstance(encoded_shellcode, bytes) else encoded_shellcode
@@ -113,6 +126,7 @@ def generate_shellcode():
     except Exception as e:
         import traceback
         traceback.print_exc()
+        print("[!] Exception:", str(e))
         return jsonify({'error': f'Unexpected server error: {str(e)}'}), 500
 
 @app.route('/api/agents', methods=['GET'])
