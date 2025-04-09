@@ -1,25 +1,8 @@
 import os
 import sys
-import platform
-import uuid
 import time
-import random
 import requests
-import json
 import logging
-from cryptography.fernet import Fernet
-import subprocess
-import ctypes
-import win32api
-import win32con
-import win32security
-import win32process
-import win32event
-import win32service
-import win32serviceutil
-import win32timezone
-import socket
-import psutil
 from datetime import datetime
 import threading
 from modules.evasion import Evasion
