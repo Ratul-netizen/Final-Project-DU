@@ -193,8 +193,12 @@
             <button onclick="downloadShellcode()">⬇️ Download Shellcode</button>
             <button onclick="downloadStub('c')">.c Loader</button>
             <button onclick="downloadStub('python')">.py Loader</button>
-            <button onclick="downloadStub('exe')">.exe Loader</button>
+            <button onclick="compileAndDownloadExe()">.exe Loader</button>
             <button id="generateExeLoaderBtn">🔐 Generate AES-Encrypted EXE</button>
+            <!-- Fallback form in case JS fetch API has issues -->
+            <form id="exeGeneratorForm" action="/generate_loader_exe" method="post" style="display:none;">
+                <input type="hidden" id="shellcodeInput" name="shellcode" value="">
+            </form>
             <div id="deployOptions" style="display: none; margin-top: 15px; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
                 <h4>Deployment Options</h4>
                 <div class="form-group">
@@ -312,6 +316,68 @@
             a.href = URL.createObjectURL(blob);
             a.download = 'shellcode.txt';
             a.click();
+        }
+
+        function compileAndDownloadExe() {
+            const output = document.getElementById('shellcodeOutput').textContent;
+            if (!output) {
+                alert('Please generate shellcode first.');
+                return;
+            }
+
+            const platform = document.getElementById('platform').value;
+            const button = event.target;
+            const originalText = button.innerHTML;
+            
+            // Update button state to indicate compilation
+            button.innerHTML = 'Compiling...';
+            button.disabled = true;
+            
+            // Make request to compile
+            fetch('/compile_shellcode_exe', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    shellcode: output,
+                    platform: platform
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(data => {
+                        throw new Error(data.error || 'Error compiling executable');
+                    });
+                }
+                return response.blob();
+            })
+            .then(blob => {
+                // Create download link
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'shellcode_loader.exe';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                // Update button to show success
+                button.innerHTML = 'Downloaded!';
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                    button.disabled = false;
+                }, 2000);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to compile executable: ' + error.message);
+                
+                // Reset button state
+                button.innerHTML = originalText;
+                button.disabled = false;
+            });
         }
 
         function downloadStub(type) {
@@ -536,7 +602,50 @@ int main() {
             this.innerHTML = '⏳ Generating...';
             this.disabled = true;
             
-            // Make request to generate loader
+            // Try the form-based approach as a more reliable method
+            try {
+                // Set the shellcode in the hidden form field
+                document.getElementById('shellcodeInput').value = encodedShellcode;
+                
+                // Create a download frame
+                let downloadFrame = document.getElementById('downloadFrame');
+                if (!downloadFrame) {
+                    downloadFrame = document.createElement('iframe');
+                    downloadFrame.id = 'downloadFrame';
+                    downloadFrame.name = 'downloadFrame';
+                    downloadFrame.style.display = 'none';
+                    document.body.appendChild(downloadFrame);
+                }
+                
+                // Configure the form to use the iframe
+                const form = document.getElementById('exeGeneratorForm');
+                form.target = 'downloadFrame';
+                
+                // Submit the form to generate and download the EXE
+                form.submit();
+                
+                // Show deploy options
+                document.getElementById('deployOptions').style.display = 'block';
+                
+                // Update button state
+                setTimeout(() => {
+                    this.innerHTML = '✅ Generated!';
+                    setTimeout(() => {
+                        this.innerHTML = '🔐 Generate AES-Encrypted EXE';
+                        this.disabled = false;
+                    }, 1500);
+                }, 2000);
+                
+            } catch (err) {
+                console.error('Error with form-based download:', err);
+                
+                // Fallback to fetch API if form submission fails
+                useFetchAPIForDownload(this);
+            }
+        });
+        
+        // Fallback function using fetch API
+        function useFetchAPIForDownload(buttonElement) {
             fetch('/generate_loader_exe', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -544,7 +653,10 @@ int main() {
             })
             .then(response => {
                 if (!response.ok) {
-                    return response.json().then(err => { throw new Error(err.error || 'Failed to generate loader'); });
+                    // Try to get error message if available
+                    return response.json()
+                        .then(err => { throw new Error(err.error || 'Failed to generate loader'); })
+                        .catch(e => { throw new Error(`HTTP ${response.status}: Failed to generate loader`); });
                 }
                 return response.blob();
             })
@@ -562,21 +674,22 @@ int main() {
                 document.getElementById('deployOptions').style.display = 'block';
                 
                 // Update button state
-                this.innerHTML = '✅ Generated!';
+                buttonElement.innerHTML = '✅ Generated!';
                 setTimeout(() => {
-                    this.innerHTML = '🔐 Generate AES-Encrypted EXE';
-                    this.disabled = false;
+                    buttonElement.innerHTML = '🔐 Generate AES-Encrypted EXE';
+                    buttonElement.disabled = false;
                 }, 1500);
             })
             .catch(err => {
+                console.error('Error generating loader:', err);
                 alert('Error: ' + err.message);
-                this.innerHTML = '❌ Failed';
+                buttonElement.innerHTML = '❌ Failed';
                 setTimeout(() => {
-                    this.innerHTML = '🔐 Generate AES-Encrypted EXE';
-                    this.disabled = false;
+                    buttonElement.innerHTML = '🔐 Generate AES-Encrypted EXE';
+                    buttonElement.disabled = false;
                 }, 1500);
             });
-        });
+        }
         
         // Function to deploy loader to an agent
         document.getElementById('deployToAgentBtn').addEventListener('click', function() {
