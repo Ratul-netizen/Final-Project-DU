@@ -372,7 +372,14 @@
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Failed to compile executable: ' + error.message);
+                
+                // If the error is about missing compilers, offer alternative solution
+                if (error.message && (error.message.includes('compiler not found') || 
+                    error.message.includes('No suitable compiler'))) {
+                    alert('Compiler not found! Please use the ".c Loader" button instead to download the C source code, which you can compile manually.');
+                } else {
+                    alert('Failed to compile executable: ' + error.message);
+                }
                 
                 // Reset button state
                 button.innerHTML = originalText;
