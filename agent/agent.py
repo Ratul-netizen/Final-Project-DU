@@ -74,6 +74,7 @@ class Agent:
         self.sleep_time = sleep_time  # Base sleep time between beacons
         self.running = False
         self.task_threads = {}
+        self.start_time = time.time()  # Initialize start_time here
         self.setup_logging()
         self.setup_modules()
         self.system_info = self.collect_system_info()
@@ -81,15 +82,23 @@ class Agent:
         
     def setup_logging(self):
         """Setup logging with file and console output"""
-        log_file = f"agent_{self.agent_id[-6:]}.log"
-        logging.basicConfig(
-            level=logging.INFO,
-            format='%(asctime)s - %(levelname)s - %(message)s',
-            handlers=[
-                logging.FileHandler(log_file),
-                logging.StreamHandler()
-            ]
-        )
+        try:
+            log_file = f"agent_{self.agent_id[-6:]}.log"
+            logging.basicConfig(
+                level=logging.INFO,
+                format='%(asctime)s - %(levelname)s - %(message)s',
+                handlers=[
+                    logging.FileHandler(log_file),
+                    logging.StreamHandler()
+                ]
+            )
+        except Exception as e:
+            print(f"Warning: Could not set up file logging: {e}")
+            # Fallback to console-only logging
+            logging.basicConfig(
+                level=logging.INFO,
+                format='%(asctime)s - %(levelname)s - %(message)s'
+            )
         
     def setup_modules(self):
         """Initialize all available modules"""
