@@ -14,7 +14,8 @@ pycryptodomex==3.20.0
 dnspython==2.5.0
 pywin32==306; platform_system=="Windows"
 pyinstaller==6.3.0
-upx==0.1.0; platform_system=="Linux"  # UPX wrapper for Linux
+# upx==0.1.0; platform_system=="Linux"  # UPX wrapper for Linux - removed (install via package manager instead)
 colorama==0.4.6  # For colored terminal output
 pypng==0.20220715.0  # For icon handling in PyInstaller 
-dnspython==2.7.0
+flask-login==0.6.3  # Added for web interface
+flask-socketio==5.5.1  # Added for web interface

@@ -12,6 +12,30 @@ python run_c2_framework.py --simple
 
 This uses a lightweight server implementation that doesn't depend on problematic modules like OpenCV or NumPy.
 
+## Setup on Linux
+
+If you're on a Linux system, you can use the provided setup script:
+
+```bash
+chmod +x linux_setup.sh
+./linux_setup.sh
+```
+
+### Installing UPX on Linux
+
+UPX is required for PyInstaller to create smaller executables. It should be installed as a system package, not via pip:
+
+```bash
+# Debian/Ubuntu
+sudo apt-get install upx
+
+# Fedora
+sudo dnf install upx
+
+# Arch Linux
+sudo pacman -S upx
+```
+
 ## Common Issues and Solutions
 
 ### Issue 1: Missing server.py or file path problems
