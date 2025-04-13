@@ -1,6 +1,16 @@
+#!/usr/bin/env python
 import sys
 import os
 import platform
+import time
+import json
+import base64
+import logging
+import socket
+import uuid
+import random
+from datetime import datetime
+import threading
 
 # Add the parent directory to the Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -8,9 +18,6 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from flask import Flask, render_template, request, jsonify
 from modules.shellcode_generator import ShellcodeGenerator
 from modules.dns_tunnel import DNSTunnel
-import threading
-import logging
-from datetime import datetime
 
 # Only import Windows-specific modules if running on Windows
 IS_WINDOWS = platform.system().lower() == "windows"

