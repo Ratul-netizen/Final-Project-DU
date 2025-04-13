@@ -11,4 +11,9 @@ psutil==5.9.8
 pyautogui==0.9.54
 keyboard==0.13.5
 pycryptodomex==3.20.0
-dnspython==2.5.0 
+dnspython==2.5.0
+pywin32==306
+pyinstaller==6.3.0
+upx==0.1.0; platform_system=="Linux"  # UPX wrapper for Linux
+colorama==0.4.6  # For colored terminal output
+pypng==0.20220715.0  # For icon handling in PyInstaller 

