@@ -5,33 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>C2 Server Dashboard</title>
     <style>
-        :root {
-            --bg: #f4f4f4;
-            --text: #333;
-            --card: #fff;
-            --highlight: #2196F3;
-        }
-
-        [data-theme="dark"] {
-            --bg: #1e1e1e;
-            --text: #eee;
-            --card: #2c2c2c;
-            --highlight: #4FC3F7;
-        }
-
         body {
             font-family: Arial, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
+            background-color: #f4f4f4;
             margin: 0;
             padding: 20px;
-            transition: background 0.3s, color 0.3s;
         }
         h1 {
-            color: var(--text);
+            color: #333;
+        }
+        nav {
+            margin-bottom: 20px;
+        }
+        nav a {
+            margin-right: 15px;
+            text-decoration: none;
+            color: #007BFF;
         }
         .agent {
-            background-color: var(--card);
+            background-color: #fff;
             padding: 15px;
             margin: 10px 0;
             border-radius: 8px;
@@ -41,72 +33,63 @@
             background-color: #e9f5ff;
             padding: 10px;
             margin-top: 10px;
-            border-left: 5px solid var(--highlight);
+            border-left: 5px solid #2196F3;
             white-space: pre-wrap;
-        }
-        .theme-toggle {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            padding: 6px 12px;
-            background: var(--card);
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            color: var(--text);
-            font-weight: bold;
         }
     </style>
 </head>
 <body>
-    <button class="theme-toggle" onclick="toggleTheme()">Toggle Theme</button>
     <h1>Agent Dashboard</h1>
-    <div id="agents"></div>
+    <nav>
+        <a href="/">Dashboard</a>
+        <a href="/shellcode">Shellcode Generator</a>
+    </nav>
+    <div id="agents">Loading agents...</div>
 
     <script>
         async function fetchAgents() {
-            const res = await fetch('/api/agents');
-            const agents = await res.json();
-            const container = document.getElementById('agents');
-            container.innerHTML = '';
+            try {
+                const res = await fetch('/api/agents');
+                const agents = await res.json();
+                const container = document.getElementById('agents');
+                container.innerHTML = '';
 
-            // Sort by last_seen descending
-            agents.sort((a, b) => new Date(b.last_seen) - new Date(a.last_seen));
-
-            for (const agent of agents) {
-                const div = document.createElement('div');
-                div.className = 'agent';
-                div.innerHTML = `
-                    <strong>Agent ID:</strong> ${agent.agent_id}<br>
-                    <strong>Status:</strong> ${agent.status}<br>
-                    <strong>Last Seen:</strong> ${agent.last_seen}<br>
-                    <strong>System Info:</strong><br>
-                    <pre>${JSON.stringify(agent.system_info, null, 2)}</pre>
-                `;
-
-                for (const [task, content] of Object.entries(agent.results || {})) {
-                    const resultDiv = document.createElement('div');
-                    resultDiv.className = 'task-result';
-                    resultDiv.innerHTML = `<strong>${task}</strong>:<br>${typeof content === 'string' ? content : JSON.stringify(content, null, 2)}`;
-                    div.appendChild(resultDiv);
+                if (agents.length === 0) {
+                    container.innerHTML = '<p>No agents connected.</p>';
+                    return;
                 }
 
-                container.appendChild(div);
+                for (const agent of agents) {
+                    const div = document.createElement('div');
+                    div.className = 'agent';
+                    div.innerHTML = `
+                        <strong>Agent ID:</strong> ${agent.agent_id}<br>
+                        <strong>Status:</strong> ${agent.status}<br>
+                        <strong>Last Seen:</strong> ${agent.last_seen}<br>
+                        <strong>System Info:</strong><br>
+                        <pre>${JSON.stringify(agent.system_info || {}, null, 2)}</pre>
+                    `;
+
+                    // Show stored results from startup tasks or agent callback
+                    if (agent.results) {
+                        for (const [task, content] of Object.entries(agent.results)) {
+                            const resultDiv = document.createElement('div');
+                            resultDiv.className = 'task-result';
+                            resultDiv.innerHTML = `<strong>${task}</strong>:<br>${typeof content === 'string' ? content : JSON.stringify(content, null, 2)}`;
+                            div.appendChild(resultDiv);
+                        }
+                    }
+
+                    container.appendChild(div);
+                }
+            } catch (error) {
+                document.getElementById('agents').innerHTML = '<p style="color:red">Failed to load agents.</p>';
+                console.error(error);
             }
         }
 
-        function toggleTheme() {
-            const currentTheme = document.body.getAttribute('data-theme');
-            document.body.setAttribute('data-theme', currentTheme === 'dark' ? 'light' : 'dark');
-            localStorage.setItem('theme', document.body.getAttribute('data-theme'));
-        }
-
-        window.onload = () => {
-            const saved = localStorage.getItem('theme') || 'light';
-            document.body.setAttribute('data-theme', saved);
-            fetchAgents();
-            setInterval(fetchAgents, 10000);
-        }
+        fetchAgents();
+        setInterval(fetchAgents, 10000); // Refresh every 10 seconds
     </script>
 </body>
 </html>

