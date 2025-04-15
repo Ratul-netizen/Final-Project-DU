@@ -1,86 +1,112 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>C2 Server Dashboard</title>
     <style>
+        :root {
+            --bg: #f4f4f4;
+            --text: #333;
+            --card: #fff;
+            --highlight: #2196F3;
+        }
+
+        [data-theme="dark"] {
+            --bg: #1e1e1e;
+            --text: #eee;
+            --card: #2c2c2c;
+            --highlight: #4FC3F7;
+        }
+
         body {
             font-family: Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
             margin: 0;
             padding: 20px;
-            background-color: #f0f0f0;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background-color: white;
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            transition: background 0.3s, color 0.3s;
         }
         h1 {
-            color: #333;
-            text-align: center;
+            color: var(--text);
         }
-        .nav {
-            margin: 20px 0;
-            text-align: center;
-        }
-        .nav a {
-            margin: 0 10px;
-            text-decoration: none;
-            color: #0066cc;
-        }
-        .status {
-            padding: 10px;
+        .agent {
+            background-color: var(--card);
+            padding: 15px;
             margin: 10px 0;
-            border-radius: 5px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        .online {
-            background-color: #d4edda;
-            color: #155724;
+        .task-result {
+            background-color: #e9f5ff;
+            padding: 10px;
+            margin-top: 10px;
+            border-left: 5px solid var(--highlight);
+            white-space: pre-wrap;
         }
-        .offline {
-            background-color: #f8d7da;
-            color: #721c24;
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 6px 12px;
+            background: var(--card);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            color: var(--text);
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>C2 Server Dashboard</h1>
-        <div class="nav">
-            <a href="/">Dashboard</a>
-            <a href="/shellcode">Shellcode Generator</a>
-        </div>
-        <div id="agents-list">
-            <h2>Connected Agents</h2>
-            <div id="agents">
-                <!-- Agents will be listed here -->
-            </div>
-        </div>
-    </div>
+    <button class="theme-toggle" onclick="toggleTheme()">Toggle Theme</button>
+    <h1>Agent Dashboard</h1>
+    <div id="agents"></div>
 
     <script>
-        // Function to fetch and update agent list
-        function updateAgents() {
-            fetch('/api/agents')
-                .then(response => response.json())
-                .then(agents => {
-                    const agentsDiv = document.getElementById('agents');
-                    agentsDiv.innerHTML = agents.length > 0 
-                        ? agents.map(agent => `
-                            <div class="status online">
-                                Agent ID: ${agent.agent_id}<br>
-                                Last Seen: ${new Date(agent.last_seen).toLocaleString()}
-                            </div>
-                        `).join('')
-                        : '<p>No agents connected</p>';
-                });
+        async function fetchAgents() {
+            const res = await fetch('/api/agents');
+            const agents = await res.json();
+            const container = document.getElementById('agents');
+            container.innerHTML = '';
+
+            // Sort by last_seen descending
+            agents.sort((a, b) => new Date(b.last_seen) - new Date(a.last_seen));
+
+            for (const agent of agents) {
+                const div = document.createElement('div');
+                div.className = 'agent';
+                div.innerHTML = `
+                    <strong>Agent ID:</strong> ${agent.agent_id}<br>
+                    <strong>Status:</strong> ${agent.status}<br>
+                    <strong>Last Seen:</strong> ${agent.last_seen}<br>
+                    <strong>System Info:</strong><br>
+                    <pre>${JSON.stringify(agent.system_info, null, 2)}</pre>
+                `;
+
+                for (const [task, content] of Object.entries(agent.results || {})) {
+                    const resultDiv = document.createElement('div');
+                    resultDiv.className = 'task-result';
+                    resultDiv.innerHTML = `<strong>${task}</strong>:<br>${typeof content === 'string' ? content : JSON.stringify(content, null, 2)}`;
+                    div.appendChild(resultDiv);
+                }
+
+                container.appendChild(div);
+            }
         }
 
-        // Update agents every 5 seconds
-        setInterval(updateAgents, 5000);
-        updateAgents(); // Initial update
+        function toggleTheme() {
+            const currentTheme = document.body.getAttribute('data-theme');
+            document.body.setAttribute('data-theme', currentTheme === 'dark' ? 'light' : 'dark');
+            localStorage.setItem('theme', document.body.getAttribute('data-theme'));
+        }
+
+        window.onload = () => {
+            const saved = localStorage.getItem('theme') || 'light';
+            document.body.setAttribute('data-theme', saved);
+            fetchAgents();
+            setInterval(fetchAgents, 10000);
+        }
     </script>
 </body>
-</html> 
+</html>
