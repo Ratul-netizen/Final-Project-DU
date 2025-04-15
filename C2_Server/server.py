@@ -634,8 +634,9 @@ if __name__ == '__main__':
             'is_admin': True
         }
         
-    # Check templates
-    app.route('/templates')()
+    # Check if templates route exists
+    if '/templates' not in [rule.rule for rule in app.url_map.iter_rules()]:
+        print("Warning: /templates route not defined!")
     
     # Run the server
     host = '0.0.0.0'  # Bind to all interfaces
