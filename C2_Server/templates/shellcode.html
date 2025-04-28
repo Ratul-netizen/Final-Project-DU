@@ -175,6 +175,7 @@
             <div class="form-group" id="keyGroup" style="display: none;">
                 <label for="key">Encryption Key:</label>
                 <input type="text" id="key" placeholder="Enter encryption key">
+                <button type="button" onclick="generateRandomKey()">Generate Random Key</button>
             </div>
 
             <button type="submit">Generate Shellcode</button>
@@ -785,6 +786,15 @@ int main() {
                 }, 1500);
             });
         });
+
+        function generateRandomKey(length = 16) {
+            const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()";
+            let key = "";
+            for (let i = 0; i < length; i++) {
+                key += charset[Math.floor(Math.random() * charset.length)];
+            }
+            document.getElementById('key').value = key;
+        }
 
         window.onload = function () {
             const savedTheme = localStorage.getItem('theme') || 'light';

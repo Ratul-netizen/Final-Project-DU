@@ -116,11 +116,14 @@ class ShellcodeGenerator:
     def xor_encrypt(self, data, key):
         """Encrypt data using XOR with the provided key"""
         try:
-            key = key.encode() if isinstance(key, str) else key
+            if data is None:
+                raise ValueError("Input shellcode for XOR encryption is None.")
+            if isinstance(key, str):
+                key = key.encode()
             key_len = len(key)
             return bytes([data[i] ^ key[i % key_len] for i in range(len(data))])
         except Exception as e:
-            print(f"Error in XOR encryption: {str(e)}")
+            print(f"[XOR Encrypt Error]: {str(e)}")
             return None
 
     def aes_encrypt(self, data, key):
