@@ -4,6 +4,33 @@ import base64
 import shutil
 from datetime import datetime
 import logging
+from pathlib import Path
+
+def sanitize_path(path):
+    """
+    Sanitize and validate file path
+    Args:
+        path (str): Path to sanitize
+    Returns:
+        str: Sanitized absolute path
+    Raises:
+        ValueError: If path is invalid or attempts directory traversal
+    """
+    try:
+        # Convert to absolute path
+        abs_path = os.path.abspath(path)
+        
+        # Get the workspace root (adjust this based on your setup)
+        workspace_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+        
+        # Check if path is within workspace
+        if not abs_path.startswith(workspace_root):
+            raise ValueError("Access denied: Path outside workspace")
+            
+        return abs_path
+        
+    except Exception as e:
+        raise ValueError(f"Invalid path: {str(e)}")
 
 def read_file(path, offset=0, length=None):
     """
@@ -16,15 +43,25 @@ def read_file(path, offset=0, length=None):
         dict: File contents and metadata
     """
     try:
+        # Sanitize path
+        safe_path = sanitize_path(path)
+        
         # Check if file exists
-        if not os.path.exists(path):
+        if not os.path.exists(safe_path):
             return {
                 'status': 'error',
                 'message': 'File does not exist'
             }
             
+        # Check if path is a file
+        if not os.path.isfile(safe_path):
+            return {
+                'status': 'error',
+                'message': 'Path is not a file'
+            }
+            
         # Get file size
-        file_size = os.path.getsize(path)
+        file_size = os.path.getsize(safe_path)
         
         # Validate offset
         if offset < 0 or offset > file_size:
@@ -34,7 +71,7 @@ def read_file(path, offset=0, length=None):
             }
             
         # Read file
-        with open(path, 'rb') as f:
+        with open(safe_path, 'rb') as f:
             f.seek(offset)
             data = f.read(length) if length is not None else f.read()
             
@@ -43,17 +80,23 @@ def read_file(path, offset=0, length=None):
         
         return {
             'status': 'success',
-            'path': path,
+            'path': safe_path,
             'size': file_size,
             'offset': offset,
             'length': len(data),
             'data': encoded_data
         }
         
-    except Exception as e:
+    except ValueError as e:
         return {
             'status': 'error',
             'message': str(e)
+        }
+    except Exception as e:
+        logging.error(f"Error reading file: {str(e)}")
+        return {
+            'status': 'error',
+            'message': 'Internal server error'
         }
 
 def write_file(path, data, mode='wb'):
@@ -67,23 +110,48 @@ def write_file(path, data, mode='wb'):
         dict: Operation status
     """
     try:
+        # Sanitize path
+        safe_path = sanitize_path(path)
+        
+        # Validate mode
+        if mode not in ['wb', 'ab']:
+            return {
+                'status': 'error',
+                'message': 'Invalid write mode'
+            }
+        
+        # Create directory if it doesn't exist
+        os.makedirs(os.path.dirname(safe_path), exist_ok=True)
+        
         # Decode base64 data
-        binary_data = base64.b64decode(data)
+        try:
+            binary_data = base64.b64decode(data)
+        except Exception:
+            return {
+                'status': 'error',
+                'message': 'Invalid base64 data'
+            }
         
         # Write file
-        with open(path, mode) as f:
+        with open(safe_path, mode) as f:
             f.write(binary_data)
             
         return {
             'status': 'success',
-            'path': path,
+            'path': safe_path,
             'size': len(binary_data)
         }
         
-    except Exception as e:
+    except ValueError as e:
         return {
             'status': 'error',
             'message': str(e)
+        }
+    except Exception as e:
+        logging.error(f"Error writing file: {str(e)}")
+        return {
+            'status': 'error',
+            'message': 'Internal server error'
         }
 
 def delete_file(path):
@@ -95,20 +163,35 @@ def delete_file(path):
         dict: Operation status
     """
     try:
-        if os.path.isdir(path):
-            shutil.rmtree(path)
+        # Sanitize path
+        safe_path = sanitize_path(path)
+        
+        if not os.path.exists(safe_path):
+            return {
+                'status': 'error',
+                'message': 'Path does not exist'
+            }
+            
+        if os.path.isdir(safe_path):
+            shutil.rmtree(safe_path)
         else:
-            os.remove(path)
+            os.remove(safe_path)
             
         return {
             'status': 'success',
-            'message': f'Deleted {path}'
+            'message': f'Deleted {safe_path}'
         }
         
-    except Exception as e:
+    except ValueError as e:
         return {
             'status': 'error',
             'message': str(e)
+        }
+    except Exception as e:
+        logging.error(f"Error deleting file: {str(e)}")
+        return {
+            'status': 'error',
+            'message': 'Internal server error'
         }
 
 def download_file(path, chunk_size=8192):
@@ -121,16 +204,41 @@ def download_file(path, chunk_size=8192):
         generator: Yields chunks of file data
     """
     try:
-        with open(path, 'rb') as f:
+        # Sanitize path
+        safe_path = sanitize_path(path)
+        
+        # Validate path
+        if not os.path.exists(safe_path):
+            yield {
+                'status': 'error',
+                'message': 'File does not exist'
+            }
+            return
+            
+        if not os.path.isfile(safe_path):
+            yield {
+                'status': 'error',
+                'message': 'Path is not a file'
+            }
+            return
+            
+        with open(safe_path, 'rb') as f:
             while True:
                 chunk = f.read(chunk_size)
                 if not chunk:
                     break
                 yield base64.b64encode(chunk).decode()
-    except Exception as e:
+                
+    except ValueError as e:
         yield {
             'status': 'error',
             'message': str(e)
+        }
+    except Exception as e:
+        logging.error(f"Error downloading file: {str(e)}")
+        yield {
+            'status': 'error',
+            'message': 'Internal server error'
         }
 
 def upload_file(path, chunk):
@@ -143,21 +251,39 @@ def upload_file(path, chunk):
         dict: Operation status
     """
     try:
+        # Sanitize path
+        safe_path = sanitize_path(path)
+        
+        # Create directory if it doesn't exist
+        os.makedirs(os.path.dirname(safe_path), exist_ok=True)
+        
         # Decode chunk
-        binary_chunk = base64.b64decode(chunk)
+        try:
+            binary_chunk = base64.b64decode(chunk)
+        except Exception:
+            return {
+                'status': 'error',
+                'message': 'Invalid base64 data'
+            }
         
         # Append to file
-        with open(path, 'ab') as f:
+        with open(safe_path, 'ab') as f:
             f.write(binary_chunk)
             
         return {
             'status': 'success',
-            'path': path,
+            'path': safe_path,
             'chunk_size': len(binary_chunk)
         }
         
-    except Exception as e:
+    except ValueError as e:
         return {
             'status': 'error',
             'message': str(e)
+        }
+    except Exception as e:
+        logging.error(f"Error uploading file: {str(e)}")
+        return {
+            'status': 'error',
+            'message': 'Internal server error'
         } 
