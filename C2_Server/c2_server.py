@@ -136,9 +136,16 @@ def register_agent():
         agent_id = data.get('agent_id')
 
         if agent_id:
-            agents[agent_id] = data
-            agents[agent_id]['last_seen'] = datetime.now().isoformat()
-            agents[agent_id]['results'] = {}
+            if agent_id in agents:
+                # Update existing agent
+                agents[agent_id].update(data)
+                agents[agent_id]['last_seen'] = datetime.now().isoformat()
+            else:
+                # Register new agent
+                agents[agent_id] = data
+                agents[agent_id]['last_seen'] = datetime.now().isoformat()
+                agents[agent_id]['results'] = {}
+
             logging.info(f"Registered agent: {agent_id}")
             return jsonify({'status': 'success'})
 
