@@ -13,11 +13,11 @@ import requests
 from flask import Flask, render_template, request, jsonify
 
 # Fix: Add correct module path BEFORE importing
-MODULES_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'agent', 'modules'))
+MODULES_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), 'modules'))
 sys.path.append(MODULES_PATH)
 
 from shellcode_generator import ShellcodeGenerator
-from dns_tunnel import DNSTunnel
+from modules.dns_tunnel import DNSTunnel
 
 IS_WINDOWS = platform.system().lower() == "windows"
 if IS_WINDOWS:

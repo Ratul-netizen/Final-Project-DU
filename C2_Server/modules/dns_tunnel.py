@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import os
 import sys
 import time
@@ -7,7 +8,6 @@ import struct
 import random
 import logging
 import threading
-from typing import Optional, Tuple, List
 import queue
 import dns.resolver
 import dns.message
@@ -18,213 +18,189 @@ from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
-class DNSTunnelConfig:
-    def __init__(self, domain: str, encryption_key: Optional[str] = None):
+class DNSTunnel:
+    def __init__(self, domain, encryption_key=None):
         self.domain = domain
         self.chunk_size = 30  # Max size for DNS label
         self.max_retries = 3
         self.timeout = 5
         self.encryption_key = self._setup_encryption(encryption_key)
-        
-    def _setup_encryption(self, key: Optional[str]) -> bytes:
-        if key:
-            # Generate encryption key from password
-            kdf = PBKDF2HMAC(
-                algorithm=hashes.SHA256(),
-                length=32,
-                salt=b'dnstunnel_salt',  # In production, use random salt
-                iterations=100000,
-            )
-            return base64.urlsafe_b64encode(kdf.derive(key.encode()))
-        return Fernet.generate_key()
-
-class DNSTunnelServer:
-    def __init__(self, config: DNSTunnelConfig):
-        self.config = config
-        self.fernet = Fernet(self.config.encryption_key)
         self.message_queue = queue.Queue()
-        self.response_cache = {}
-        self.setup_logging()
+        self.running = False
+        self.logger = logging.getLogger('DNSTunnel')
         
-    def setup_logging(self):
-        logging.basicConfig(
-            level=logging.INFO,
-            format='%(asctime)s - %(levelname)s - %(message)s',
-            handlers=[
-                logging.FileHandler('dns_tunnel.log'),
-                logging.StreamHandler()
-            ]
+    def _setup_encryption(self, key=None):
+        """Setup encryption key using PBKDF2"""
+        if not key:
+            key = base64.b64encode(os.urandom(32)).decode()
+            
+        salt = b'dns_tunnel_salt'
+        kdf = PBKDF2HMAC(
+            algorithm=hashes.SHA256(),
+            length=32,
+            salt=salt,
+            iterations=100000,
         )
-        
-    def start(self, port: int = 53):
+        key_bytes = key.encode() if isinstance(key, str) else key
+        derived_key = base64.b64encode(kdf.derive(key_bytes))
+        return Fernet(derived_key)
+
+    def start(self, port=53):
         """Start DNS tunnel server"""
+        self.running = True
+        self.server_thread = threading.Thread(target=self._run_server, args=(port,))
+        self.server_thread.daemon = True
+        self.server_thread.start()
+        self.logger.info(f"DNS tunnel server started on port {port}")
+
+    def stop(self):
+        """Stop DNS tunnel server"""
+        self.running = False
+        if hasattr(self, 'server_thread'):
+            self.server_thread.join()
+        self.logger.info("DNS tunnel server stopped")
+
+    def _run_server(self, port):
+        """Run DNS server"""
         try:
-            self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            self.sock.bind(('0.0.0.0', port))
-            logging.info(f"DNS tunnel server started on port {port}")
+            server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            server_socket.bind(('0.0.0.0', port))
+            server_socket.settimeout(1)
             
-            # Start processing thread
-            self.processing = True
-            self.process_thread = threading.Thread(target=self._process_queue)
-            self.process_thread.daemon = True
-            self.process_thread.start()
-            
-            while True:
+            while self.running:
                 try:
-                    data, addr = self.sock.recvfrom(4096)
-                    threading.Thread(target=self._handle_query, args=(data, addr)).start()
+                    data, addr = server_socket.recvfrom(4096)
+                    response = self._handle_dns_query(data)
+                    if response:
+                        server_socket.sendto(response, addr)
+                except socket.timeout:
+                    continue
                 except Exception as e:
-                    logging.error(f"Error handling DNS query: {str(e)}")
+                    self.logger.error(f"Error handling DNS query: {e}")
                     
         except Exception as e:
-            logging.error(f"Server error: {str(e)}")
+            self.logger.error(f"Server error: {e}")
         finally:
-            self.cleanup()
-            
-    def cleanup(self):
-        """Cleanup resources"""
-        self.processing = False
-        if hasattr(self, 'sock'):
-            self.sock.close()
-            
-    def _handle_query(self, data: bytes, addr: Tuple[str, int]):
+            server_socket.close()
+
+    def _handle_dns_query(self, data):
         """Handle incoming DNS query"""
         try:
             query = dns.message.from_wire(data)
+            response = dns.message.make_response(query)
             
-            # Process only if it's our domain
-            qname = str(query.question[0].name)
-            if not qname.endswith(self.config.domain + '.'):
-                return
-                
-            # Extract encoded data from subdomain
-            encoded_data = qname[0:-(len(self.config.domain) + 2)]
-            chunks = encoded_data.split('.')
-            
-            # Reconstruct and decrypt data
-            data = self._reconstruct_data(chunks)
-            if data:
-                # Add to processing queue
-                self.message_queue.put((data, addr))
-                
-            # Send acknowledgment
-            response = self._create_response(query)
-            self.sock.sendto(response.to_wire(), addr)
-            
-        except Exception as e:
-            logging.error(f"Error processing DNS query: {str(e)}")
-            
-    def _reconstruct_data(self, chunks: List[str]) -> Optional[bytes]:
-        """Reconstruct and decrypt data from DNS chunks"""
-        try:
-            # Join chunks and decode
-            data = ''.join(chunks)
-            decoded = base64.urlsafe_b64decode(data + '=' * (-len(data) % 4))
-            
-            # Decrypt
-            return self.fernet.decrypt(decoded)
-        except Exception as e:
-            logging.error(f"Error reconstructing data: {str(e)}")
-            return None
-            
-    def _create_response(self, query: dns.message.Message) -> dns.message.Message:
-        """Create DNS response"""
-        response = dns.message.make_response(query)
-        response.flags |= dns.flags.QR
-        return response
-        
-    def _process_queue(self):
-        """Process received messages"""
-        while self.processing:
-            try:
-                data, addr = self.message_queue.get(timeout=1)
-                self._handle_message(data, addr)
-            except queue.Empty:
-                continue
-            except Exception as e:
-                logging.error(f"Error processing message: {str(e)}")
-                
-    def _handle_message(self, data: bytes, addr: Tuple[str, int]):
-        """Handle reconstructed message"""
-        try:
-            message = data.decode()
-            logging.info(f"Received message from {addr}: {message}")
-            # Handle command/data as needed
-            # Add your command processing logic here
-        except Exception as e:
-            logging.error(f"Error handling message: {str(e)}")
-
-class DNSTunnelClient:
-    def __init__(self, config: DNSTunnelConfig):
-        self.config = config
-        self.fernet = Fernet(self.config.encryption_key)
-        self.setup_logging()
-        
-    def setup_logging(self):
-        logging.basicConfig(
-            level=logging.INFO,
-            format='%(asctime)s - %(levelname)s - %(message_s)s',
-            handlers=[
-                logging.FileHandler('dns_tunnel_client.log'),
-                logging.StreamHandler()
-            ]
-        )
-        
-    def send(self, data: str) -> bool:
-        """Send data through DNS tunnel"""
-        try:
-            # Encrypt data
-            encrypted = self.fernet.encrypt(data.encode())
-            encoded = base64.urlsafe_b64encode(encrypted).decode()
-            
-            # Split into chunks
-            chunks = self._chunk_data(encoded)
-            
-            # Send chunks as DNS queries
-            for chunk in chunks:
-                if not self._send_chunk(chunk):
-                    return False
+            if len(query.question) > 0:
+                qname = str(query.question[0].name)
+                if self.domain in qname:
+                    # Extract data from subdomain
+                    data = self._extract_data_from_query(qname)
+                    if data:
+                        self.message_queue.put((data, time.time()))
+                        
+                    # Create response
+                    response.answer.append(self._create_response_record(query.question[0].name))
                     
-            return True
-            
+            return response.to_wire()
         except Exception as e:
-            logging.error(f"Error sending data: {str(e)}")
-            return False
+            self.logger.error(f"Error processing DNS query: {e}")
+            return None
+
+    def _extract_data_from_query(self, qname):
+        """Extract and decrypt data from DNS query"""
+        try:
+            # Remove domain suffix
+            data = qname.replace(f".{self.domain}.", "")
             
-    def _chunk_data(self, data: str) -> List[str]:
-        """Split data into DNS-compatible chunks"""
-        return [data[i:i+self.config.chunk_size] 
-                for i in range(0, len(data), self.config.chunk_size)]
-                
-    def _send_chunk(self, chunk: str) -> bool:
-        """Send single chunk as DNS query"""
-        for attempt in range(self.config.max_retries):
-            try:
-                # Create DNS query
-                query = f"{chunk}.{self.config.domain}"
-                resolver = dns.resolver.Resolver()
-                resolver.timeout = self.config.timeout
-                resolver.lifetime = self.config.timeout
-                
-                # Send query
-                resolver.resolve(query, 'A')
-                return True
-                
-            except Exception as e:
-                logging.error(f"Error sending chunk (attempt {attempt+1}): {str(e)}")
-                time.sleep(random.uniform(0.1, 0.5))
-                
-        return False
+            # Decode base32 data from subdomains
+            parts = data.split('.')
+            assembled_data = ''
+            for part in parts:
+                try:
+                    decoded = base64.b32decode(part.upper())
+                    assembled_data += decoded.decode()
+                except:
+                    continue
+                    
+            # Decrypt if encryption is used
+            if assembled_data and self.encryption_key:
+                try:
+                    decrypted = self.encryption_key.decrypt(assembled_data.encode())
+                    return decrypted.decode()
+                except:
+                    return assembled_data
+                    
+            return assembled_data
+        except Exception as e:
+            self.logger.error(f"Error extracting data: {e}")
+            return None
 
-def create_server(domain: str, encryption_key: Optional[str] = None) -> DNSTunnelServer:
+    def _create_response_record(self, qname):
+        """Create DNS response record"""
+        return dns.rrset.from_text(
+            qname, 300, dns.rdataclass.IN, dns.rdatatype.TXT, '"ok"'
+        )
+
+    def send_data(self, data):
+        """Send data through DNS tunnel"""
+        if not isinstance(data, str):
+            data = str(data)
+            
+        # Encrypt if key available
+        if self.encryption_key:
+            data = self.encryption_key.encrypt(data.encode()).decode()
+            
+        # Split into chunks that fit DNS labels
+        chunks = []
+        for i in range(0, len(data), self.chunk_size):
+            chunk = data[i:i + self.chunk_size]
+            # Encode chunk to base32 and make DNS-safe
+            encoded = base64.b32encode(chunk.encode()).decode().lower().rstrip('=')
+            chunks.append(encoded)
+            
+        # Create DNS query
+        subdomain = '.'.join(chunks)
+        domain = f"{subdomain}.{self.domain}"
+        
+        try:
+            resolver = dns.resolver.Resolver()
+            resolver.timeout = self.timeout
+            resolver.lifetime = self.timeout
+            
+            for _ in range(self.max_retries):
+                try:
+                    resolver.resolve(domain, 'TXT')
+                    return True
+                except dns.exception.Timeout:
+                    continue
+                except Exception as e:
+                    self.logger.error(f"Error sending data: {e}")
+                    break
+                    
+            return False
+        except Exception as e:
+            self.logger.error(f"Error initializing resolver: {e}")
+            return False
+
+    def receive_data(self, timeout=1):
+        """Receive data from the tunnel"""
+        try:
+            data, timestamp = self.message_queue.get(timeout=timeout)
+            return data
+        except queue.Empty:
+            return None
+
+    def flush_queue(self):
+        """Clear message queue"""
+        while not self.message_queue.empty():
+            self.message_queue.get_nowait()
+
+def create_server(domain: str, encryption_key: Optional[str] = None) -> DNSTunnel:
     """Create and return a configured DNS tunnel server"""
-    config = DNSTunnelConfig(domain, encryption_key)
-    return DNSTunnelServer(config)
+    return DNSTunnel(domain, encryption_key)
 
-def create_client(domain: str, encryption_key: Optional[str] = None) -> DNSTunnelClient:
+def create_client(domain: str, encryption_key: Optional[str] = None) -> DNSTunnel:
     """Create and return a configured DNS tunnel client"""
-    config = DNSTunnelConfig(domain, encryption_key)
-    return DNSTunnelClient(config)
+    return DNSTunnel(domain, encryption_key)
 
 if __name__ == "__main__":
     # Example usage
@@ -237,4 +213,4 @@ if __name__ == "__main__":
     
     # Client example
     client = create_client(domain, encryption_key)
-    client.send("Hello from DNS tunnel!") 
+    client.send_data("Hello from DNS tunnel!") 
