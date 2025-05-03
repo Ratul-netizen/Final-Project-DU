@@ -1,5 +1,4 @@
-"""Shellcode generation and injection module"""
+"""Shellcode generation package"""
 from .generator import ShellcodeGenerator
-from .injector import inject_shellcode
 
-__all__ = ['ShellcodeGenerator', 'inject_shellcode'] 
+__all__ = ['ShellcodeGenerator'] 
