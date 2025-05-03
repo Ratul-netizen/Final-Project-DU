@@ -8,10 +8,7 @@ from . import process
 from . import surveillance
 from . import files
 from . import shellcode
-from . import privesc
-from . import credentials
 from . import dns_tunnel
-from . import persistence
 from . import shell
 
 __all__ = [
@@ -20,9 +17,6 @@ __all__ = [
     'surveillance',
     'files',
     'shellcode',
-    'privesc',
-    'credentials',
     'dns_tunnel',
-    'persistence',
     'shell'
 ] 
