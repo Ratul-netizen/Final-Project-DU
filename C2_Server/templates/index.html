@@ -5,49 +5,146 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>C2 Server Dashboard</title>
     <style>
+        :root {
+            --bg: #f4f4f4;
+            --text: #333;
+            --card: #fff;
+            --border: #ddd;
+            --primary: #007BFF;
+            --success: #28a745;
+            --danger: #dc3545;
+            --warning: #ffc107;
+        }
+
+        [data-theme="dark"] {
+            --bg: #121212;
+            --text: #f4f4f4;
+            --card: #1e1e1e;
+            --border: #333;
+            --primary: #0d6efd;
+        }
+
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
+            background-color: var(--bg);
+            color: var(--text);
             margin: 0;
             padding: 20px;
+            transition: background-color 0.3s, color 0.3s;
         }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
         h1 {
-            color: #333;
+            color: var(--text);
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
         }
+
         nav {
-            margin-bottom: 20px;
+            margin-bottom: 30px;
+            text-align: center;
         }
+
         nav a {
-            margin-right: 15px;
+            margin: 0 15px;
             text-decoration: none;
-            color: #007BFF;
+            color: var(--primary);
+            font-weight: 500;
+            font-size: 1.1em;
+            transition: color 0.3s;
         }
+
+        nav a:hover {
+            color: var(--text);
+        }
+
         .agent {
-            background-color: #fff;
-            padding: 15px;
-            margin: 10px 0;
+            background-color: var(--card);
+            padding: 20px;
+            margin: 15px 0;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: left;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
+
+        .agent:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
         .task-result {
-            background-color: #e9f5ff;
-            padding: 10px;
-            margin-top: 10px;
-            border-left: 5px solid #2196F3;
+            background-color: var(--bg);
+            padding: 15px;
+            margin-top: 15px;
+            border-left: 5px solid var(--primary);
             white-space: pre-wrap;
+            border-radius: 4px;
+        }
+
+        .toggle-theme {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .toggle-theme:hover {
+            background-color: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        #agents {
+            text-align: left;
+            margin-top: 30px;
+        }
+
+        pre {
+            background-color: var(--bg);
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
         }
     </style>
 </head>
 <body>
-    <h1>Agent Dashboard</h1>
-    <nav>
-        <a href="/">Dashboard</a>
-        <a href="/shellcode">Shellcode Generator</a>
-        <a href="/control">Task Control Panel</a>
-    </nav>
-    <div id="agents">Loading agents...</div>
+    <button class="toggle-theme" onclick="toggleTheme()">🌙 Toggle Dark Mode</button>
+    
+    <div class="container">
+        <h1>Agent Dashboard</h1>
+        <nav>
+            <a href="/">Dashboard</a>
+            <a href="/shellcode">Shellcode Generator</a>
+            <a href="/control">Task Control Panel</a>
+        </nav>
+        <div id="agents">Loading agents...</div>
+    </div>
 
     <script>
+        // Theme management
+        function toggleTheme() {
+            const current = localStorage.getItem('theme') || 'light';
+            const next = current === 'light' ? 'dark' : 'light';
+            localStorage.setItem('theme', next);
+            document.body.setAttribute('data-theme', next);
+        }
+
+        // Initialize theme
+        document.body.setAttribute('data-theme', localStorage.getItem('theme') || 'light');
+
         async function fetchAgents() {
             try {
                 const res = await fetch('/api/agents');
@@ -56,7 +153,7 @@
                 container.innerHTML = '';
 
                 if (agents.length === 0) {
-                    container.innerHTML = '<p>No agents connected.</p>';
+                    container.innerHTML = '<p style="text-align: center;">No agents connected.</p>';
                     return;
                 }
 
@@ -84,7 +181,7 @@
                     container.appendChild(div);
                 }
             } catch (error) {
-                document.getElementById('agents').innerHTML = '<p style="color:red">Failed to load agents.</p>';
+                document.getElementById('agents').innerHTML = '<p style="color: var(--danger); text-align: center;">Failed to load agents.</p>';
                 console.error(error);
             }
         }
