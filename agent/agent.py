@@ -82,7 +82,6 @@ def send_result(task_id, result):
 def run_task(task):
     task_id = task.get("id")
     task_type = task.get("type")
-    data = task.get("data", {})
     result = None
 
     try:
@@ -90,26 +89,40 @@ def run_task(task):
             result = get_system_info()
         else:
             try:
+                # Dynamically load module
                 module_path = f"modules.{task_type}"
                 mod = importlib.import_module(module_path)
 
-                if hasattr(mod, 'run'):
+                # Case 1: Simple run() function
+                if hasattr(mod, "run") and callable(mod.run):
                     result = mod.run()
+
                 else:
-                    cls_name = ''.join([part.capitalize() for part in task_type.split('_')])
-                    handler = getattr(mod, cls_name, None)
-                    if handler:
-                        result = handler().run()
+                    # Case 2: Class with run()/capture_image()/start() methods
+                    class_name = ''.join([part.capitalize() for part in task_type.split('_')])
+                    handler_cls = getattr(mod, class_name, None)
+
+                    if handler_cls:
+                        instance = handler_cls()
+                        if hasattr(instance, "run") and callable(instance.run):
+                            result = instance.run()
+                        elif hasattr(instance, "capture_image") and callable(instance.capture_image):
+                            result = instance.capture_image()
+                        elif hasattr(instance, "start") and callable(instance.start):
+                            instance.start()
+                            result = f"{task_type} started."
+                        else:
+                            result = f"{task_type} module loaded, but no recognized method found."
                     else:
-                        result = f"No run method found in {task_type}"
+                        result = f"No matching class '{class_name}' found in {task_type}.py"
 
             except Exception as e:
-                result = f"Module load error: {e}"
+                result = f"[Error loading module]: {str(e)}"
 
         send_result(task_id, result)
 
     except Exception as e:
-        send_result(task_id, f"Execution error: {e}")
+        send_result(task_id, f"[Task execution failed]: {str(e)}")
 
 def auto_task_post_startup():
     logging.info("Running startup modules...")
