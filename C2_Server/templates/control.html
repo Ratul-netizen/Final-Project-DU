@@ -244,29 +244,82 @@
             </div>
             
             <div class="predefined-tasks">
+                <!-- System Information -->
+                <button class="task-button" onclick="selectTask('system_info')">
+                    💻 System Info
+                    <small>Get detailed system information</small>
+                </button>
+
+                <!-- Process Management -->
+                <button class="task-button" onclick="selectTask('process_list')">
+                    📋 Process List
+                    <small>List running processes</small>
+                </button>
+                <button class="task-button" onclick="selectTask('process_injection')">
+                    💉 Process Injection
+                    <small>Inject code into running process</small>
+                </button>
+
+                <!-- Surveillance -->
                 <button class="task-button" onclick="selectTask('keylogger')">
                     ⌨️ Keylogger
-                    <small style="display: block">Start keylogging session</small>
+                    <small>Start keylogging session</small>
                 </button>
                 <button class="task-button" onclick="selectTask('screenshot')">
                     📸 Screenshot
-                    <small style="display: block">Capture screen</small>
+                    <small>Capture screen</small>
                 </button>
                 <button class="task-button" onclick="selectTask('webcam')">
                     📹 Webcam
-                    <small style="display: block">Capture webcam image</small>
+                    <small>Capture webcam image</small>
                 </button>
-                <button class="task-button" onclick="selectTask('process_list')">
-                    📋 Process List
-                    <small style="display: block">List running processes</small>
-                </button>
+
+                <!-- File Operations -->
                 <button class="task-button" onclick="selectTask('file_exfil')">
                     📂 File Exfiltration
-                    <small style="display: block">Retrieve specific files</small>
+                    <small>Retrieve specific files</small>
                 </button>
+
+                <!-- Privilege Escalation -->
+                <button class="task-button" onclick="selectTask('priv_esc')">
+                    🔑 Privilege Escalation
+                    <small>Attempt privilege escalation</small>
+                </button>
+
+                <!-- Persistence -->
+                <button class="task-button" onclick="selectTask('persistence')">
+                    🔄 Persistence
+                    <small>Establish persistence</small>
+                </button>
+
+                <!-- Credential Access -->
+                <button class="task-button" onclick="selectTask('credential_dump')">
+                    🔐 Credential Dump
+                    <small>Extract stored credentials</small>
+                </button>
+
+                <!-- Network -->
+                <button class="task-button" onclick="selectTask('dns_tunnel')">
+                    🌐 DNS Tunnel
+                    <small>Setup DNS tunneling</small>
+                </button>
+
+                <!-- Evasion -->
+                <button class="task-button" onclick="selectTask('evasion')">
+                    🕵️ Evasion
+                    <small>Execute evasion techniques</small>
+                </button>
+
+                <!-- Post Exploitation -->
+                <button class="task-button" onclick="selectTask('post_exploit')">
+                    🎯 Post Exploit
+                    <small>Run post-exploitation tasks</small>
+                </button>
+
+                <!-- Custom Commands -->
                 <button class="task-button" onclick="selectTask('custom')">
                     🔧 Custom Command
-                    <small style="display: block">Execute custom command</small>
+                    <small>Execute custom command</small>
                 </button>
             </div>
 

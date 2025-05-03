@@ -1,0 +1,15 @@
+# Core dependencies
+requests>=2.25.1
+cryptography>=3.4.7
+
+# Screenshot and image handling
+Pillow>=8.2.0  # For screenshot functionality
+
+# System interaction
+psutil>=5.8.0  # For process listing
+pywin32>=300; sys_platform == 'win32'  # Windows-specific functionality
+
+# Optional dependencies
+opencv-python>=4.5.1  # For webcam functionality
+keyboard>=0.13.5  # For keylogging functionality
+mss>=6.1.0  # Alternative screenshot method 
