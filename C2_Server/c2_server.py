@@ -8,6 +8,7 @@ import base64
 import logging
 from datetime import datetime
 import threading
+import requests
 
 from flask import Flask, render_template, request, jsonify
 
@@ -244,28 +245,36 @@ def control_panel():
 
 @app.route('/send_task', methods=['POST'])
 def send_task_from_ui():
-    agent_id = request.form.get("agent_id")
-    task_type = request.form.get("task")
-    task_id = f"task_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-    task = {
-        "id": task_id,
-        "type": task_type,
-        "data": {},
-        "status": "pending",
-        "timestamp": datetime.now().isoformat()
-    }
-    if agent_id not in tasks:
-        tasks[agent_id] = []
-    tasks[agent_id].append(task)
+    try:
+        agent_id = request.form.get("agent_id")
+        task_type = request.form.get("task")
 
-    thread = threading.Thread(
-        target=execute_task,
-        args=(agent_id, task_id, task_type, {}),
-        daemon=True
-    )
-    thread.start()
+        if not agent_id or not task_type:
+            return jsonify({"status": "error", "message": "Missing agent_id or task_type"}), 400
 
-    return jsonify({"status": "sent", "task_id": task_id})
+        # Properly call internal API to create task
+        response = requests.post("http://localhost:5001/api/tasks", json={
+            "agent_id": agent_id,
+            "type": task_type,
+            "data": {}
+        })
+
+        if response.status_code == 200:
+            return jsonify({
+                "status": "sent",
+                "task_id": response.json().get("task_id")
+            })
+        else:
+            return jsonify({
+                "status": "error",
+                "message": "Failed to send task to agent"
+            }), 400
+
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5001)
