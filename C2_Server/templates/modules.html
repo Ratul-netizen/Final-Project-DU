@@ -1,0 +1,78 @@
+{% extends "control.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Module Manager</h2>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Available Modules</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Module Name</th>
+                                    <th>Description</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for module in modules %}
+                                <tr>
+                                    <td>{{ module.name }}</td>
+                                    <td>{{ module.description }}</td>
+                                    <td>
+                                        <span class="badge {% if module.enabled %}bg-success{% else %}bg-danger{% endif %}">
+                                            {{ 'Enabled' if module.enabled else 'Disabled' }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm {% if module.enabled %}btn-danger{% else %}btn-success{% endif %}"
+                                                onclick="toggleModule('{{ module.name }}')">
+                                            {{ 'Disable' if module.enabled else 'Enable' }}
+                                        </button>
+                                        <button class="btn btn-sm btn-info" onclick="configureModule('{{ module.name }}')">
+                                            Configure
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleModule(moduleName) {
+    fetch('/api/modules/' + moduleName + '/toggle', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Failed to toggle module: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while toggling the module');
+    });
+}
+
+function configureModule(moduleName) {
+    // Implement module configuration logic here
+    alert('Module configuration for ' + moduleName + ' coming soon!');
+}
+</script>
+{% endblock %} 
