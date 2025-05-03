@@ -14,12 +14,13 @@ import dns.message
 import dns.name
 import dns.rdatatype
 import dns.rdataclass
+from typing import Optional, Union
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
 class DNSTunnel:
-    def __init__(self, domain, encryption_key=None):
+    def __init__(self, domain: str, encryption_key: Optional[str] = None):
         self.domain = domain
         self.chunk_size = 30  # Max size for DNS label
         self.max_retries = 3
