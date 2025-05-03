@@ -250,27 +250,50 @@ def send_task_from_ui():
         task_type = request.form.get("task")
 
         if not agent_id or not task_type:
-            return jsonify({"status": "error", "message": "Missing agent_id or task_type"}), 400
-
-        # Properly call internal API to create task
-        response = requests.post("http://localhost:5001/api/tasks", json={
-            "agent_id": agent_id,
-            "type": task_type,
-            "data": {}
-        })
-
-        if response.status_code == 200:
-            return jsonify({
-                "status": "sent",
-                "task_id": response.json().get("task_id")
-            })
-        else:
             return jsonify({
                 "status": "error",
-                "message": "Failed to send task to agent"
+                "message": "Missing agent_id or task_type"
             }), 400
 
+        # Validate agent exists
+        if agent_id not in agents:
+            return jsonify({
+                "status": "error",
+                "message": "Agent not found"
+            }), 404
+
+        # Create task directly
+        task_id = f"task_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        task = {
+            'id': task_id,
+            'type': task_type,
+            'data': {},
+            'status': 'pending',
+            'timestamp': datetime.now().isoformat()
+        }
+
+        # Initialize task list for agent if needed
+        if agent_id not in tasks:
+            tasks[agent_id] = []
+        tasks[agent_id].append(task)
+
+        # Start task execution thread
+        thread = threading.Thread(
+            target=execute_task,
+            args=(agent_id, task_id, task_type, {}),
+            daemon=True
+        )
+        thread.start()
+
+        logging.info(f"Task {task_id} created for agent {agent_id}")
+        return jsonify({
+            "status": "sent",
+            "task_id": task_id,
+            "message": f"Task {task_type} sent to agent {agent_id}"
+        })
+
     except Exception as e:
+        logging.error(f"Error creating task: {str(e)}")
         return jsonify({
             "status": "error",
             "message": str(e)
