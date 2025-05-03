@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Agent Task Control Panel</title>
+</head>
+<body>
+    <h2>Send Task to Agent</h2>
+    <form method="POST" action="/send_task">
+        <label for="agent_id">Agent ID:</label><br>
+        <input type="text" id="agent_id" name="agent_id" required><br><br>
+
+        <label for="task">Task (e.g., keylogger, webcam):</label><br>
+        <input type="text" id="task" name="task" required><br><br>
+
+        <button type="submit">Send Task</button>
+    </form>
+
+    <h3>Agent List</h3>
+    <iframe src="/api/agents" width="100%" height="200px"></iframe>
+</body>
+</html>

