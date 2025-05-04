@@ -1,12 +1,13 @@
 import psutil
 import logging
+import tempfile
 from datetime import datetime
 
 def list_processes():
     """List all running processes with their details"""
     try:
         processes = []
-        for proc in psutil.process_iter(['pid', 'name', 'username', 'memory_percent', 'cpu_percent', 'status']):
+        for proc in psutil.process_iter(['pid', 'name', 'username', 'memory_percent', 'cpu_percent', 'status', 'create_time']):
             try:
                 pinfo = proc.as_dict()
                 processes.append({
@@ -15,10 +16,13 @@ def list_processes():
                     'username': pinfo['username'],
                     'memory_percent': round(pinfo['memory_percent'], 2),
                     'cpu_percent': round(pinfo['cpu_percent'], 2),
-                    'status': pinfo['status']
+                    'status': pinfo['status'],
+                    'create_time': datetime.fromtimestamp(pinfo['create_time']).isoformat() if pinfo['create_time'] else None
                 })
             except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
                 pass
+        
+        logging.info(f"Successfully listed {len(processes)} processes")
         return {
             'status': 'success',
             'timestamp': datetime.now().isoformat(),

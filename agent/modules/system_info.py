@@ -4,6 +4,7 @@ import uuid
 import psutil
 import os
 import getpass
+import datetime
 
 def get_system_info():
     try:
@@ -18,8 +19,13 @@ def get_system_info():
             "cpu_count": psutil.cpu_count(logical=True),
             "memory_total": f"{round(psutil.virtual_memory().total / (1024 ** 3), 2)} GB",
             "disk_total": f"{round(psutil.disk_usage('/').total / (1024 ** 3), 2)} GB",
-            "boot_time": str(datetime.datetime.fromtimestamp(psutil.boot_time()))
+            "boot_time": str(datetime.datetime.fromtimestamp(psutil.boot_time())),
+            "timestamp": datetime.datetime.now().isoformat()
         }
         return info
     except Exception as e:
-        return {"error": str(e)}
+        return {
+            "status": "error",
+            "error": str(e),
+            "timestamp": datetime.datetime.now().isoformat()
+        }

