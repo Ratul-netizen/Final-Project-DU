@@ -1,0 +1,30 @@
+# Core dependencies
+requests>=2.28.0
+cryptography>=41.0.1
+urllib3>=1.26.0
+certifi>=2023.7.22
+
+# Screenshot and image handling
+Pillow>=9.5.0  # For screenshot functionality
+mss>=6.1.0  # Alternative screenshot method
+
+# System interaction
+psutil>=5.9.0  # For process listing
+pynput>=1.7.6  # For keylogging functionality
+pyautogui>=0.9.53  # For GUI automation
+pywin32>=300; sys_platform == 'win32'  # Windows-specific functionality
+wmi>=1.5.1; sys_platform == 'win32'  # Windows Management Instrumentation
+
+# Surveillance and monitoring
+opencv-python>=4.7.0  # For webcam functionality
+keyboard>=0.13.5  # For keylogging functionality
+python-mss>=6.1.0  # For screenshots
+pynput>=1.7.6  # For keyboard monitoring
+
+# Network and security
+dnspython>=2.3.0  # For DNS tunneling
+pycryptodome>=3.18.0  # For encryption
+pyOpenSSL>=23.2.0  # For SSL/TLS support
+
+# File operations
+watchdog>=3.0.0  # For file system monitoring 
