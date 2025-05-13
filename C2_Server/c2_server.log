@@ -9028,3 +9028,919 @@ TypeError: argument should be a bytes-like object or ASCII string, not 'dict'
 2025-05-13 17:30:46,452 - INFO - 192.168.200.35 - - [13/May/2025 17:30:46] "GET / HTTP/1.1" 200 -
 2025-05-13 17:30:56,151 - INFO - 192.168.200.35 - - [13/May/2025 17:30:56] "GET /api/agents HTTP/1.1" 200 -
 2025-05-13 17:31:06,144 - INFO - 192.168.200.35 - - [13/May/2025 17:31:06] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 17:54:14,894 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5001
+ * Running on http://192.168.200.35:5001
+2025-05-13 17:54:14,896 - INFO - [33mPress CTRL+C to quit[0m
+2025-05-13 17:54:18,024 - INFO - 192.168.200.35 - - [13/May/2025 17:54:18] "[32mGET / HTTP/1.1[0m" 302 -
+2025-05-13 17:54:18,111 - INFO - 192.168.200.35 - - [13/May/2025 17:54:18] "GET /login?next=/ HTTP/1.1" 200 -
+2025-05-13 17:54:19,524 - INFO - 192.168.200.35 - - [13/May/2025 17:54:19] "GET /login?next=/ HTTP/1.1" 200 -
+2025-05-13 17:54:22,063 - INFO - 192.168.200.35 - - [13/May/2025 17:54:22] "[32mPOST /login HTTP/1.1[0m" 302 -
+2025-05-13 17:54:22,076 - INFO - 192.168.200.35 - - [13/May/2025 17:54:22] "GET / HTTP/1.1" 200 -
+2025-05-13 17:54:22,130 - INFO - 192.168.200.35 - - [13/May/2025 17:54:22] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 17:54:22,365 - INFO - 192.168.200.35 - - [13/May/2025 17:54:22] "GET / HTTP/1.1" 200 -
+2025-05-13 17:54:25,429 - INFO - 192.168.200.35 - - [13/May/2025 17:54:25] "GET /shellcode HTTP/1.1" 200 -
+2025-05-13 17:54:25,689 - INFO - 192.168.200.35 - - [13/May/2025 17:54:25] "GET /shellcode HTTP/1.1" 200 -
+2025-05-13 17:54:50,385 - INFO - 192.168.200.35 - - [13/May/2025 17:54:50] "GET / HTTP/1.1" 200 -
+2025-05-13 17:54:50,443 - INFO - 192.168.200.35 - - [13/May/2025 17:54:50] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 17:54:50,762 - INFO - 192.168.200.35 - - [13/May/2025 17:54:50] "GET / HTTP/1.1" 200 -
+2025-05-13 17:54:51,847 - INFO - 192.168.200.35 - - [13/May/2025 17:54:51] "GET / HTTP/1.1" 200 -
+2025-05-13 17:54:51,916 - INFO - 192.168.200.35 - - [13/May/2025 17:54:51] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 17:54:52,155 - INFO - 192.168.200.35 - - [13/May/2025 17:54:52] "GET / HTTP/1.1" 200 -
+2025-05-13 17:54:53,809 - INFO - 192.168.200.35 - - [13/May/2025 17:54:53] "GET / HTTP/1.1" 200 -
+2025-05-13 17:54:53,867 - INFO - 192.168.200.35 - - [13/May/2025 17:54:53] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 17:54:54,093 - INFO - 192.168.200.35 - - [13/May/2025 17:54:54] "GET / HTTP/1.1" 200 -
+2025-05-13 17:54:55,672 - INFO - 192.168.200.35 - - [13/May/2025 17:54:55] "GET /control HTTP/1.1" 200 -
+2025-05-13 17:54:55,725 - INFO - 192.168.200.35 - - [13/May/2025 17:54:55] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 17:54:55,964 - INFO - 192.168.200.35 - - [13/May/2025 17:54:55] "GET /control HTTP/1.1" 200 -
+2025-05-13 17:54:56,732 - INFO - 192.168.200.35 - - [13/May/2025 17:54:56] "GET / HTTP/1.1" 200 -
+2025-05-13 17:54:56,789 - INFO - 192.168.200.35 - - [13/May/2025 17:54:56] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 17:54:57,037 - INFO - 192.168.200.35 - - [13/May/2025 17:54:57] "GET / HTTP/1.1" 200 -
+2025-05-13 17:54:58,249 - INFO - 192.168.200.35 - - [13/May/2025 17:54:58] "GET / HTTP/1.1" 200 -
+2025-05-13 17:54:58,322 - INFO - 192.168.200.35 - - [13/May/2025 17:54:58] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 17:54:58,504 - INFO - 192.168.200.35 - - [13/May/2025 17:54:58] "GET / HTTP/1.1" 200 -
+2025-05-13 17:54:59,269 - INFO - 192.168.200.35 - - [13/May/2025 17:54:59] "GET / HTTP/1.1" 200 -
+2025-05-13 17:54:59,314 - INFO - 192.168.200.35 - - [13/May/2025 17:54:59] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 17:54:59,513 - INFO - 192.168.200.35 - - [13/May/2025 17:54:59] "GET / HTTP/1.1" 200 -
+2025-05-13 17:55:00,066 - INFO - 192.168.200.35 - - [13/May/2025 17:55:00] "GET / HTTP/1.1" 200 -
+2025-05-13 17:55:00,124 - INFO - 192.168.200.35 - - [13/May/2025 17:55:00] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 17:55:00,390 - INFO - 192.168.200.35 - - [13/May/2025 17:55:00] "GET / HTTP/1.1" 200 -
+2025-05-13 17:55:10,307 - INFO - 192.168.200.35 - - [13/May/2025 17:55:10] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 17:55:20,304 - INFO - 192.168.200.35 - - [13/May/2025 17:55:20] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 17:55:26,188 - INFO - Registered agent: agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 17:55:26,189 - INFO - 192.168.200.83 - - [13/May/2025 17:55:26] "POST /api/agents/register HTTP/1.1" 200 -
+2025-05-13 17:55:26,220 - INFO - Processing result from agent agent_35a46a0c-c442-4fe3-a62a-028d99216717 for task system_info_165526
+2025-05-13 17:55:26,225 - INFO - Successfully stored result from agent agent_35a46a0c-c442-4fe3-a62a-028d99216717 for task system_info_165526
+2025-05-13 17:55:26,226 - INFO - 192.168.200.83 - - [13/May/2025 17:55:26] "POST /api/results HTTP/1.1" 200 -
+2025-05-13 17:55:26,264 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 17:55:26,265 - INFO - 192.168.200.83 - - [13/May/2025 17:55:26] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 17:55:26,266 - INFO - 192.168.200.83 - - [13/May/2025 17:55:26] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 17:55:30,128 - INFO - 192.168.200.35 - - [13/May/2025 17:55:30] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 17:55:30,160 - INFO - 192.168.200.35 - - [13/May/2025 17:55:30] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 17:55:33,788 - INFO - 192.168.200.35 - - [13/May/2025 17:55:33] "GET /shellcode HTTP/1.1" 200 -
+2025-05-13 17:55:34,366 - INFO - 192.168.200.35 - - [13/May/2025 17:55:34] "GET /shellcode HTTP/1.1" 200 -
+2025-05-13 17:55:36,297 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 17:55:36,298 - INFO - 192.168.200.83 - - [13/May/2025 17:55:36] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 17:55:36,299 - INFO - 192.168.200.83 - - [13/May/2025 17:55:36] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 17:55:46,332 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 17:55:46,333 - INFO - 192.168.200.83 - - [13/May/2025 17:55:46] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 17:55:46,334 - INFO - 192.168.200.83 - - [13/May/2025 17:55:46] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 17:55:56,355 - INFO - 192.168.200.83 - - [13/May/2025 17:55:56] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 17:55:56,357 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 17:55:56,358 - INFO - 192.168.200.83 - - [13/May/2025 17:55:56] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 17:56:04,957 - INFO - 192.168.200.35 - - [13/May/2025 17:56:04] "POST /api/generate_shellcode HTTP/1.1" 200 -
+2025-05-13 17:56:06,376 - INFO - 192.168.200.83 - - [13/May/2025 17:56:06] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 17:56:06,392 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 17:56:06,393 - INFO - 192.168.200.83 - - [13/May/2025 17:56:06] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 17:56:16,404 - INFO - 192.168.200.83 - - [13/May/2025 17:56:16] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 17:56:16,432 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 17:56:16,435 - INFO - 192.168.200.83 - - [13/May/2025 17:56:16] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 17:56:26,437 - INFO - 192.168.200.83 - - [13/May/2025 17:56:26] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 17:56:26,459 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 17:56:26,460 - INFO - 192.168.200.83 - - [13/May/2025 17:56:26] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 17:56:36,469 - INFO - 192.168.200.83 - - [13/May/2025 17:56:36] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 17:56:36,485 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 17:56:36,485 - INFO - 192.168.200.83 - - [13/May/2025 17:56:36] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 17:56:46,493 - INFO - 192.168.200.83 - - [13/May/2025 17:56:46] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 17:56:46,509 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 17:56:46,509 - INFO - 192.168.200.83 - - [13/May/2025 17:56:46] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 17:56:56,523 - INFO - 192.168.200.83 - - [13/May/2025 17:56:56] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 17:56:56,537 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 17:56:56,538 - INFO - 192.168.200.83 - - [13/May/2025 17:56:56] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 17:57:06,550 - INFO - 192.168.200.83 - - [13/May/2025 17:57:06] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 17:57:06,564 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 17:57:06,565 - INFO - 192.168.200.83 - - [13/May/2025 17:57:06] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 17:57:16,580 - INFO - 192.168.200.83 - - [13/May/2025 17:57:16] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 17:57:16,596 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 17:57:16,596 - INFO - 192.168.200.83 - - [13/May/2025 17:57:16] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 17:57:26,612 - INFO - 192.168.200.83 - - [13/May/2025 17:57:26] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 17:57:26,627 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 17:57:26,629 - INFO - 192.168.200.83 - - [13/May/2025 17:57:26] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 17:57:36,643 - INFO - 192.168.200.83 - - [13/May/2025 17:57:36] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 17:57:36,654 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 17:57:36,654 - INFO - 192.168.200.83 - - [13/May/2025 17:57:36] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 17:57:46,688 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 17:57:46,689 - INFO - 192.168.200.83 - - [13/May/2025 17:57:46] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 17:57:46,690 - INFO - 192.168.200.83 - - [13/May/2025 17:57:46] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 17:57:56,731 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 17:57:56,734 - INFO - 192.168.200.83 - - [13/May/2025 17:57:56] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 17:57:56,736 - INFO - 192.168.200.83 - - [13/May/2025 17:57:56] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 17:58:06,757 - INFO - 192.168.200.83 - - [13/May/2025 17:58:06] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 17:58:06,759 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 17:58:06,760 - INFO - 192.168.200.83 - - [13/May/2025 17:58:06] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 17:58:16,786 - INFO - 192.168.200.83 - - [13/May/2025 17:58:16] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 17:58:16,788 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 17:58:16,789 - INFO - 192.168.200.83 - - [13/May/2025 17:58:16] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 17:58:26,814 - INFO - 192.168.200.83 - - [13/May/2025 17:58:26] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 17:58:26,819 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 17:58:26,821 - INFO - 192.168.200.83 - - [13/May/2025 17:58:26] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 17:58:34,567 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5001
+ * Running on http://192.168.200.35:5001
+2025-05-13 17:58:34,567 - INFO - [33mPress CTRL+C to quit[0m
+2025-05-13 17:58:34,676 - INFO - 192.168.200.35 - - [13/May/2025 17:58:34] "[32mGET /shellcode HTTP/1.1[0m" 302 -
+2025-05-13 17:58:34,693 - INFO - 192.168.200.35 - - [13/May/2025 17:58:34] "GET /login?next=/shellcode HTTP/1.1" 200 -
+2025-05-13 17:58:35,223 - INFO - 192.168.200.35 - - [13/May/2025 17:58:35] "GET /login?next=/shellcode HTTP/1.1" 200 -
+2025-05-13 17:58:36,860 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 17:58:36,861 - INFO - 192.168.200.83 - - [13/May/2025 17:58:36] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 17:58:36,863 - INFO - 192.168.200.83 - - [13/May/2025 17:58:36] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 17:58:37,573 - INFO - 192.168.200.35 - - [13/May/2025 17:58:37] "[32mPOST /login HTTP/1.1[0m" 302 -
+2025-05-13 17:58:37,585 - INFO - 192.168.200.35 - - [13/May/2025 17:58:37] "GET / HTTP/1.1" 200 -
+2025-05-13 17:58:37,632 - INFO - 192.168.200.35 - - [13/May/2025 17:58:37] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 17:58:37,878 - INFO - 192.168.200.35 - - [13/May/2025 17:58:37] "GET / HTTP/1.1" 200 -
+2025-05-13 17:58:37,895 - INFO - 192.168.200.35 - - [13/May/2025 17:58:37] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 17:58:41,501 - INFO - 192.168.200.35 - - [13/May/2025 17:58:41] "GET / HTTP/1.1" 200 -
+2025-05-13 17:58:41,558 - INFO - 192.168.200.35 - - [13/May/2025 17:58:41] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 17:58:41,770 - INFO - 192.168.200.35 - - [13/May/2025 17:58:41] "GET / HTTP/1.1" 200 -
+2025-05-13 17:58:41,792 - INFO - 192.168.200.35 - - [13/May/2025 17:58:41] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 17:58:44,233 - INFO - 192.168.200.35 - - [13/May/2025 17:58:44] "GET /shellcode HTTP/1.1" 200 -
+2025-05-13 17:58:44,488 - INFO - 192.168.200.35 - - [13/May/2025 17:58:44] "GET /shellcode HTTP/1.1" 200 -
+2025-05-13 17:58:46,888 - INFO - 192.168.200.83 - - [13/May/2025 17:58:46] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 17:58:46,891 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 17:58:46,891 - INFO - 192.168.200.83 - - [13/May/2025 17:58:46] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 17:58:56,922 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 17:58:56,923 - INFO - 192.168.200.83 - - [13/May/2025 17:58:56] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 17:58:56,927 - INFO - 192.168.200.83 - - [13/May/2025 17:58:56] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 17:59:03,015 - INFO - 192.168.200.35 - - [13/May/2025 17:59:03] "POST /api/generate_shellcode HTTP/1.1" 200 -
+2025-05-13 17:59:03,023 - INFO - 192.168.200.35 - - [13/May/2025 17:59:03] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 17:59:06,953 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 17:59:06,954 - INFO - 192.168.200.83 - - [13/May/2025 17:59:06] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 17:59:06,955 - INFO - 192.168.200.83 - - [13/May/2025 17:59:06] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 17:59:16,992 - INFO - 192.168.200.83 - - [13/May/2025 17:59:16] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 17:59:16,996 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 17:59:16,997 - INFO - 192.168.200.83 - - [13/May/2025 17:59:16] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 17:59:27,036 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 17:59:27,039 - INFO - 192.168.200.83 - - [13/May/2025 17:59:27] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 17:59:27,042 - INFO - 192.168.200.83 - - [13/May/2025 17:59:27] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 17:59:33,419 - INFO - Task task_20250513_175933 created for agent agent_35a46a0c-c442-4fe3-a62a-028d99216717: shellcode_inject
+2025-05-13 17:59:33,420 - INFO - 192.168.200.35 - - [13/May/2025 17:59:33] "POST /api/tasks HTTP/1.1" 200 -
+2025-05-13 17:59:36,937 - INFO - 192.168.200.35 - - [13/May/2025 17:59:36] "GET / HTTP/1.1" 200 -
+2025-05-13 17:59:36,993 - INFO - 192.168.200.35 - - [13/May/2025 17:59:36] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 17:59:37,069 - INFO - Sending task task_20250513_175933 to agent agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 17:59:37,071 - INFO - 192.168.200.83 - - [13/May/2025 17:59:37] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 17:59:37,072 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 17:59:37,073 - INFO - 192.168.200.83 - - [13/May/2025 17:59:37] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 17:59:37,275 - INFO - 192.168.200.35 - - [13/May/2025 17:59:37] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 17:59:37,354 - INFO - Processing result from agent agent_35a46a0c-c442-4fe3-a62a-028d99216717 for task task_20250513_175933
+2025-05-13 17:59:37,355 - INFO - Successfully stored result from agent agent_35a46a0c-c442-4fe3-a62a-028d99216717 for task task_20250513_175933
+2025-05-13 17:59:37,355 - INFO - 192.168.200.83 - - [13/May/2025 17:59:37] "POST /api/results HTTP/1.1" 200 -
+2025-05-13 17:59:37,617 - INFO - 192.168.200.35 - - [13/May/2025 17:59:37] "GET / HTTP/1.1" 200 -
+2025-05-13 17:59:38,955 - INFO - 192.168.200.35 - - [13/May/2025 17:59:38] "GET / HTTP/1.1" 200 -
+2025-05-13 17:59:39,007 - INFO - 192.168.200.35 - - [13/May/2025 17:59:39] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 17:59:39,216 - INFO - 192.168.200.35 - - [13/May/2025 17:59:39] "GET / HTTP/1.1" 200 -
+2025-05-13 17:59:39,232 - INFO - 192.168.200.35 - - [13/May/2025 17:59:39] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 17:59:47,130 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 17:59:47,131 - INFO - 192.168.200.83 - - [13/May/2025 17:59:47] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 17:59:47,391 - INFO - 192.168.200.83 - - [13/May/2025 17:59:47] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 17:59:49,010 - INFO - 192.168.200.35 - - [13/May/2025 17:59:49] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 17:59:49,019 - INFO - 192.168.200.35 - - [13/May/2025 17:59:49] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 17:59:57,161 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 17:59:57,162 - INFO - 192.168.200.83 - - [13/May/2025 17:59:57] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 17:59:57,414 - INFO - 192.168.200.83 - - [13/May/2025 17:59:57] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 17:59:59,298 - INFO - 192.168.200.35 - - [13/May/2025 17:59:59] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 17:59:59,306 - INFO - 192.168.200.35 - - [13/May/2025 17:59:59] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:00:07,205 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:00:07,206 - INFO - 192.168.200.83 - - [13/May/2025 18:00:07] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:00:07,455 - INFO - 192.168.200.83 - - [13/May/2025 18:00:07] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:00:09,307 - INFO - 192.168.200.35 - - [13/May/2025 18:00:09] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:00:09,315 - INFO - 192.168.200.35 - - [13/May/2025 18:00:09] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:00:13,685 - INFO - 192.168.200.35 - - [13/May/2025 18:00:13] "GET /shellcode HTTP/1.1" 200 -
+2025-05-13 18:00:14,419 - INFO - 192.168.200.35 - - [13/May/2025 18:00:14] "GET /shellcode HTTP/1.1" 200 -
+2025-05-13 18:00:17,243 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:00:17,244 - INFO - 192.168.200.83 - - [13/May/2025 18:00:17] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:00:17,510 - INFO - 192.168.200.83 - - [13/May/2025 18:00:17] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:00:27,279 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:00:27,280 - INFO - 192.168.200.83 - - [13/May/2025 18:00:27] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:00:27,720 - INFO - 192.168.200.83 - - [13/May/2025 18:00:27] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:00:29,529 - INFO - 192.168.200.35 - - [13/May/2025 18:00:29] "POST /api/generate_shellcode HTTP/1.1" 200 -
+2025-05-13 18:00:29,537 - INFO - 192.168.200.35 - - [13/May/2025 18:00:29] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:00:37,348 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:00:37,350 - INFO - 192.168.200.83 - - [13/May/2025 18:00:37] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:00:37,756 - INFO - 192.168.200.83 - - [13/May/2025 18:00:37] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:00:47,373 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:00:47,374 - INFO - 192.168.200.83 - - [13/May/2025 18:00:47] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:00:47,826 - INFO - 192.168.200.83 - - [13/May/2025 18:00:47] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:00:57,408 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:00:57,409 - INFO - 192.168.200.83 - - [13/May/2025 18:00:57] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:00:57,864 - INFO - 192.168.200.83 - - [13/May/2025 18:00:57] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:01:07,434 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:01:07,435 - INFO - 192.168.200.83 - - [13/May/2025 18:01:07] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:01:07,892 - INFO - 192.168.200.83 - - [13/May/2025 18:01:07] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:01:17,464 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:01:17,465 - INFO - 192.168.200.83 - - [13/May/2025 18:01:17] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:01:17,920 - INFO - 192.168.200.83 - - [13/May/2025 18:01:17] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:01:27,506 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:01:27,507 - INFO - 192.168.200.83 - - [13/May/2025 18:01:27] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:01:27,946 - INFO - 192.168.200.83 - - [13/May/2025 18:01:27] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:01:37,529 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:01:37,531 - INFO - 192.168.200.83 - - [13/May/2025 18:01:37] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:01:37,982 - INFO - 192.168.200.83 - - [13/May/2025 18:01:37] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:01:47,553 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:01:47,555 - INFO - 192.168.200.83 - - [13/May/2025 18:01:47] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:01:48,013 - INFO - 192.168.200.83 - - [13/May/2025 18:01:48] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:01:57,587 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:01:57,588 - INFO - 192.168.200.83 - - [13/May/2025 18:01:57] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:01:58,045 - INFO - 192.168.200.83 - - [13/May/2025 18:01:58] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:02:07,619 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:02:07,620 - INFO - 192.168.200.83 - - [13/May/2025 18:02:07] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:02:08,073 - INFO - 192.168.200.83 - - [13/May/2025 18:02:08] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:02:17,643 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:02:17,644 - INFO - 192.168.200.83 - - [13/May/2025 18:02:17] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:02:18,096 - INFO - 192.168.200.83 - - [13/May/2025 18:02:18] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:02:27,670 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:02:27,672 - INFO - 192.168.200.83 - - [13/May/2025 18:02:27] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:02:28,125 - INFO - 192.168.200.83 - - [13/May/2025 18:02:28] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:02:37,697 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:02:37,697 - INFO - 192.168.200.83 - - [13/May/2025 18:02:37] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:02:38,156 - INFO - 192.168.200.83 - - [13/May/2025 18:02:38] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:02:51,575 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5001
+ * Running on http://192.168.200.35:5001
+2025-05-13 18:02:51,576 - INFO - [33mPress CTRL+C to quit[0m
+2025-05-13 18:02:54,734 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:02:54,735 - INFO - 192.168.200.83 - - [13/May/2025 18:02:54] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:02:55,201 - INFO - 192.168.200.83 - - [13/May/2025 18:02:55] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:03:04,766 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:03:04,767 - INFO - 192.168.200.83 - - [13/May/2025 18:03:04] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:03:05,242 - INFO - 192.168.200.83 - - [13/May/2025 18:03:05] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:03:06,558 - INFO - 192.168.200.35 - - [13/May/2025 18:03:06] "[32mGET /shellcode HTTP/1.1[0m" 302 -
+2025-05-13 18:03:06,582 - INFO - 192.168.200.35 - - [13/May/2025 18:03:06] "GET /login?next=/shellcode HTTP/1.1" 200 -
+2025-05-13 18:03:07,288 - INFO - 192.168.200.35 - - [13/May/2025 18:03:07] "GET /login?next=/shellcode HTTP/1.1" 200 -
+2025-05-13 18:03:09,780 - INFO - 192.168.200.35 - - [13/May/2025 18:03:09] "[32mPOST /login HTTP/1.1[0m" 302 -
+2025-05-13 18:03:09,792 - INFO - 192.168.200.35 - - [13/May/2025 18:03:09] "GET / HTTP/1.1" 200 -
+2025-05-13 18:03:09,839 - INFO - 192.168.200.35 - - [13/May/2025 18:03:09] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:03:10,121 - INFO - 192.168.200.35 - - [13/May/2025 18:03:10] "GET / HTTP/1.1" 200 -
+2025-05-13 18:03:10,122 - INFO - 192.168.200.35 - - [13/May/2025 18:03:10] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:03:13,194 - INFO - 192.168.200.35 - - [13/May/2025 18:03:13] "GET /shellcode HTTP/1.1" 200 -
+2025-05-13 18:03:13,471 - INFO - 192.168.200.35 - - [13/May/2025 18:03:13] "GET /shellcode HTTP/1.1" 200 -
+2025-05-13 18:03:14,795 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:03:14,796 - INFO - 192.168.200.83 - - [13/May/2025 18:03:14] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:03:15,272 - INFO - 192.168.200.83 - - [13/May/2025 18:03:15] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:03:24,819 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:03:24,820 - INFO - 192.168.200.83 - - [13/May/2025 18:03:24] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:03:25,308 - INFO - 192.168.200.83 - - [13/May/2025 18:03:25] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:03:27,935 - INFO - 192.168.200.35 - - [13/May/2025 18:03:27] "POST /api/generate_shellcode HTTP/1.1" 200 -
+2025-05-13 18:03:27,947 - INFO - 192.168.200.35 - - [13/May/2025 18:03:27] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:03:34,846 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:03:34,847 - INFO - 192.168.200.83 - - [13/May/2025 18:03:34] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:03:34,962 - INFO - Task task_20250513_180334 created for agent agent_35a46a0c-c442-4fe3-a62a-028d99216717: shellcode_inject
+2025-05-13 18:03:34,963 - INFO - 192.168.200.35 - - [13/May/2025 18:03:34] "POST /api/tasks HTTP/1.1" 200 -
+2025-05-13 18:03:35,334 - INFO - Sending task task_20250513_180334 to agent agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:03:35,335 - INFO - 192.168.200.83 - - [13/May/2025 18:03:35] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:03:35,453 - INFO - Processing result from agent agent_35a46a0c-c442-4fe3-a62a-028d99216717 for task task_20250513_180334
+2025-05-13 18:03:35,455 - INFO - Successfully stored result from agent agent_35a46a0c-c442-4fe3-a62a-028d99216717 for task task_20250513_180334
+2025-05-13 18:03:35,456 - INFO - 192.168.200.83 - - [13/May/2025 18:03:35] "POST /api/results HTTP/1.1" 200 -
+2025-05-13 18:03:37,377 - INFO - 192.168.200.35 - - [13/May/2025 18:03:37] "GET / HTTP/1.1" 200 -
+2025-05-13 18:03:37,428 - INFO - 192.168.200.35 - - [13/May/2025 18:03:37] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:03:37,664 - INFO - 192.168.200.35 - - [13/May/2025 18:03:37] "GET / HTTP/1.1" 200 -
+2025-05-13 18:03:37,701 - INFO - 192.168.200.35 - - [13/May/2025 18:03:37] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:03:44,875 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:03:44,876 - INFO - 192.168.200.83 - - [13/May/2025 18:03:44] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:03:45,479 - INFO - 192.168.200.83 - - [13/May/2025 18:03:45] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:03:47,442 - INFO - 192.168.200.35 - - [13/May/2025 18:03:47] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:03:47,457 - INFO - 192.168.200.35 - - [13/May/2025 18:03:47] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:03:54,900 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:03:54,901 - INFO - 192.168.200.83 - - [13/May/2025 18:03:54] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:03:55,513 - INFO - 192.168.200.83 - - [13/May/2025 18:03:55] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:03:58,310 - INFO - 192.168.200.35 - - [13/May/2025 18:03:58] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:03:58,319 - INFO - 192.168.200.35 - - [13/May/2025 18:03:58] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:04:04,929 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:04:04,930 - INFO - 192.168.200.83 - - [13/May/2025 18:04:04] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:04:05,543 - INFO - 192.168.200.83 - - [13/May/2025 18:04:05] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:04:08,303 - INFO - 192.168.200.35 - - [13/May/2025 18:04:08] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:04:08,317 - INFO - 192.168.200.35 - - [13/May/2025 18:04:08] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:04:14,956 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:04:14,957 - INFO - 192.168.200.83 - - [13/May/2025 18:04:14] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:04:15,569 - INFO - 192.168.200.83 - - [13/May/2025 18:04:15] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:04:18,311 - INFO - 192.168.200.35 - - [13/May/2025 18:04:18] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:04:18,331 - INFO - 192.168.200.35 - - [13/May/2025 18:04:18] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:04:24,986 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:04:24,987 - INFO - 192.168.200.83 - - [13/May/2025 18:04:24] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:04:25,591 - INFO - 192.168.200.83 - - [13/May/2025 18:04:25] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:04:28,296 - INFO - 192.168.200.35 - - [13/May/2025 18:04:28] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:04:28,308 - INFO - 192.168.200.35 - - [13/May/2025 18:04:28] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:04:35,021 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:04:35,024 - INFO - 192.168.200.83 - - [13/May/2025 18:04:35] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:04:35,623 - INFO - 192.168.200.83 - - [13/May/2025 18:04:35] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:04:38,298 - INFO - 192.168.200.35 - - [13/May/2025 18:04:38] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:04:38,309 - INFO - 192.168.200.35 - - [13/May/2025 18:04:38] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:04:45,050 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:04:45,050 - INFO - 192.168.200.83 - - [13/May/2025 18:04:45] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:04:45,656 - INFO - 192.168.200.83 - - [13/May/2025 18:04:45] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:04:48,308 - INFO - 192.168.200.35 - - [13/May/2025 18:04:48] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:04:48,325 - INFO - 192.168.200.35 - - [13/May/2025 18:04:48] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:04:53,570 - INFO - 192.168.200.35 - - [13/May/2025 18:04:53] "GET /shellcode HTTP/1.1" 200 -
+2025-05-13 18:04:54,024 - INFO - 192.168.200.35 - - [13/May/2025 18:04:54] "GET /shellcode HTTP/1.1" 200 -
+2025-05-13 18:04:55,078 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:04:55,078 - INFO - 192.168.200.83 - - [13/May/2025 18:04:55] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:04:55,681 - INFO - 192.168.200.83 - - [13/May/2025 18:04:55] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:05:05,099 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:05:05,101 - INFO - 192.168.200.83 - - [13/May/2025 18:05:05] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:05:05,708 - INFO - 192.168.200.83 - - [13/May/2025 18:05:05] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:05:15,118 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:05:15,119 - INFO - 192.168.200.83 - - [13/May/2025 18:05:15] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:05:15,730 - INFO - 192.168.200.83 - - [13/May/2025 18:05:15] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:05:25,148 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:05:25,149 - INFO - 192.168.200.83 - - [13/May/2025 18:05:25] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:05:25,796 - INFO - 192.168.200.83 - - [13/May/2025 18:05:25] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:05:35,169 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:05:35,170 - INFO - 192.168.200.83 - - [13/May/2025 18:05:35] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:05:35,826 - INFO - 192.168.200.83 - - [13/May/2025 18:05:35] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:05:45,202 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:05:45,203 - INFO - 192.168.200.83 - - [13/May/2025 18:05:45] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:05:45,858 - INFO - 192.168.200.83 - - [13/May/2025 18:05:45] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:05:55,234 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:05:55,235 - INFO - 192.168.200.83 - - [13/May/2025 18:05:55] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:05:55,889 - INFO - 192.168.200.83 - - [13/May/2025 18:05:55] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:06:05,262 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:06:05,263 - INFO - 192.168.200.83 - - [13/May/2025 18:06:05] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:06:05,913 - INFO - 192.168.200.83 - - [13/May/2025 18:06:05] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:06:15,294 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:06:15,295 - INFO - 192.168.200.83 - - [13/May/2025 18:06:15] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:06:15,942 - INFO - 192.168.200.83 - - [13/May/2025 18:06:15] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:07:12,377 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5001
+ * Running on http://192.168.200.35:5001
+2025-05-13 18:07:12,378 - INFO - [33mPress CTRL+C to quit[0m
+2025-05-13 18:07:15,176 - INFO - 192.168.200.35 - - [13/May/2025 18:07:15] "[32mGET /shellcode HTTP/1.1[0m" 302 -
+2025-05-13 18:07:15,202 - INFO - 192.168.200.35 - - [13/May/2025 18:07:15] "GET /login?next=/shellcode HTTP/1.1" 200 -
+2025-05-13 18:07:16,666 - INFO - 192.168.200.35 - - [13/May/2025 18:07:16] "GET /login?next=/shellcode HTTP/1.1" 200 -
+2025-05-13 18:07:18,996 - INFO - 192.168.200.35 - - [13/May/2025 18:07:18] "[32mPOST /login HTTP/1.1[0m" 302 -
+2025-05-13 18:07:19,008 - INFO - 192.168.200.35 - - [13/May/2025 18:07:19] "GET / HTTP/1.1" 200 -
+2025-05-13 18:07:19,061 - INFO - 192.168.200.35 - - [13/May/2025 18:07:19] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:07:19,356 - INFO - 192.168.200.35 - - [13/May/2025 18:07:19] "GET / HTTP/1.1" 200 -
+2025-05-13 18:07:22,771 - INFO - 192.168.200.35 - - [13/May/2025 18:07:22] "GET / HTTP/1.1" 200 -
+2025-05-13 18:07:22,831 - INFO - 192.168.200.35 - - [13/May/2025 18:07:22] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:07:23,022 - INFO - 192.168.200.35 - - [13/May/2025 18:07:23] "GET / HTTP/1.1" 200 -
+2025-05-13 18:07:24,194 - INFO - 192.168.200.35 - - [13/May/2025 18:07:24] "GET / HTTP/1.1" 200 -
+2025-05-13 18:07:24,297 - INFO - 192.168.200.35 - - [13/May/2025 18:07:24] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:07:24,466 - INFO - 192.168.200.35 - - [13/May/2025 18:07:24] "GET / HTTP/1.1" 200 -
+2025-05-13 18:07:25,278 - INFO - 192.168.200.35 - - [13/May/2025 18:07:25] "GET /shellcode HTTP/1.1" 200 -
+2025-05-13 18:07:25,534 - INFO - 192.168.200.35 - - [13/May/2025 18:07:25] "GET /shellcode HTTP/1.1" 200 -
+2025-05-13 18:07:26,660 - INFO - 192.168.200.35 - - [13/May/2025 18:07:26] "GET / HTTP/1.1" 200 -
+2025-05-13 18:07:26,710 - INFO - 192.168.200.35 - - [13/May/2025 18:07:26] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:07:26,935 - INFO - 192.168.200.35 - - [13/May/2025 18:07:26] "GET / HTTP/1.1" 200 -
+2025-05-13 18:07:27,433 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:07:27,433 - INFO - 192.168.200.83 - - [13/May/2025 18:07:27] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:07:28,081 - INFO - 192.168.200.83 - - [13/May/2025 18:07:28] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:07:28,548 - INFO - 192.168.200.35 - - [13/May/2025 18:07:28] "GET / HTTP/1.1" 200 -
+2025-05-13 18:07:28,606 - INFO - 192.168.200.35 - - [13/May/2025 18:07:28] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:07:28,815 - INFO - 192.168.200.35 - - [13/May/2025 18:07:28] "GET / HTTP/1.1" 200 -
+2025-05-13 18:07:28,833 - INFO - 192.168.200.35 - - [13/May/2025 18:07:28] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:07:32,133 - INFO - 192.168.200.35 - - [13/May/2025 18:07:32] "GET /shellcode HTTP/1.1" 200 -
+2025-05-13 18:07:32,393 - INFO - 192.168.200.35 - - [13/May/2025 18:07:32] "GET /shellcode HTTP/1.1" 200 -
+2025-05-13 18:07:37,454 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:07:37,454 - INFO - 192.168.200.83 - - [13/May/2025 18:07:37] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:07:38,111 - INFO - 192.168.200.83 - - [13/May/2025 18:07:38] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:07:46,508 - INFO - 192.168.200.35 - - [13/May/2025 18:07:46] "POST /api/generate_shellcode HTTP/1.1" 200 -
+2025-05-13 18:07:46,518 - INFO - 192.168.200.35 - - [13/May/2025 18:07:46] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:07:47,479 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:07:47,481 - INFO - 192.168.200.83 - - [13/May/2025 18:07:47] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:07:48,132 - INFO - 192.168.200.83 - - [13/May/2025 18:07:48] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:07:54,369 - INFO - Task task_20250513_180754 created for agent agent_35a46a0c-c442-4fe3-a62a-028d99216717: shellcode_inject
+2025-05-13 18:07:54,370 - INFO - 192.168.200.35 - - [13/May/2025 18:07:54] "POST /api/tasks HTTP/1.1" 200 -
+2025-05-13 18:07:56,252 - INFO - 192.168.200.35 - - [13/May/2025 18:07:56] "GET / HTTP/1.1" 200 -
+2025-05-13 18:07:56,298 - INFO - 192.168.200.35 - - [13/May/2025 18:07:56] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:07:56,586 - INFO - 192.168.200.35 - - [13/May/2025 18:07:56] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:07:56,629 - INFO - 192.168.200.35 - - [13/May/2025 18:07:56] "GET / HTTP/1.1" 200 -
+2025-05-13 18:07:57,511 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:07:57,512 - INFO - 192.168.200.83 - - [13/May/2025 18:07:57] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:07:58,160 - INFO - Sending task task_20250513_180754 to agent agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:07:58,161 - INFO - 192.168.200.83 - - [13/May/2025 18:07:58] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:07:58,328 - INFO - Processing result from agent agent_35a46a0c-c442-4fe3-a62a-028d99216717 for task task_20250513_180754
+2025-05-13 18:07:58,329 - INFO - Successfully stored result from agent agent_35a46a0c-c442-4fe3-a62a-028d99216717 for task task_20250513_180754
+2025-05-13 18:07:58,329 - INFO - 192.168.200.83 - - [13/May/2025 18:07:58] "POST /api/results HTTP/1.1" 200 -
+2025-05-13 18:07:58,557 - INFO - 192.168.200.35 - - [13/May/2025 18:07:58] "GET / HTTP/1.1" 200 -
+2025-05-13 18:07:58,602 - INFO - 192.168.200.35 - - [13/May/2025 18:07:58] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:07:58,822 - INFO - 192.168.200.35 - - [13/May/2025 18:07:58] "GET / HTTP/1.1" 200 -
+2025-05-13 18:07:58,843 - INFO - 192.168.200.35 - - [13/May/2025 18:07:58] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:08:07,542 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:08:07,543 - INFO - 192.168.200.83 - - [13/May/2025 18:08:07] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:08:08,357 - INFO - 192.168.200.83 - - [13/May/2025 18:08:08] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:08:08,603 - INFO - 192.168.200.35 - - [13/May/2025 18:08:08] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:08:08,611 - INFO - 192.168.200.35 - - [13/May/2025 18:08:08] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:08:17,569 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:08:17,570 - INFO - 192.168.200.83 - - [13/May/2025 18:08:17] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:08:18,411 - INFO - 192.168.200.83 - - [13/May/2025 18:08:18] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:08:19,310 - INFO - 192.168.200.35 - - [13/May/2025 18:08:19] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:08:19,321 - INFO - 192.168.200.35 - - [13/May/2025 18:08:19] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:08:27,593 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:08:27,593 - INFO - 192.168.200.83 - - [13/May/2025 18:08:27] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:08:28,432 - INFO - 192.168.200.83 - - [13/May/2025 18:08:28] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:08:29,310 - INFO - 192.168.200.35 - - [13/May/2025 18:08:29] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:08:29,320 - INFO - 192.168.200.35 - - [13/May/2025 18:08:29] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:08:37,632 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:08:37,634 - INFO - 192.168.200.83 - - [13/May/2025 18:08:37] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:08:38,453 - INFO - 192.168.200.83 - - [13/May/2025 18:08:38] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:08:39,294 - INFO - 192.168.200.35 - - [13/May/2025 18:08:39] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:08:39,304 - INFO - 192.168.200.35 - - [13/May/2025 18:08:39] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:08:47,657 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:08:47,658 - INFO - 192.168.200.83 - - [13/May/2025 18:08:47] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:08:48,484 - INFO - 192.168.200.83 - - [13/May/2025 18:08:48] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:08:49,311 - INFO - 192.168.200.35 - - [13/May/2025 18:08:49] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:08:49,321 - INFO - 192.168.200.35 - - [13/May/2025 18:08:49] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:08:57,694 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:08:57,696 - INFO - 192.168.200.83 - - [13/May/2025 18:08:57] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:08:58,521 - INFO - 192.168.200.83 - - [13/May/2025 18:08:58] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:08:59,297 - INFO - 192.168.200.35 - - [13/May/2025 18:08:59] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:08:59,307 - INFO - 192.168.200.35 - - [13/May/2025 18:08:59] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:09:07,722 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:09:07,723 - INFO - 192.168.200.83 - - [13/May/2025 18:09:07] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:09:08,554 - INFO - 192.168.200.83 - - [13/May/2025 18:09:08] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:09:09,308 - INFO - 192.168.200.35 - - [13/May/2025 18:09:09] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:09:09,322 - INFO - 192.168.200.35 - - [13/May/2025 18:09:09] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:09:17,758 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:09:17,759 - INFO - 192.168.200.83 - - [13/May/2025 18:09:17] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:09:18,584 - INFO - 192.168.200.83 - - [13/May/2025 18:09:18] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:09:19,301 - INFO - 192.168.200.35 - - [13/May/2025 18:09:19] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:09:19,315 - INFO - 192.168.200.35 - - [13/May/2025 18:09:19] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:09:27,778 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:09:27,779 - INFO - 192.168.200.83 - - [13/May/2025 18:09:27] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:09:28,611 - INFO - 192.168.200.83 - - [13/May/2025 18:09:28] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:09:37,802 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:09:37,803 - INFO - 192.168.200.83 - - [13/May/2025 18:09:37] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:09:38,628 - INFO - 192.168.200.83 - - [13/May/2025 18:09:38] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:09:47,835 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:09:47,836 - INFO - 192.168.200.83 - - [13/May/2025 18:09:47] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:09:48,647 - INFO - 192.168.200.83 - - [13/May/2025 18:09:48] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:09:57,865 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:09:57,866 - INFO - 192.168.200.83 - - [13/May/2025 18:09:57] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:09:58,678 - INFO - 192.168.200.83 - - [13/May/2025 18:09:58] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:10:10,621 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5001
+ * Running on http://192.168.200.35:5001
+2025-05-13 18:10:10,622 - INFO - [33mPress CTRL+C to quit[0m
+2025-05-13 18:10:10,897 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:10:10,902 - INFO - 192.168.200.83 - - [13/May/2025 18:10:10] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:10:11,010 - INFO - 192.168.200.35 - - [13/May/2025 18:10:11] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:10:11,043 - INFO - 192.168.200.35 - - [13/May/2025 18:10:11] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:10:11,713 - INFO - 192.168.200.83 - - [13/May/2025 18:10:11] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:10:12,426 - INFO - 192.168.200.35 - - [13/May/2025 18:10:12] "[32mGET / HTTP/1.1[0m" 302 -
+2025-05-13 18:10:12,458 - INFO - 192.168.200.35 - - [13/May/2025 18:10:12] "GET /login?next=/ HTTP/1.1" 200 -
+2025-05-13 18:10:12,982 - INFO - 192.168.200.35 - - [13/May/2025 18:10:12] "GET /login?next=/ HTTP/1.1" 200 -
+2025-05-13 18:10:15,999 - INFO - 192.168.200.35 - - [13/May/2025 18:10:15] "[32mPOST /login HTTP/1.1[0m" 302 -
+2025-05-13 18:10:16,015 - INFO - 192.168.200.35 - - [13/May/2025 18:10:16] "GET / HTTP/1.1" 200 -
+2025-05-13 18:10:16,059 - INFO - 192.168.200.35 - - [13/May/2025 18:10:16] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:10:16,284 - INFO - 192.168.200.35 - - [13/May/2025 18:10:16] "GET / HTTP/1.1" 200 -
+2025-05-13 18:10:16,308 - INFO - 192.168.200.35 - - [13/May/2025 18:10:16] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:10:20,573 - INFO - 192.168.200.35 - - [13/May/2025 18:10:20] "GET / HTTP/1.1" 200 -
+2025-05-13 18:10:20,625 - INFO - 192.168.200.35 - - [13/May/2025 18:10:20] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:10:20,825 - INFO - 192.168.200.35 - - [13/May/2025 18:10:20] "GET / HTTP/1.1" 200 -
+2025-05-13 18:10:20,837 - INFO - 192.168.200.35 - - [13/May/2025 18:10:20] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:10:21,007 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:10:21,018 - INFO - 192.168.200.83 - - [13/May/2025 18:10:21] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:10:21,733 - INFO - 192.168.200.83 - - [13/May/2025 18:10:21] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:10:22,683 - INFO - 192.168.200.35 - - [13/May/2025 18:10:22] "GET /shellcode HTTP/1.1" 200 -
+2025-05-13 18:10:22,931 - INFO - 192.168.200.35 - - [13/May/2025 18:10:22] "GET /shellcode HTTP/1.1" 200 -
+2025-05-13 18:10:23,565 - INFO - 192.168.200.35 - - [13/May/2025 18:10:23] "GET / HTTP/1.1" 200 -
+2025-05-13 18:10:23,615 - INFO - 192.168.200.35 - - [13/May/2025 18:10:23] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:10:23,823 - INFO - 192.168.200.35 - - [13/May/2025 18:10:23] "GET / HTTP/1.1" 200 -
+2025-05-13 18:10:23,850 - INFO - 192.168.200.35 - - [13/May/2025 18:10:23] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:10:25,197 - INFO - 192.168.200.35 - - [13/May/2025 18:10:25] "GET /shellcode HTTP/1.1" 200 -
+2025-05-13 18:10:25,444 - INFO - 192.168.200.35 - - [13/May/2025 18:10:25] "GET /shellcode HTTP/1.1" 200 -
+2025-05-13 18:10:31,052 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:10:31,053 - INFO - 192.168.200.83 - - [13/May/2025 18:10:31] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:10:31,765 - INFO - 192.168.200.83 - - [13/May/2025 18:10:31] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:10:39,571 - INFO - 192.168.200.35 - - [13/May/2025 18:10:39] "POST /api/generate_shellcode HTTP/1.1" 200 -
+2025-05-13 18:10:39,581 - INFO - 192.168.200.35 - - [13/May/2025 18:10:39] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:10:41,081 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:10:41,082 - INFO - 192.168.200.83 - - [13/May/2025 18:10:41] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:10:41,786 - INFO - 192.168.200.83 - - [13/May/2025 18:10:41] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:10:49,128 - INFO - Task task_20250513_181049 created for agent agent_35a46a0c-c442-4fe3-a62a-028d99216717: shellcode_inject
+2025-05-13 18:10:49,130 - INFO - 192.168.200.35 - - [13/May/2025 18:10:49] "POST /api/tasks HTTP/1.1" 200 -
+2025-05-13 18:10:51,113 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:10:51,114 - INFO - 192.168.200.83 - - [13/May/2025 18:10:51] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:10:51,806 - INFO - Sending task task_20250513_181049 to agent agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:10:51,807 - INFO - 192.168.200.83 - - [13/May/2025 18:10:51] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:10:51,944 - INFO - Processing result from agent agent_35a46a0c-c442-4fe3-a62a-028d99216717 for task task_20250513_181049
+2025-05-13 18:10:51,945 - INFO - Successfully stored result from agent agent_35a46a0c-c442-4fe3-a62a-028d99216717 for task task_20250513_181049
+2025-05-13 18:10:51,946 - INFO - 192.168.200.83 - - [13/May/2025 18:10:51] "POST /api/results HTTP/1.1" 200 -
+2025-05-13 18:10:59,237 - INFO - 192.168.200.35 - - [13/May/2025 18:10:59] "GET / HTTP/1.1" 200 -
+2025-05-13 18:10:59,302 - INFO - 192.168.200.35 - - [13/May/2025 18:10:59] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:10:59,594 - INFO - 192.168.200.35 - - [13/May/2025 18:10:59] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:10:59,729 - INFO - 192.168.200.35 - - [13/May/2025 18:10:59] "GET / HTTP/1.1" 200 -
+2025-05-13 18:11:01,146 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:11:01,147 - INFO - 192.168.200.83 - - [13/May/2025 18:11:01] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:11:01,972 - INFO - 192.168.200.83 - - [13/May/2025 18:11:01] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:11:09,303 - INFO - 192.168.200.35 - - [13/May/2025 18:11:09] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:11:09,316 - INFO - 192.168.200.35 - - [13/May/2025 18:11:09] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:11:11,184 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:11:11,189 - INFO - 192.168.200.83 - - [13/May/2025 18:11:11] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:11:12,002 - INFO - 192.168.200.83 - - [13/May/2025 18:11:12] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:11:19,300 - INFO - 192.168.200.35 - - [13/May/2025 18:11:19] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:11:19,312 - INFO - 192.168.200.35 - - [13/May/2025 18:11:19] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:11:21,216 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:11:21,217 - INFO - 192.168.200.83 - - [13/May/2025 18:11:21] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:11:22,028 - INFO - 192.168.200.83 - - [13/May/2025 18:11:22] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:11:29,302 - INFO - 192.168.200.35 - - [13/May/2025 18:11:29] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:11:29,311 - INFO - 192.168.200.35 - - [13/May/2025 18:11:29] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:11:31,237 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:11:31,238 - INFO - 192.168.200.83 - - [13/May/2025 18:11:31] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:11:32,050 - INFO - 192.168.200.83 - - [13/May/2025 18:11:32] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:11:39,300 - INFO - 192.168.200.35 - - [13/May/2025 18:11:39] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:11:39,311 - INFO - 192.168.200.35 - - [13/May/2025 18:11:39] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:11:41,258 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:11:41,259 - INFO - 192.168.200.83 - - [13/May/2025 18:11:41] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:11:42,067 - INFO - 192.168.200.83 - - [13/May/2025 18:11:42] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:11:49,305 - INFO - 192.168.200.35 - - [13/May/2025 18:11:49] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:11:49,314 - INFO - 192.168.200.35 - - [13/May/2025 18:11:49] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:11:51,292 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:11:51,293 - INFO - 192.168.200.83 - - [13/May/2025 18:11:51] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:11:52,089 - INFO - 192.168.200.83 - - [13/May/2025 18:11:52] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:11:59,321 - INFO - 192.168.200.35 - - [13/May/2025 18:11:59] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:11:59,331 - INFO - 192.168.200.35 - - [13/May/2025 18:11:59] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:12:01,322 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:12:01,324 - INFO - 192.168.200.83 - - [13/May/2025 18:12:01] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:12:02,112 - INFO - 192.168.200.83 - - [13/May/2025 18:12:02] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:12:09,304 - INFO - 192.168.200.35 - - [13/May/2025 18:12:09] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:12:09,314 - INFO - 192.168.200.35 - - [13/May/2025 18:12:09] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:12:11,345 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:12:11,346 - INFO - 192.168.200.83 - - [13/May/2025 18:12:11] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:12:12,134 - INFO - 192.168.200.83 - - [13/May/2025 18:12:12] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:12:19,297 - INFO - 192.168.200.35 - - [13/May/2025 18:12:19] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:12:19,311 - INFO - 192.168.200.35 - - [13/May/2025 18:12:19] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:12:19,500 - INFO - 192.168.200.35 - - [13/May/2025 18:12:19] "GET /shellcode HTTP/1.1" 200 -
+2025-05-13 18:12:19,953 - INFO - 192.168.200.35 - - [13/May/2025 18:12:19] "GET /shellcode HTTP/1.1" 200 -
+2025-05-13 18:12:21,367 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:12:21,368 - INFO - 192.168.200.83 - - [13/May/2025 18:12:21] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:12:22,161 - INFO - 192.168.200.83 - - [13/May/2025 18:12:22] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:12:31,397 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:12:31,398 - INFO - 192.168.200.83 - - [13/May/2025 18:12:31] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:12:32,197 - INFO - 192.168.200.83 - - [13/May/2025 18:12:32] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:12:36,443 - INFO - 192.168.200.35 - - [13/May/2025 18:12:36] "POST /api/generate_shellcode HTTP/1.1" 200 -
+2025-05-13 18:12:36,450 - INFO - 192.168.200.35 - - [13/May/2025 18:12:36] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:12:41,430 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:12:41,431 - INFO - 192.168.200.83 - - [13/May/2025 18:12:41] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:12:42,226 - INFO - 192.168.200.83 - - [13/May/2025 18:12:42] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:12:47,541 - INFO - Task task_20250513_181247 created for agent agent_35a46a0c-c442-4fe3-a62a-028d99216717: shellcode_inject
+2025-05-13 18:12:47,541 - INFO - 192.168.200.35 - - [13/May/2025 18:12:47] "POST /api/tasks HTTP/1.1" 200 -
+2025-05-13 18:12:50,906 - INFO - 192.168.200.35 - - [13/May/2025 18:12:50] "GET / HTTP/1.1" 200 -
+2025-05-13 18:12:50,968 - INFO - 192.168.200.35 - - [13/May/2025 18:12:50] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:12:51,257 - INFO - 192.168.200.35 - - [13/May/2025 18:12:51] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:12:51,375 - INFO - 192.168.200.35 - - [13/May/2025 18:12:51] "GET / HTTP/1.1" 200 -
+2025-05-13 18:12:51,462 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:12:51,463 - INFO - 192.168.200.83 - - [13/May/2025 18:12:51] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:12:52,259 - INFO - Sending task task_20250513_181247 to agent agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:12:52,262 - INFO - 192.168.200.83 - - [13/May/2025 18:12:52] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:12:52,434 - INFO - Processing result from agent agent_35a46a0c-c442-4fe3-a62a-028d99216717 for task task_20250513_181247
+2025-05-13 18:12:52,435 - INFO - Successfully stored result from agent agent_35a46a0c-c442-4fe3-a62a-028d99216717 for task task_20250513_181247
+2025-05-13 18:12:52,435 - INFO - 192.168.200.83 - - [13/May/2025 18:12:52] "POST /api/results HTTP/1.1" 200 -
+2025-05-13 18:12:53,685 - INFO - 192.168.200.35 - - [13/May/2025 18:12:53] "GET / HTTP/1.1" 200 -
+2025-05-13 18:12:53,740 - INFO - 192.168.200.35 - - [13/May/2025 18:12:53] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:12:53,957 - INFO - 192.168.200.35 - - [13/May/2025 18:12:53] "GET / HTTP/1.1" 200 -
+2025-05-13 18:12:53,980 - INFO - 192.168.200.35 - - [13/May/2025 18:12:53] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:13:01,482 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:13:01,482 - INFO - 192.168.200.83 - - [13/May/2025 18:13:01] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:13:02,445 - INFO - 192.168.200.35 - - [13/May/2025 18:13:02] "GET /api/results/download/task_20250513_181247 HTTP/1.1" 200 -
+2025-05-13 18:13:02,464 - INFO - 192.168.200.83 - - [13/May/2025 18:13:02] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:13:03,744 - INFO - 192.168.200.35 - - [13/May/2025 18:13:03] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:13:03,754 - INFO - 192.168.200.35 - - [13/May/2025 18:13:03] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:13:11,584 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:13:11,585 - INFO - 192.168.200.83 - - [13/May/2025 18:13:11] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:13:12,530 - INFO - 192.168.200.83 - - [13/May/2025 18:13:12] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:13:14,304 - INFO - 192.168.200.35 - - [13/May/2025 18:13:14] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:13:14,388 - INFO - 192.168.200.35 - - [13/May/2025 18:13:14] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:13:21,648 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:13:21,650 - INFO - 192.168.200.83 - - [13/May/2025 18:13:21] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:13:22,576 - INFO - 192.168.200.83 - - [13/May/2025 18:13:22] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:13:24,303 - INFO - 192.168.200.35 - - [13/May/2025 18:13:24] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:13:24,316 - INFO - 192.168.200.35 - - [13/May/2025 18:13:24] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:13:31,679 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:13:31,679 - INFO - 192.168.200.83 - - [13/May/2025 18:13:31] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:13:32,606 - INFO - 192.168.200.83 - - [13/May/2025 18:13:32] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:13:34,309 - INFO - 192.168.200.35 - - [13/May/2025 18:13:34] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:13:34,320 - INFO - 192.168.200.35 - - [13/May/2025 18:13:34] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:13:41,712 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:13:41,712 - INFO - 192.168.200.83 - - [13/May/2025 18:13:41] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:13:42,643 - INFO - 192.168.200.83 - - [13/May/2025 18:13:42] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:13:44,344 - INFO - 192.168.200.35 - - [13/May/2025 18:13:44] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:13:44,466 - INFO - 192.168.200.35 - - [13/May/2025 18:13:44] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:13:51,732 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:13:51,733 - INFO - 192.168.200.83 - - [13/May/2025 18:13:51] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:13:52,675 - INFO - 192.168.200.83 - - [13/May/2025 18:13:52] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:13:53,741 - INFO - 192.168.200.35 - - [13/May/2025 18:13:53] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:13:53,751 - INFO - 192.168.200.35 - - [13/May/2025 18:13:53] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:14:01,770 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:14:01,771 - INFO - 192.168.200.83 - - [13/May/2025 18:14:01] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:14:02,700 - INFO - 192.168.200.83 - - [13/May/2025 18:14:02] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:14:04,300 - INFO - 192.168.200.35 - - [13/May/2025 18:14:04] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:14:04,313 - INFO - 192.168.200.35 - - [13/May/2025 18:14:04] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:14:11,798 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:14:11,798 - INFO - 192.168.200.83 - - [13/May/2025 18:14:11] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:14:12,733 - INFO - 192.168.200.83 - - [13/May/2025 18:14:12] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:14:14,310 - INFO - 192.168.200.35 - - [13/May/2025 18:14:14] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:14:14,337 - INFO - 192.168.200.35 - - [13/May/2025 18:14:14] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:14:21,830 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:14:21,831 - INFO - 192.168.200.83 - - [13/May/2025 18:14:21] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:14:22,760 - INFO - 192.168.200.83 - - [13/May/2025 18:14:22] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:14:23,745 - INFO - 192.168.200.35 - - [13/May/2025 18:14:23] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:14:23,756 - INFO - 192.168.200.35 - - [13/May/2025 18:14:23] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:14:31,857 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:14:31,859 - INFO - 192.168.200.83 - - [13/May/2025 18:14:31] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:14:32,778 - INFO - 192.168.200.83 - - [13/May/2025 18:14:32] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:14:34,317 - INFO - 192.168.200.35 - - [13/May/2025 18:14:34] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:14:34,336 - INFO - 192.168.200.35 - - [13/May/2025 18:14:34] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:14:41,883 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:14:41,884 - INFO - 192.168.200.83 - - [13/May/2025 18:14:41] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:14:42,804 - INFO - 192.168.200.83 - - [13/May/2025 18:14:42] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:14:44,307 - INFO - 192.168.200.35 - - [13/May/2025 18:14:44] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:14:44,318 - INFO - 192.168.200.35 - - [13/May/2025 18:14:44] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:16:00,771 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5001
+ * Running on http://192.168.200.35:5001
+2025-05-13 18:16:00,772 - INFO - [33mPress CTRL+C to quit[0m
+2025-05-13 18:16:00,849 - INFO - 192.168.200.35 - - [13/May/2025 18:16:00] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:16:01,085 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:16:01,086 - INFO - 192.168.200.83 - - [13/May/2025 18:16:01] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:16:01,323 - INFO - 192.168.200.35 - - [13/May/2025 18:16:01] "[32mGET / HTTP/1.1[0m" 302 -
+2025-05-13 18:16:01,351 - INFO - 192.168.200.35 - - [13/May/2025 18:16:01] "GET /login?next=/ HTTP/1.1" 200 -
+2025-05-13 18:16:01,694 - INFO - 192.168.200.35 - - [13/May/2025 18:16:01] "GET /login?next=/ HTTP/1.1" 200 -
+2025-05-13 18:16:02,021 - INFO - 192.168.200.83 - - [13/May/2025 18:16:02] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:16:04,032 - INFO - 192.168.200.35 - - [13/May/2025 18:16:04] "[32mPOST /login HTTP/1.1[0m" 302 -
+2025-05-13 18:16:04,043 - INFO - 192.168.200.35 - - [13/May/2025 18:16:04] "GET / HTTP/1.1" 200 -
+2025-05-13 18:16:04,094 - INFO - 192.168.200.35 - - [13/May/2025 18:16:04] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:16:04,354 - INFO - 192.168.200.35 - - [13/May/2025 18:16:04] "GET / HTTP/1.1" 200 -
+2025-05-13 18:16:04,355 - INFO - 192.168.200.35 - - [13/May/2025 18:16:04] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:16:08,131 - INFO - 192.168.200.35 - - [13/May/2025 18:16:08] "GET / HTTP/1.1" 200 -
+2025-05-13 18:16:08,181 - INFO - 192.168.200.35 - - [13/May/2025 18:16:08] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:16:08,387 - INFO - 192.168.200.35 - - [13/May/2025 18:16:08] "GET / HTTP/1.1" 200 -
+2025-05-13 18:16:08,402 - INFO - 192.168.200.35 - - [13/May/2025 18:16:08] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:16:09,408 - INFO - 192.168.200.35 - - [13/May/2025 18:16:09] "GET /shellcode HTTP/1.1" 200 -
+2025-05-13 18:16:09,665 - INFO - 192.168.200.35 - - [13/May/2025 18:16:09] "GET /shellcode HTTP/1.1" 200 -
+2025-05-13 18:16:11,103 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:16:11,104 - INFO - 192.168.200.83 - - [13/May/2025 18:16:11] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:16:12,046 - INFO - 192.168.200.83 - - [13/May/2025 18:16:12] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:16:21,137 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:16:21,139 - INFO - 192.168.200.83 - - [13/May/2025 18:16:21] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:16:22,077 - INFO - 192.168.200.83 - - [13/May/2025 18:16:22] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:16:29,124 - INFO - 192.168.200.35 - - [13/May/2025 18:16:29] "POST /api/generate_shellcode HTTP/1.1" 200 -
+2025-05-13 18:16:29,140 - INFO - 192.168.200.35 - - [13/May/2025 18:16:29] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:16:31,175 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:16:31,176 - INFO - 192.168.200.83 - - [13/May/2025 18:16:31] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:16:32,106 - INFO - 192.168.200.83 - - [13/May/2025 18:16:32] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:16:41,206 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:16:41,208 - INFO - 192.168.200.83 - - [13/May/2025 18:16:41] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:16:42,144 - INFO - 192.168.200.83 - - [13/May/2025 18:16:42] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:16:51,232 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:16:51,233 - INFO - 192.168.200.83 - - [13/May/2025 18:16:51] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:16:52,177 - INFO - 192.168.200.83 - - [13/May/2025 18:16:52] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:16:57,160 - INFO - Task task_20250513_181657 created for agent agent_35a46a0c-c442-4fe3-a62a-028d99216717: shellcode_inject
+2025-05-13 18:16:57,161 - INFO - 192.168.200.35 - - [13/May/2025 18:16:57] "POST /api/tasks HTTP/1.1" 200 -
+2025-05-13 18:16:59,976 - INFO - 192.168.200.35 - - [13/May/2025 18:16:59] "GET / HTTP/1.1" 200 -
+2025-05-13 18:17:00,040 - INFO - 192.168.200.35 - - [13/May/2025 18:17:00] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:17:00,306 - INFO - 192.168.200.35 - - [13/May/2025 18:17:00] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:17:00,512 - INFO - 192.168.200.35 - - [13/May/2025 18:17:00] "GET / HTTP/1.1" 200 -
+2025-05-13 18:17:01,260 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:17:01,261 - INFO - 192.168.200.83 - - [13/May/2025 18:17:01] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:17:01,749 - INFO - 192.168.200.35 - - [13/May/2025 18:17:01] "GET / HTTP/1.1" 200 -
+2025-05-13 18:17:01,800 - INFO - 192.168.200.35 - - [13/May/2025 18:17:01] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:17:02,011 - INFO - 192.168.200.35 - - [13/May/2025 18:17:02] "GET / HTTP/1.1" 200 -
+2025-05-13 18:17:02,028 - INFO - 192.168.200.35 - - [13/May/2025 18:17:02] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:17:02,203 - INFO - Sending task task_20250513_181657 to agent agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:17:02,204 - INFO - 192.168.200.83 - - [13/May/2025 18:17:02] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:17:02,368 - INFO - Processing result from agent agent_35a46a0c-c442-4fe3-a62a-028d99216717 for task task_20250513_181657
+2025-05-13 18:17:02,369 - INFO - Successfully stored result from agent agent_35a46a0c-c442-4fe3-a62a-028d99216717 for task task_20250513_181657
+2025-05-13 18:17:02,369 - INFO - 192.168.200.83 - - [13/May/2025 18:17:02] "POST /api/results HTTP/1.1" 200 -
+2025-05-13 18:17:11,291 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:17:11,292 - INFO - 192.168.200.83 - - [13/May/2025 18:17:11] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:17:12,300 - INFO - 192.168.200.35 - - [13/May/2025 18:17:12] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:17:12,317 - INFO - 192.168.200.35 - - [13/May/2025 18:17:12] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:17:12,390 - INFO - 192.168.200.83 - - [13/May/2025 18:17:12] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:17:21,317 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:17:21,318 - INFO - 192.168.200.83 - - [13/May/2025 18:17:21] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:17:22,303 - INFO - 192.168.200.35 - - [13/May/2025 18:17:22] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:17:22,317 - INFO - 192.168.200.35 - - [13/May/2025 18:17:22] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:17:22,409 - INFO - 192.168.200.83 - - [13/May/2025 18:17:22] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:17:31,344 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:17:31,344 - INFO - 192.168.200.83 - - [13/May/2025 18:17:31] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:17:32,308 - INFO - 192.168.200.35 - - [13/May/2025 18:17:32] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:17:32,326 - INFO - 192.168.200.35 - - [13/May/2025 18:17:32] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:17:32,441 - INFO - 192.168.200.83 - - [13/May/2025 18:17:32] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:17:41,417 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:17:41,418 - INFO - 192.168.200.83 - - [13/May/2025 18:17:41] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:17:41,809 - INFO - 192.168.200.35 - - [13/May/2025 18:17:41] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:17:41,819 - INFO - 192.168.200.35 - - [13/May/2025 18:17:41] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:17:42,475 - INFO - 192.168.200.83 - - [13/May/2025 18:17:42] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:17:51,446 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:17:51,447 - INFO - 192.168.200.83 - - [13/May/2025 18:17:51] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:17:52,307 - INFO - 192.168.200.35 - - [13/May/2025 18:17:52] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:17:52,321 - INFO - 192.168.200.35 - - [13/May/2025 18:17:52] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:17:52,506 - INFO - 192.168.200.83 - - [13/May/2025 18:17:52] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:18:01,471 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:18:01,472 - INFO - 192.168.200.83 - - [13/May/2025 18:18:01] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:18:02,313 - INFO - 192.168.200.35 - - [13/May/2025 18:18:02] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:18:02,324 - INFO - 192.168.200.35 - - [13/May/2025 18:18:02] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:18:02,524 - INFO - 192.168.200.83 - - [13/May/2025 18:18:02] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:18:11,491 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:18:11,492 - INFO - 192.168.200.83 - - [13/May/2025 18:18:11] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:18:12,311 - INFO - 192.168.200.35 - - [13/May/2025 18:18:12] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:18:12,324 - INFO - 192.168.200.35 - - [13/May/2025 18:18:12] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:18:12,556 - INFO - 192.168.200.83 - - [13/May/2025 18:18:12] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:18:21,515 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:18:21,516 - INFO - 192.168.200.83 - - [13/May/2025 18:18:21] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:18:22,298 - INFO - 192.168.200.35 - - [13/May/2025 18:18:22] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:18:22,311 - INFO - 192.168.200.35 - - [13/May/2025 18:18:22] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:18:22,591 - INFO - 192.168.200.83 - - [13/May/2025 18:18:22] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:18:31,542 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:18:31,543 - INFO - 192.168.200.83 - - [13/May/2025 18:18:31] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:18:32,308 - INFO - 192.168.200.35 - - [13/May/2025 18:18:32] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:18:32,320 - INFO - 192.168.200.35 - - [13/May/2025 18:18:32] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:18:32,609 - INFO - 192.168.200.83 - - [13/May/2025 18:18:32] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:18:41,564 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:18:41,565 - INFO - 192.168.200.83 - - [13/May/2025 18:18:41] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:18:42,296 - INFO - 192.168.200.35 - - [13/May/2025 18:18:42] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:18:42,310 - INFO - 192.168.200.35 - - [13/May/2025 18:18:42] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:18:42,643 - INFO - 192.168.200.83 - - [13/May/2025 18:18:42] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:18:51,596 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:18:51,596 - INFO - 192.168.200.83 - - [13/May/2025 18:18:51] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:18:52,668 - INFO - 192.168.200.83 - - [13/May/2025 18:18:52] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:19:01,619 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:19:01,620 - INFO - 192.168.200.83 - - [13/May/2025 18:19:01] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:19:02,704 - INFO - 192.168.200.83 - - [13/May/2025 18:19:02] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:19:11,644 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:19:11,645 - INFO - 192.168.200.83 - - [13/May/2025 18:19:11] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:19:12,739 - INFO - 192.168.200.83 - - [13/May/2025 18:19:12] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:19:19,302 - INFO - 192.168.200.35 - - [13/May/2025 18:19:19] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:19:19,333 - INFO - 192.168.200.35 - - [13/May/2025 18:19:19] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:19:21,671 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:19:21,672 - INFO - 192.168.200.83 - - [13/May/2025 18:19:21] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:19:22,770 - INFO - 192.168.200.83 - - [13/May/2025 18:19:22] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:19:31,696 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:19:31,698 - INFO - 192.168.200.83 - - [13/May/2025 18:19:31] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:19:32,807 - INFO - 192.168.200.83 - - [13/May/2025 18:19:32] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:19:41,724 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:19:41,752 - INFO - 192.168.200.83 - - [13/May/2025 18:19:41] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:19:42,842 - INFO - 192.168.200.83 - - [13/May/2025 18:19:42] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:19:51,770 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:19:51,771 - INFO - 192.168.200.83 - - [13/May/2025 18:19:51] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:19:52,870 - INFO - 192.168.200.83 - - [13/May/2025 18:19:52] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:21:46,520 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5001
+ * Running on http://192.168.200.35:5001
+2025-05-13 18:21:46,521 - INFO - [33mPress CTRL+C to quit[0m
+2025-05-13 18:21:47,644 - INFO - 192.168.200.35 - - [13/May/2025 18:21:47] "[32mGET / HTTP/1.1[0m" 302 -
+2025-05-13 18:21:47,666 - INFO - 192.168.200.35 - - [13/May/2025 18:21:47] "GET /login?next=/ HTTP/1.1" 200 -
+2025-05-13 18:21:48,862 - INFO - 192.168.200.35 - - [13/May/2025 18:21:48] "GET /login?next=/ HTTP/1.1" 200 -
+2025-05-13 18:21:49,995 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:21:49,997 - INFO - 192.168.200.83 - - [13/May/2025 18:21:49] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:21:51,118 - INFO - 192.168.200.83 - - [13/May/2025 18:21:51] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:21:51,504 - INFO - 192.168.200.35 - - [13/May/2025 18:21:51] "[32mPOST /login HTTP/1.1[0m" 302 -
+2025-05-13 18:21:51,515 - INFO - 192.168.200.35 - - [13/May/2025 18:21:51] "GET / HTTP/1.1" 200 -
+2025-05-13 18:21:51,565 - INFO - 192.168.200.35 - - [13/May/2025 18:21:51] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:21:51,835 - INFO - 192.168.200.35 - - [13/May/2025 18:21:51] "GET / HTTP/1.1" 200 -
+2025-05-13 18:21:51,836 - INFO - 192.168.200.35 - - [13/May/2025 18:21:51] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:21:57,038 - INFO - 192.168.200.35 - - [13/May/2025 18:21:57] "GET /shellcode HTTP/1.1" 200 -
+2025-05-13 18:21:57,305 - INFO - 192.168.200.35 - - [13/May/2025 18:21:57] "GET /shellcode HTTP/1.1" 200 -
+2025-05-13 18:22:00,026 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:22:00,027 - INFO - 192.168.200.83 - - [13/May/2025 18:22:00] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:22:01,153 - INFO - 192.168.200.83 - - [13/May/2025 18:22:01] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:22:10,066 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:22:10,068 - INFO - 192.168.200.83 - - [13/May/2025 18:22:10] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:22:11,189 - INFO - 192.168.200.83 - - [13/May/2025 18:22:11] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:22:20,092 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:22:20,092 - INFO - 192.168.200.83 - - [13/May/2025 18:22:20] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:22:21,222 - INFO - 192.168.200.83 - - [13/May/2025 18:22:21] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:22:30,131 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:22:30,133 - INFO - 192.168.200.83 - - [13/May/2025 18:22:30] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:22:31,259 - INFO - 192.168.200.83 - - [13/May/2025 18:22:31] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:22:40,167 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:22:40,169 - INFO - 192.168.200.83 - - [13/May/2025 18:22:40] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:22:41,291 - INFO - 192.168.200.83 - - [13/May/2025 18:22:41] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:22:50,196 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:22:50,196 - INFO - 192.168.200.83 - - [13/May/2025 18:22:50] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:22:51,474 - INFO - 192.168.200.83 - - [13/May/2025 18:22:51] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:23:00,231 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:23:00,232 - INFO - 192.168.200.83 - - [13/May/2025 18:23:00] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:23:01,517 - INFO - 192.168.200.83 - - [13/May/2025 18:23:01] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:23:10,264 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:23:10,265 - INFO - 192.168.200.83 - - [13/May/2025 18:23:10] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:23:10,347 - INFO - 192.168.200.35 - - [13/May/2025 18:23:10] "GET / HTTP/1.1" 200 -
+2025-05-13 18:23:10,414 - INFO - 192.168.200.35 - - [13/May/2025 18:23:10] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:23:10,709 - INFO - 192.168.200.35 - - [13/May/2025 18:23:10] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:23:10,905 - INFO - 192.168.200.35 - - [13/May/2025 18:23:10] "GET / HTTP/1.1" 200 -
+2025-05-13 18:23:11,546 - INFO - 192.168.200.83 - - [13/May/2025 18:23:11] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:23:14,011 - INFO - 192.168.200.35 - - [13/May/2025 18:23:14] "GET /shellcode HTTP/1.1" 200 -
+2025-05-13 18:23:14,308 - INFO - 192.168.200.35 - - [13/May/2025 18:23:14] "GET /shellcode HTTP/1.1" 200 -
+2025-05-13 18:23:15,619 - INFO - 192.168.200.35 - - [13/May/2025 18:23:15] "GET /control HTTP/1.1" 200 -
+2025-05-13 18:23:15,668 - INFO - 192.168.200.35 - - [13/May/2025 18:23:15] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:23:15,989 - INFO - 192.168.200.35 - - [13/May/2025 18:23:15] "GET /control HTTP/1.1" 200 -
+2025-05-13 18:23:18,324 - INFO - 192.168.200.35 - - [13/May/2025 18:23:18] "GET /shellcode HTTP/1.1" 200 -
+2025-05-13 18:23:18,614 - INFO - 192.168.200.35 - - [13/May/2025 18:23:18] "GET /shellcode HTTP/1.1" 200 -
+2025-05-13 18:23:20,303 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:23:20,304 - INFO - 192.168.200.83 - - [13/May/2025 18:23:20] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:23:21,568 - INFO - 192.168.200.83 - - [13/May/2025 18:23:21] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:23:26,535 - INFO - 192.168.200.35 - - [13/May/2025 18:23:26] "GET / HTTP/1.1" 200 -
+2025-05-13 18:23:26,587 - INFO - 192.168.200.35 - - [13/May/2025 18:23:26] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:23:26,814 - INFO - 192.168.200.35 - - [13/May/2025 18:23:26] "GET / HTTP/1.1" 200 -
+2025-05-13 18:23:26,837 - INFO - 192.168.200.35 - - [13/May/2025 18:23:26] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:23:30,331 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:23:30,331 - INFO - 192.168.200.83 - - [13/May/2025 18:23:30] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:23:31,607 - INFO - 192.168.200.83 - - [13/May/2025 18:23:31] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:23:34,819 - INFO - 192.168.200.35 - - [13/May/2025 18:23:34] "GET /control HTTP/1.1" 200 -
+2025-05-13 18:23:34,875 - INFO - 192.168.200.35 - - [13/May/2025 18:23:34] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:23:35,086 - INFO - 192.168.200.35 - - [13/May/2025 18:23:35] "GET /control HTTP/1.1" 200 -
+2025-05-13 18:23:36,971 - INFO - 192.168.200.35 - - [13/May/2025 18:23:36] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:23:38,019 - INFO - Task task_20250513_182338 created for agent agent_35a46a0c-c442-4fe3-a62a-028d99216717: system_get_info
+2025-05-13 18:23:38,020 - INFO - 192.168.200.35 - - [13/May/2025 18:23:38] "POST /api/tasks HTTP/1.1" 200 -
+2025-05-13 18:23:39,030 - INFO - 192.168.200.35 - - [13/May/2025 18:23:39] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:23:40,361 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:23:40,362 - INFO - 192.168.200.83 - - [13/May/2025 18:23:40] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:23:40,467 - INFO - 192.168.200.35 - - [13/May/2025 18:23:40] "GET / HTTP/1.1" 200 -
+2025-05-13 18:23:40,519 - INFO - 192.168.200.35 - - [13/May/2025 18:23:40] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:23:40,746 - INFO - 192.168.200.35 - - [13/May/2025 18:23:40] "GET / HTTP/1.1" 200 -
+2025-05-13 18:23:40,766 - INFO - 192.168.200.35 - - [13/May/2025 18:23:40] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:23:41,635 - INFO - Sending task task_20250513_182338 to agent agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:23:41,637 - INFO - 192.168.200.83 - - [13/May/2025 18:23:41] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:23:41,677 - INFO - Processing result from agent agent_35a46a0c-c442-4fe3-a62a-028d99216717 for task task_20250513_182338
+2025-05-13 18:23:41,679 - INFO - Successfully stored result from agent agent_35a46a0c-c442-4fe3-a62a-028d99216717 for task task_20250513_182338
+2025-05-13 18:23:41,680 - INFO - 192.168.200.83 - - [13/May/2025 18:23:41] "POST /api/results HTTP/1.1" 200 -
+2025-05-13 18:23:48,720 - INFO - 192.168.200.35 - - [13/May/2025 18:23:48] "GET / HTTP/1.1" 200 -
+2025-05-13 18:23:48,774 - INFO - 192.168.200.35 - - [13/May/2025 18:23:48] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:23:48,983 - INFO - 192.168.200.35 - - [13/May/2025 18:23:48] "GET / HTTP/1.1" 200 -
+2025-05-13 18:23:48,995 - INFO - 192.168.200.35 - - [13/May/2025 18:23:48] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:23:50,384 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:23:50,385 - INFO - 192.168.200.83 - - [13/May/2025 18:23:50] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:23:51,708 - INFO - 192.168.200.83 - - [13/May/2025 18:23:51] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:23:58,794 - INFO - 192.168.200.35 - - [13/May/2025 18:23:58] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:23:58,804 - INFO - 192.168.200.35 - - [13/May/2025 18:23:58] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:24:00,203 - INFO - 192.168.200.35 - - [13/May/2025 18:24:00] "GET /api/results/download/task_20250513_182338 HTTP/1.1" 200 -
+2025-05-13 18:24:00,405 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:24:00,406 - INFO - 192.168.200.83 - - [13/May/2025 18:24:00] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:24:01,738 - INFO - 192.168.200.83 - - [13/May/2025 18:24:01] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:24:09,297 - INFO - 192.168.200.35 - - [13/May/2025 18:24:09] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:24:09,329 - INFO - 192.168.200.35 - - [13/May/2025 18:24:09] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:24:10,431 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:24:10,432 - INFO - 192.168.200.83 - - [13/May/2025 18:24:10] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:24:11,771 - INFO - 192.168.200.83 - - [13/May/2025 18:24:11] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:24:19,339 - INFO - 192.168.200.35 - - [13/May/2025 18:24:19] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:24:19,350 - INFO - 192.168.200.35 - - [13/May/2025 18:24:19] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:24:20,463 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:24:20,463 - INFO - 192.168.200.83 - - [13/May/2025 18:24:20] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:24:21,801 - INFO - 192.168.200.83 - - [13/May/2025 18:24:21] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:24:29,308 - INFO - 192.168.200.35 - - [13/May/2025 18:24:29] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:24:29,324 - INFO - 192.168.200.35 - - [13/May/2025 18:24:29] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:24:30,489 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:24:30,490 - INFO - 192.168.200.83 - - [13/May/2025 18:24:30] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:24:31,823 - INFO - 192.168.200.83 - - [13/May/2025 18:24:31] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:24:39,301 - INFO - 192.168.200.35 - - [13/May/2025 18:24:39] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:24:39,315 - INFO - 192.168.200.35 - - [13/May/2025 18:24:39] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:24:40,514 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:24:40,515 - INFO - 192.168.200.83 - - [13/May/2025 18:24:40] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:24:41,857 - INFO - 192.168.200.83 - - [13/May/2025 18:24:41] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:24:49,310 - INFO - 192.168.200.35 - - [13/May/2025 18:24:49] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:24:49,320 - INFO - 192.168.200.35 - - [13/May/2025 18:24:49] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:24:50,551 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:24:50,553 - INFO - 192.168.200.83 - - [13/May/2025 18:24:50] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:24:51,880 - INFO - 192.168.200.83 - - [13/May/2025 18:24:51] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:24:59,303 - INFO - 192.168.200.35 - - [13/May/2025 18:24:59] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:24:59,315 - INFO - 192.168.200.35 - - [13/May/2025 18:24:59] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:25:00,580 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:25:00,581 - INFO - 192.168.200.83 - - [13/May/2025 18:25:00] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:25:01,904 - INFO - 192.168.200.83 - - [13/May/2025 18:25:01] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:25:08,785 - INFO - 192.168.200.35 - - [13/May/2025 18:25:08] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:25:08,793 - INFO - 192.168.200.35 - - [13/May/2025 18:25:08] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:25:10,603 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:25:10,604 - INFO - 192.168.200.83 - - [13/May/2025 18:25:10] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:25:11,924 - INFO - 192.168.200.83 - - [13/May/2025 18:25:11] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:25:18,789 - INFO - 192.168.200.35 - - [13/May/2025 18:25:18] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:25:18,802 - INFO - 192.168.200.35 - - [13/May/2025 18:25:18] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:25:20,639 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:25:20,640 - INFO - 192.168.200.83 - - [13/May/2025 18:25:20] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:25:21,951 - INFO - 192.168.200.83 - - [13/May/2025 18:25:21] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:25:28,774 - INFO - 192.168.200.35 - - [13/May/2025 18:25:28] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:25:28,783 - INFO - 192.168.200.35 - - [13/May/2025 18:25:28] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:25:30,673 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:25:30,674 - INFO - 192.168.200.83 - - [13/May/2025 18:25:30] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:25:31,998 - INFO - 192.168.200.83 - - [13/May/2025 18:25:31] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:25:38,786 - INFO - 192.168.200.35 - - [13/May/2025 18:25:38] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:25:38,796 - INFO - 192.168.200.35 - - [13/May/2025 18:25:38] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:25:40,698 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:25:40,700 - INFO - 192.168.200.83 - - [13/May/2025 18:25:40] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:25:42,026 - INFO - 192.168.200.83 - - [13/May/2025 18:25:42] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:25:48,785 - INFO - 192.168.200.35 - - [13/May/2025 18:25:48] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:25:48,794 - INFO - 192.168.200.35 - - [13/May/2025 18:25:48] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:25:50,738 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:25:50,740 - INFO - 192.168.200.83 - - [13/May/2025 18:25:50] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:25:52,057 - INFO - 192.168.200.83 - - [13/May/2025 18:25:52] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:25:58,795 - INFO - 192.168.200.35 - - [13/May/2025 18:25:58] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:25:58,814 - INFO - 192.168.200.35 - - [13/May/2025 18:25:58] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:26:00,776 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:26:00,778 - INFO - 192.168.200.83 - - [13/May/2025 18:26:00] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:26:02,087 - INFO - 192.168.200.83 - - [13/May/2025 18:26:02] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:26:08,795 - INFO - 192.168.200.35 - - [13/May/2025 18:26:08] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:26:08,819 - INFO - 192.168.200.35 - - [13/May/2025 18:26:08] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:26:10,802 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:26:10,804 - INFO - 192.168.200.83 - - [13/May/2025 18:26:10] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:26:12,119 - INFO - 192.168.200.83 - - [13/May/2025 18:26:12] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:26:18,778 - INFO - 192.168.200.35 - - [13/May/2025 18:26:18] "GET /api/agents HTTP/1.1" 200 -
+2025-05-13 18:26:18,787 - INFO - 192.168.200.35 - - [13/May/2025 18:26:18] "GET /api/results/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -
+2025-05-13 18:26:20,836 - INFO - Beacon received from agent_35a46a0c-c442-4fe3-a62a-028d99216717
+2025-05-13 18:26:20,836 - INFO - 192.168.200.83 - - [13/May/2025 18:26:20] "POST /api/agents/beacon HTTP/1.1" 200 -
+2025-05-13 18:26:22,149 - INFO - 192.168.200.83 - - [13/May/2025 18:26:22] "GET /api/tasks/agent_35a46a0c-c442-4fe3-a62a-028d99216717 HTTP/1.1" 200 -

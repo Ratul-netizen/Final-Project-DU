@@ -633,6 +633,16 @@
                             preview += `<div class="error-message">Error: ${result.error}</div>`;
                         }
                         
+                        // Add command result block if present
+                        if (result.data && typeof result.data === 'object' && (
+                            result.data.output !== undefined || result.data.error !== undefined || result.data.returncode !== undefined)) {
+                            preview += `<div class="cmd-result-block">
+                                <b>Command Output:</b><pre>${result.data.output ? result.data.output : '(none)'}</pre>
+                                <b>Command Error:</b><pre>${result.data.error ? result.data.error : '(none)'}</pre>
+                                <b>Return Code:</b> ${result.data.returncode !== undefined ? result.data.returncode : '(none)'}
+                            </div>`;
+                        }
+                        
                         resultsDiv.innerHTML += `
                             <div class="results-block">
                                 <div class="result-header">

