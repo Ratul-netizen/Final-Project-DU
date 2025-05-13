@@ -606,7 +606,13 @@
                         else {
                             const content = result.result || result.data;
                             if (typeof content === 'object') {
-                                const jsonStr = JSON.stringify(content, null, 2);
+                                // If this is a credential dump result, try to identify and annotate hashes
+                                let jsonStr = JSON.stringify(content, null, 2);
+                                // Regex to find likely hashes (32, 40, 64, 128 hex chars, or $x$...)
+                                jsonStr = jsonStr.replace(/([a-fA-F0-9]{32,128}|\$[126yab]\$[^\s"]+)/g, function(match) {
+                                    const type = identifyHashType(match);
+                                    return match + (type !== 'Unknown' ? `  <span style='color:var(--primary);font-size:0.95em;'>[${type}]</span>` : '');
+                                });
                                 const isLong = jsonStr.length > 600;
                                 preview = `
                                     <pre class="json-preview" style="max-height: 200px; overflow-y: auto;">${isLong ? jsonStr.slice(0, 600) + '...' : jsonStr}</pre>
@@ -692,6 +698,21 @@
             pre.textContent = fullJson;
             pre.style.maxHeight = '400px';
             link.remove();
+        }
+
+        // Add this hash identifier function to the <script> section
+        function identifyHashType(hash) {
+            hash = hash.trim();
+            if (/^[a-fA-F0-9]{32}$/.test(hash)) return 'MD5 or NTLM';
+            if (/^[a-fA-F0-9]{40}$/.test(hash)) return 'SHA-1';
+            if (/^[a-fA-F0-9]{64}$/.test(hash)) return 'SHA-256';
+            if (/^[a-fA-F0-9]{128}$/.test(hash)) return 'SHA-512';
+            if (/^[a-fA-F0-9]{16}$/.test(hash)) return 'LM';
+            if (hash.startsWith('$6$')) return 'SHA-512 (Unix)';
+            if (hash.startsWith('$1$')) return 'MD5 (Unix)';
+            if (hash.startsWith('$2y$') || hash.startsWith('$2a$')) return 'bcrypt';
+            if (hash.startsWith('$5$')) return 'SHA-256 (Unix)';
+            return 'Unknown';
         }
     </script>
 </body>
