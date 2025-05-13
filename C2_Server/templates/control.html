@@ -149,6 +149,7 @@
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             transition: all 0.3s ease;
+            min-height: 200px;
         }
 
         .results-block:hover {
@@ -285,6 +286,7 @@
             max-width: 100%;
             margin: 0;
             font-size: 0.95em;
+            max-height: 500px;
         }
 
         .expand-json {
@@ -551,24 +553,9 @@
                     
                     try {
                         // Handle image results
-                        if (result.data && result.format && ['png', 'jpg', 'jpeg', 'gif', 'bmp'].includes(result.format.toLowerCase())) {
+                        if (result.result && result.result.data && result.result.format && ['png','jpg','jpeg','gif','bmp'].includes(result.result.format.toLowerCase())) {
                             preview = `
-                                <img src="data:image/${result.format};base64,${result.data}" 
-                                     class="image-preview" 
-                                     onclick="showFullImage(this.src)"
-                                     alt="Result image">
-                            `;
-                            actions = `
-                                <a href="/api/results/download/${taskId}" class="download-btn" download>
-                                    <i class="fas fa-download"></i> Download Image
-                                </a>
-                            `;
-                        } 
-                        // Handle nested image results
-                        else if (result.result && result.result.data && result.result.format && 
-                                ['png', 'jpg', 'jpeg', 'gif', 'bmp'].includes(result.result.format.toLowerCase())) {
-                            preview = `
-                                <img src="data:image/${result.result.format};base64,${result.result.data}" 
+                                <img src="data:image/${result.result.format.toLowerCase()};base64,${result.result.data}" 
                                      class="image-preview" 
                                      onclick="showFullImage(this.src)"
                                      alt="Result image">
@@ -579,10 +566,10 @@
                                 </a>
                             `;
                         }
-                        // Handle direct image data URLs
-                        else if (typeof result.result === 'string' && result.result.startsWith('data:image')) {
+                        // Also handle the case where result.data/format are at the top level (not nested)
+                        else if (result.data && result.format && ['png','jpg','jpeg','gif','bmp'].includes(result.format.toLowerCase())) {
                             preview = `
-                                <img src="${result.result}" 
+                                <img src="data:image/${result.format.toLowerCase()};base64,${result.data}" 
                                      class="image-preview" 
                                      onclick="showFullImage(this.src)"
                                      alt="Result image">
