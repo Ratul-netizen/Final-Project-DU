@@ -135,12 +135,163 @@
             color: var(--text);
         }
 
+        .results-container {
+            margin-top: 20px;
+            max-height: 600px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
         .results-block {
             background: var(--card);
             margin: 10px 0;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .results-block:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .result-title {
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .result-meta {
+            font-size: 0.9em;
+            color: var(--text);
+            opacity: 0.8;
+        }
+
+        .result-content {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .result-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .download-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+            background: var(--primary);
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .download-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .view-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+            background: var(--success);
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .view-btn:hover {
+            background: var(--success-dark);
+            transform: translateY(-1px);
+        }
+
+        .error-message {
+            color: var(--danger);
+            background: rgba(220, 53, 69, 0.1);
             padding: 10px;
-            border-radius: 6px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+            border-radius: 4px;
+            margin: 5px 0;
+        }
+
+        .image-preview {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .image-preview:hover {
+            transform: scale(1.02);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            position: relative;
+            max-width: 90%;
+            max-height: 90%;
+            margin: auto;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .modal-image {
+            max-width: 100%;
+            max-height: 90vh;
+            object-fit: contain;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            color: white;
+            font-size: 30px;
+            cursor: pointer;
+        }
+
+        .json-preview {
+            background: var(--bg);
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            max-width: 100%;
+            margin: 0;
+            font-size: 0.95em;
+        }
+
+        .expand-json {
+            color: var(--primary);
+            cursor: pointer;
+            display: inline-block;
+            margin-top: 5px;
         }
     </style>
 </head>
@@ -239,6 +390,13 @@
 
         <div id="taskStatus"></div>
         <div id="results"></div>
+    </div>
+
+    <div id="imageModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <img id="modalImage" class="modal-image" src="" alt="Full size preview">
+        </div>
     </div>
 
     <script>
@@ -372,43 +530,169 @@
             const data = await res.json();
             const resultsDiv = document.getElementById('results');
             resultsDiv.innerHTML = '';
+            
             if (data.status === 'success') {
                 const results = data.results;
                 if (results.length === 0) {
-                    resultsDiv.innerHTML = '<b>No results yet.</b>';
+                    resultsDiv.innerHTML = '<div class="results-block"><b>No results yet.</b></div>';
                     return;
                 }
+                
+                // Sort results by timestamp (newest first)
+                results.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                
                 results.forEach(result => {
                     const taskId = result.task_id;
                     const type = result.type || 'Unknown';
-                    const time = result.timestamp || '';
+                    const time = new Date(result.timestamp).toLocaleString();
                     const status = result.status || '';
                     let preview = '';
-                    // Show image preview if result is an image
-                    if (result.data && result.format && ['png', 'jpg', 'jpeg'].includes(result.format.toLowerCase())) {
-                        preview = `<img src=\"data:image/${result.format};base64,${result.data}\" style=\"max-width:200px;max-height:120px;display:block;\">`;
-                    } else if (result.result && result.result.data && result.result.format && ['png', 'jpg', 'jpeg'].includes(result.result.format.toLowerCase())) {
-                        preview = `<img src=\"data:image/${result.result.format};base64,${result.result.data}\" style=\"max-width:200px;max-height:120px;display:block;\">`;
-                    } else if (typeof result.result === 'string' && result.result.startsWith('data:image')) {
-                        preview = `<img src=\"${result.result}\" style=\"max-width:200px;max-height:120px;display:block;\">`;
-                    } else {
-                        preview = `<pre>${JSON.stringify(result.result || result.data, null, 2).slice(0, 300)}...</pre>`;
+                    let actions = '';
+                    
+                    try {
+                        // Handle image results
+                        if (result.data && result.format && ['png', 'jpg', 'jpeg', 'gif', 'bmp'].includes(result.format.toLowerCase())) {
+                            preview = `
+                                <img src="data:image/${result.format};base64,${result.data}" 
+                                     class="image-preview" 
+                                     onclick="showFullImage(this.src)"
+                                     alt="Result image">
+                            `;
+                            actions = `
+                                <a href="/api/results/download/${taskId}" class="download-btn" download>
+                                    <i class="fas fa-download"></i> Download Image
+                                </a>
+                            `;
+                        } 
+                        // Handle nested image results
+                        else if (result.result && result.result.data && result.result.format && 
+                                ['png', 'jpg', 'jpeg', 'gif', 'bmp'].includes(result.result.format.toLowerCase())) {
+                            preview = `
+                                <img src="data:image/${result.result.format};base64,${result.result.data}" 
+                                     class="image-preview" 
+                                     onclick="showFullImage(this.src)"
+                                     alt="Result image">
+                            `;
+                            actions = `
+                                <a href="/api/results/download/${taskId}" class="download-btn" download>
+                                    <i class="fas fa-download"></i> Download Image
+                                </a>
+                            `;
+                        }
+                        // Handle direct image data URLs
+                        else if (typeof result.result === 'string' && result.result.startsWith('data:image')) {
+                            preview = `
+                                <img src="${result.result}" 
+                                     class="image-preview" 
+                                     onclick="showFullImage(this.src)"
+                                     alt="Result image">
+                            `;
+                            actions = `
+                                <a href="/api/results/download/${taskId}" class="download-btn" download>
+                                    <i class="fas fa-download"></i> Download Image
+                                </a>
+                            `;
+                        }
+                        // Handle file results
+                        else if (result.data && result.path) {
+                            preview = `<pre>File: ${result.path}</pre>`;
+                            actions = `
+                                <a href="/api/results/download/${taskId}" class="download-btn" download>
+                                    <i class="fas fa-download"></i> Download File
+                                </a>
+                            `;
+                        }
+                        // Handle JSON/text results
+                        else {
+                            const content = result.result || result.data;
+                            if (typeof content === 'object') {
+                                const jsonStr = JSON.stringify(content, null, 2);
+                                const isLong = jsonStr.length > 600;
+                                preview = `
+                                    <pre class="json-preview" style="max-height: 200px; overflow-y: auto;">${isLong ? jsonStr.slice(0, 600) + '...' : jsonStr}</pre>
+                                    ${isLong ? `<a href="#" class="expand-json" onclick="showFullJson(this, \`${jsonStr.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`); return false;">Show full</a>` : ''}
+                                `;
+                            } else {
+                                preview = `<pre>${String(content)}</pre>`;
+                            }
+                            actions = `
+                                <a href="/api/results/download/${taskId}" class="download-btn" download>
+                                    <i class="fas fa-download"></i> Download Result
+                                </a>
+                            `;
+                        }
+                        
+                        // Add error message if present
+                        if (result.error) {
+                            preview += `<div class="error-message">Error: ${result.error}</div>`;
+                        }
+                        
+                        resultsDiv.innerHTML += `
+                            <div class="results-block">
+                                <div class="result-header">
+                                    <div class="result-title">${type}</div>
+                                    <div class="result-meta">
+                                        <span>${time}</span>
+                                        <span class="status-badge ${status.toLowerCase()}">${status}</span>
+                                    </div>
+                                </div>
+                                <div class="result-content">
+                                    ${preview}
+                                    <div class="result-actions">
+                                        ${actions}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    } catch (error) {
+                        console.error('Error processing result:', error);
+                        resultsDiv.innerHTML += `
+                            <div class="results-block">
+                                <div class="error-message">
+                                    Error processing result: ${error.message}
+                                </div>
+                            </div>
+                        `;
                     }
-                    resultsDiv.innerHTML += `
-                        <div class=\"results-block\">
-                            <b>Task:</b> ${type} <b>Status:</b> ${status} <b>Time:</b> ${time}<br>
-                            ${preview}
-                            <a href=\"/api/results/download/${taskId}\" download>Download</a>
-                        </div>
-                        <hr>
-                    `;
                 });
             }
         }
 
+        // Add these new functions for image preview
+        function showFullImage(src) {
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImage');
+            modal.style.display = "block";
+            modalImg.src = src;
+        }
+
+        // Close modal when clicking the X or outside the image
+        document.querySelector('.close-modal').onclick = function() {
+            document.getElementById('imageModal').style.display = "none";
+        }
+
+        document.getElementById('imageModal').onclick = function(e) {
+            if (e.target === this) {
+                this.style.display = "none";
+            }
+        }
+
+        // Add Font Awesome for icons
+        const fontAwesome = document.createElement('link');
+        fontAwesome.rel = 'stylesheet';
+        fontAwesome.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css';
+        document.head.appendChild(fontAwesome);
+
         // Update agent list every 10 seconds
         updateAgentList();
         setInterval(updateAgentList, 10000);
+
+        function showFullJson(link, fullJson) {
+            const pre = link.previousElementSibling;
+            pre.textContent = fullJson;
+            pre.style.maxHeight = '400px';
+            link.remove();
+        }
     </script>
 </body>
 </html>
