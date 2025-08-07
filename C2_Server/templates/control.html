@@ -111,14 +111,19 @@
             background: var(--card-bg);
             border: 1px solid var(--border);
             color: var(--text-primary);
-            padding: 8px 12px;
-            border-radius: 6px;
+            padding: 12px 16px;
+            border-radius: 8px;
             cursor: pointer;
             transition: all 0.3s ease;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .theme-toggle:hover {
             background: var(--light);
+            color: var(--text-primary);
         }
 
         /* Header */
@@ -608,9 +613,6 @@
             <div class="results-header">
                 <h3><i class="fas fa-list-alt"></i> Agent Results</h3>
                 <div class="results-controls">
-                    <a href="/index" class="btn btn-secondary">
-                        <i class="fas fa-desktop"></i> View Agent Dashboard
-                    </a>
                     <button class="btn btn-primary" onclick="refreshResults()">
                         <i class="fas fa-refresh"></i> Refresh Results
                     </button>
@@ -1012,18 +1014,23 @@
                         else {
                             const content = result.result || result.data;
                             if (typeof content === 'object') {
-                                // If this is a credential dump result, try to identify and annotate hashes
-                                let jsonStr = JSON.stringify(content, null, 2);
-                                // Regex to find likely hashes (32, 40, 64, 128 hex chars, or $x$...)
-                                jsonStr = jsonStr.replace(/([a-fA-F0-9]{32,128}|\$[126yab]\$[^\s"]+)/g, function(match) {
-                                    const type = identifyHashType(match);
-                                    return match + (type !== 'Unknown' ? `  <span style='color:var(--primary);font-size:0.95em;'>[${type}]</span>` : '');
-                                });
-                                const isLong = jsonStr.length > 600;
-                                preview = `
-                                    <pre class="json-preview" style="max-height: 200px; overflow-y: auto;">${isLong ? jsonStr.slice(0, 600) + '...' : jsonStr}</pre>
-                                    ${isLong ? `<a href="#" class="expand-json" onclick="showFullJson(this, \`${jsonStr.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`); return false;">Show full</a>` : ''}
-                                `;
+                                // Special handling for credential dump results
+                                if (type === 'credentials_dump' || (content.data && (content.data.windows_credentials || content.data.lsass_dump || content.data.sam_hashes))) {
+                                    preview = formatCredentialResults(content);
+                                } else {
+                                    // Standard JSON formatting for other results
+                                    let jsonStr = JSON.stringify(content, null, 2);
+                                    // Regex to find likely hashes (32, 40, 64, 128 hex chars, or $x$...)
+                                    jsonStr = jsonStr.replace(/([a-fA-F0-9]{32,128}|\$[126yab]\$[^\s"]+)/g, function(match) {
+                                        const type = identifyHashType(match);
+                                        return match + (type !== 'Unknown' ? `  <span style='color:var(--primary);font-size:0.95em;'>[${type}]</span>` : '');
+                                    });
+                                    const isLong = jsonStr.length > 600;
+                                    preview = `
+                                        <pre class="json-preview" style="max-height: 200px; overflow-y: auto;">${isLong ? jsonStr.slice(0, 600) + '...' : jsonStr}</pre>
+                                        ${isLong ? `<a href="#" class="expand-json" onclick="showFullJson(this, \`${jsonStr.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`); return false;">Show full</a>` : ''}
+                                    `;
+                                }
                             } else {
                                 preview = `<pre>${String(content)}</pre>`;
                             }
@@ -1110,8 +1117,8 @@
         setInterval(updateAgentList, 10000);
         
         // Force reload check - if the page was cached, reload once
-        if (!sessionStorage.getItem('reloaded_v2')) {
-            sessionStorage.setItem('reloaded_v2', 'true');
+        if (!sessionStorage.getItem('reloaded_v12')) {
+            sessionStorage.setItem('reloaded_v12', 'true');
             console.log('Forcing reload to clear cache...');
             location.reload();
         }
@@ -1124,6 +1131,134 @@
         }
 
         // Add this hash identifier function to the <script> section
+        function formatCredentialResults(content) {
+            let html = '<div class="credential-results">';
+            
+            if (content.status) {
+                html += `<div class="credential-header">
+                    <h4><i class="fas fa-key"></i> Credential Dump Results</h4>
+                    <span class="status-badge ${content.status === 'success' ? 'success' : 'error'}">${content.status.toUpperCase()}</span>
+                </div>`;
+            }
+            
+            if (content.data) {
+                // Windows Credentials
+                if (content.data.windows_credentials && content.data.windows_credentials.credentials) {
+                    html += `<div class="credential-section">
+                        <h5><i class="fas fa-windows"></i> Windows Stored Credentials (${content.data.windows_credentials.credentials.length})</h5>
+                        <div class="credential-table">`;
+                    
+                    content.data.windows_credentials.credentials.forEach((cred, index) => {
+                        html += `
+                            <div class="credential-row">
+                                <div class="cred-field"><strong>Target:</strong> ${cred.target || 'N/A'}</div>
+                                <div class="cred-field"><strong>Username:</strong> ${cred.username || 'N/A'}</div>
+                                <div class="cred-field"><strong>Password:</strong> 
+                                    <span class="password-field" onclick="togglePassword(this)">
+                                        <span class="password-hidden">••••••••</span>
+                                        <span class="password-shown" style="display:none;">${cred.password || 'N/A'}</span>
+                                        <i class="fas fa-eye toggle-icon"></i>
+                                    </span>
+                                </div>
+                                <div class="cred-field"><strong>Type:</strong> ${cred.type || 'N/A'}</div>
+                            </div>`;
+                    });
+                    html += '</div></div>';
+                }
+                
+                // SAM Hashes
+                if (content.data.sam_hashes) {
+                    html += `<div class="credential-section">
+                        <h5><i class="fas fa-shield-alt"></i> SAM Database Information</h5>`;
+                    
+                    if (content.data.sam_hashes.extracted_data && content.data.sam_hashes.extracted_data.length > 0) {
+                        html += '<div class="hash-table">';
+                        content.data.sam_hashes.extracted_data.forEach(hash => {
+                            html += `
+                                <div class="hash-row">
+                                    <div class="hash-field"><strong>Username:</strong> ${hash.username}</div>
+                                    <div class="hash-field"><strong>Type:</strong> ${hash.hash_type}</div>
+                                    ${hash.hash ? `<div class="hash-field"><strong>Hash:</strong> <code>${hash.hash}</code></div>` : ''}
+                                    ${hash.status ? `<div class="hash-field"><strong>Status:</strong> ${hash.status}</div>` : ''}
+                                </div>`;
+                        });
+                        html += '</div>';
+                    }
+                    
+                    if (content.data.sam_hashes.message) {
+                        html += `<p><strong>Status:</strong> ${content.data.sam_hashes.message}</p>`;
+                    }
+                    
+                    if (content.data.sam_hashes.note) {
+                        html += `<p class="note"><i class="fas fa-info-circle"></i> ${content.data.sam_hashes.note}</p>`;
+                    }
+                    html += '</div>';
+                }
+                
+                // LSASS Dump Info
+                if (content.data.lsass_dump) {
+                    html += `<div class="credential-section">
+                        <h5><i class="fas fa-memory"></i> LSASS Memory Dump</h5>`;
+                    
+                    if (content.data.lsass_dump.status === 'success') {
+                        html += `
+                            <div class="lsass-info">
+                                <p><strong>File:</strong> ${content.data.lsass_dump.file}</p>
+                                ${content.data.lsass_dump.file_size ? `<p><strong>Size:</strong> ${(content.data.lsass_dump.file_size / 1024 / 1024).toFixed(2)} MB</p>` : ''}
+                                <p><strong>Status:</strong> <span class="success">${content.data.lsass_dump.message}</span></p>
+                                <p class="note"><i class="fas fa-download"></i> Use the download button to get the LSASS dump file for analysis with Mimikatz</p>
+                            </div>`;
+                    } else {
+                        html += `<p class="error">Error: ${content.data.lsass_dump.error}</p>`;
+                    }
+                    html += '</div>';
+                }
+            }
+            
+            html += '</div>';
+            
+            // Add CSS styles
+            html += `
+                <style>
+                .credential-results { margin: 10px 0; }
+                .credential-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+                .credential-section { margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 5px; border-left: 4px solid var(--primary); }
+                .credential-row, .hash-row { padding: 10px; margin: 5px 0; background: white; border-radius: 3px; border: 1px solid #e0e0e0; }
+                .cred-field, .hash-field { margin: 5px 0; }
+                .password-field { cursor: pointer; user-select: none; display: inline-flex; align-items: center; gap: 5px; }
+                .password-field:hover { background: #f0f0f0; padding: 2px 5px; border-radius: 3px; }
+                .toggle-icon { font-size: 0.8em; color: #666; }
+                .status-badge { padding: 3px 8px; border-radius: 3px; font-size: 0.8em; font-weight: bold; }
+                .status-badge.success { background: #d4edda; color: #155724; }
+                .status-badge.error { background: #f8d7da; color: #721c24; }
+                .note { color: #666; font-style: italic; margin-top: 10px; }
+                .lsass-info p { margin: 5px 0; }
+                .success { color: #28a745; font-weight: bold; }
+                .error { color: #dc3545; font-weight: bold; }
+                </style>
+            `;
+            
+            return html;
+        }
+        
+        function togglePassword(element) {
+            const hidden = element.querySelector('.password-hidden');
+            const shown = element.querySelector('.password-shown');
+            const icon = element.querySelector('.toggle-icon');
+            
+            if (hidden.style.display === 'none') {
+                hidden.style.display = 'inline';
+                shown.style.display = 'none';
+                icon.className = 'fas fa-eye toggle-icon';
+            } else {
+                hidden.style.display = 'none';
+                shown.style.display = 'inline';
+                icon.className = 'fas fa-eye-slash toggle-icon';
+            }
+        }
+        
+
+
         function identifyHashType(hash) {
             hash = hash.trim();
             if (/^[a-fA-F0-9]{32}$/.test(hash)) return 'MD5 or NTLM';

