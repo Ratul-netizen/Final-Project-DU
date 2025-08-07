@@ -3,246 +3,483 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>C2 Control Panel</title>
+    <title>Task Control Panel - C2 Framework</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
-            --bg: #f4f4f4;
-            --text: #333;
-            --card: #fff;
-            --border: #ddd;
-            --primary: #007BFF;
-            --success: #28a745;
-            --danger: #dc3545;
-            --warning: #ffc107;
+            --primary: #2563eb;
+            --secondary: #64748b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #06b6d4;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --border: #e2e8f0;
+            --background: #ffffff;
+            --card-bg: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
         }
 
         [data-theme="dark"] {
-            --bg: #121212;
-            --text: #f4f4f4;
-            --card: #1e1e1e;
-            --border: #333;
-            --primary: #0d6efd;
+            --background: #0f172a;
+            --card-bg: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border: #334155;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
         body {
-            font-family: Arial, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            margin: 0;
-            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background);
+            color: var(--text-primary);
+            line-height: 1.6;
             transition: background-color 0.3s, color 0.3s;
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
+            padding: 20px;
         }
 
-        h1 {
-            text-align: center;
-            color: var(--text);
+        /* Global Navigation */
+        .global-nav {
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border);
+            padding: 0;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .global-nav-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .global-nav-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .global-nav-links {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .global-nav-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 12px 16px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .global-nav-link:hover {
+            background: var(--light);
+            color: var(--text-primary);
+        }
+
+        .global-nav-link.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .global-nav-link i {
+            font-size: 1.1rem;
+        }
+
+        .theme-toggle {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle:hover {
+            background: var(--light);
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, #1d4ed8 100%);
+            color: white;
+            padding: 20px 0;
             margin-bottom: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
 
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        /* Navigation */
         nav {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 8px;
             margin-bottom: 30px;
-            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            gap: 10px;
         }
 
         nav a {
-            margin: 0 15px;
+            color: var(--text-secondary);
             text-decoration: none;
-            color: var(--primary);
+            padding: 12px 24px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
             font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
+        nav a:hover {
+            background: var(--light);
+            color: var(--text-primary);
+        }
+
+        nav a.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Agent Selection */
+        .agent-select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--card-bg);
+            color: var(--text-primary);
+            margin-bottom: 30px;
+            font-size: 1rem;
+        }
+
+        /* Module Grid */
         .module-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            margin-bottom: 30px;
         }
 
         .module-card {
-            background-color: var(--card);
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .module-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
         }
 
         .module-card h3 {
-            margin-top: 0;
-            color: var(--primary);
+            color: var(--text-primary);
+            margin-bottom: 10px;
+            font-size: 1.25rem;
         }
 
         .module-card p {
-            margin-bottom: 15px;
-            font-size: 0.9em;
-            color: var(--text);
+            color: var(--text-secondary);
+            margin-bottom: 20px;
         }
 
-        button {
-            background-color: var(--primary);
+        .module-card button {
+            background: var(--primary);
             color: white;
             border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
+            padding: 10px 20px;
+            border-radius: 6px;
             cursor: pointer;
-            width: 100%;
+            transition: all 0.3s ease;
+            font-weight: 500;
         }
 
-        button:hover {
-            opacity: 0.9;
+        .module-card button:hover {
+            background: #1d4ed8;
+            transform: translateY(-1px);
         }
 
-        .toggle-theme {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: none;
-            border: 1px solid var(--border);
-            color: var(--text);
-            padding: 8px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            width: auto;
-        }
-
-        #taskStatus {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 4px;
-            display: none;
-        }
-
-        .success {
-            background-color: var(--success);
-            color: white;
-        }
-
-        .error {
-            background-color: var(--danger);
-            color: white;
-        }
-
-        .agent-select {
-            width: 100%;
-            padding: 8px;
+        /* Results */
+        .result-header {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
             margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             border: 1px solid var(--border);
-            border-radius: 4px;
-            background-color: var(--bg);
-            color: var(--text);
+        }
+
+        .result-content {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border);
+        }
+
+        /* Results Section */
+        .results-section {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border);
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .results-header h3 {
+            color: var(--text-primary);
+            margin-bottom: 0;
+        }
+
+        .results-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-secondary {
+            background: var(--secondary);
+            color: white;
+            border: none;
+        }
+
+        .btn-secondary:hover {
+            background: #475569;
         }
 
         .results-container {
-            margin-top: 20px;
-            max-height: 600px;
-            overflow-y: auto;
-            padding-right: 10px;
+            min-height: 200px; /* Ensure a minimum height for the results container */
         }
 
+        .no-results {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 50px 20px;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+
+        .no-results i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        .no-results p {
+            font-size: 1.1rem;
+        }
+
+        /* Enhanced Results Display */
         .results-block {
-            background: var(--card);
-            margin: 10px 0;
-            padding: 15px;
+            background: var(--background);
+            border: 1px solid var(--border);
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 15px;
             transition: all 0.3s ease;
-            min-height: 200px;
         }
 
         .results-block:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
         .result-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
-            padding-bottom: 5px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
             border-bottom: 1px solid var(--border);
         }
 
         .result-title {
-            font-weight: bold;
-            color: var(--primary);
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 1.1rem;
         }
 
         .result-meta {
-            font-size: 0.9em;
-            color: var(--text);
-            opacity: 0.8;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
         }
 
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-badge.success { background: #dcfce7; color: #166534; }
+        .status-badge.error { background: #fef2f2; color: #dc2626; }
+        .status-badge.running { background: #fef3c7; color: #d97706; }
+        .status-badge.pending { background: #f3f4f6; color: #6b7280; }
+
         .result-content {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
+            margin-bottom: 15px;
         }
 
         .result-actions {
             display: flex;
             gap: 10px;
-            margin-top: 10px;
+            flex-wrap: wrap;
         }
 
-        .download-btn {
+        .download-btn, .view-btn {
             display: inline-flex;
             align-items: center;
             gap: 5px;
-            padding: 5px 10px;
-            background: var(--primary);
-            color: white;
-            text-decoration: none;
+            padding: 6px 12px;
             border-radius: 4px;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
             transition: all 0.3s ease;
         }
 
+        .download-btn {
+            background: var(--success);
+            color: white;
+        }
+
         .download-btn:hover {
-            background: var(--primary-dark);
+            background: #059669;
             transform: translateY(-1px);
         }
 
         .view-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            padding: 5px 10px;
-            background: var(--success);
+            background: var(--info);
             color: white;
-            text-decoration: none;
-            border-radius: 4px;
-            transition: all 0.3s ease;
         }
 
         .view-btn:hover {
-            background: var(--success-dark);
+            background: #0891b2;
             transform: translateY(-1px);
+        }
+
+        .image-preview {
+            max-width: 200px;
+            max-height: 150px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .image-preview:hover {
+            transform: scale(1.05);
+        }
+
+        .json-preview {
+            background: var(--background);
+            padding: 12px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            border: 1px solid var(--border);
         }
 
         .error-message {
             color: var(--danger);
-            background: rgba(220, 53, 69, 0.1);
+            background: rgba(239, 68, 68, 0.1);
             padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+            border-left: 4px solid var(--danger);
+        }
+
+        .cmd-result-block {
+            background: var(--background);
+            padding: 12px;
+            border-radius: 6px;
+            margin: 10px 0;
+            border: 1px solid var(--border);
+        }
+
+        .cmd-result-block pre {
+            background: var(--card-bg);
+            padding: 8px;
             border-radius: 4px;
             margin: 5px 0;
+            overflow-x: auto;
+            font-size: 0.85rem;
         }
 
-        .image-preview {
-            max-width: 100%;
-            height: auto;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .image-preview:hover {
-            transform: scale(1.02);
-        }
-
+        /* Modal Styles */
         .modal {
             display: none;
             position: fixed;
@@ -250,7 +487,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.8);
+            background: rgba(0, 0, 0, 0.8);
             z-index: 1000;
         }
 
@@ -267,6 +504,7 @@
             max-width: 100%;
             max-height: 90vh;
             object-fit: contain;
+            border-radius: 8px;
         }
 
         .close-modal {
@@ -276,41 +514,118 @@
             color: white;
             font-size: 30px;
             cursor: pointer;
+            background: none;
+            border: none;
         }
 
-        .json-preview {
-            background: var(--bg);
-            padding: 10px;
-            border-radius: 4px;
-            overflow-x: auto;
-            max-width: 100%;
-            margin: 0;
-            font-size: 0.95em;
-            max-height: 500px;
+        /* Task Status */
+        #taskStatus {
+            margin: 20px 0;
+            padding: 12px 16px;
+            border-radius: 6px;
+            display: none;
+            font-weight: 500;
         }
 
-        .expand-json {
-            color: var(--primary);
-            cursor: pointer;
-            display: inline-block;
-            margin-top: 5px;
+        #taskStatus.success {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+
+        #taskStatus.error {
+            background: #fef2f2;
+            color: #dc2626;
+            border: 1px solid #fecaca;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .global-nav-content {
+                flex-direction: column;
+                gap: 15px;
+                padding: 15px 20px;
+            }
+
+            .global-nav-links {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .module-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header-content {
+                flex-direction: column;
+                gap: 20px;
+            }
         }
     </style>
 </head>
 <body>
-    <button class="toggle-theme" onclick="toggleTheme()">🌙 Toggle Dark Mode</button>
-    
+    <!-- Global Navigation -->
+    <nav class="global-nav">
+        <div class="global-nav-content">
+            <a href="/" class="global-nav-brand">
+                <i class="fas fa-shield-alt"></i>
+                C2 Framework
+            </a>
+            <div class="global-nav-links">
+                <a href="/" class="global-nav-link">
+                    <i class="fas fa-chart-line"></i>
+                    Dashboard
+                </a>
+                <a href="/control" class="global-nav-link active">
+                    <i class="fas fa-cogs"></i>
+                    Control Panel
+                </a>
+                <a href="/shellcode" class="global-nav-link">
+                    <i class="fas fa-code"></i>
+                    Shellcode
+                </a>
+                <button class="theme-toggle" onclick="toggleTheme()">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
     <div class="container">
-        <h1>Task Control Panel</h1>
-        <nav>
-            <a href="/">Dashboard</a>
-            <a href="/shellcode">Shellcode Generator</a>
-            <a href="/control">Task Control Panel</a>
-        </nav>
+        <!-- Header -->
+        <div class="header">
+            <div class="header-content">
+                <h1><i class="fas fa-cogs"></i> Task Control Panel</h1>
+            </div>
+        </div>
 
         <select id="agentSelect" class="agent-select">
             <option value="">Select an agent...</option>
         </select>
+
+        <!-- Results Section -->
+        <div class="results-section">
+            <div class="results-header">
+                <h3><i class="fas fa-list-alt"></i> Agent Results</h3>
+                <div class="results-controls">
+                    <a href="/index" class="btn btn-secondary">
+                        <i class="fas fa-desktop"></i> View Agent Dashboard
+                    </a>
+                    <button class="btn btn-primary" onclick="refreshResults()">
+                        <i class="fas fa-refresh"></i> Refresh Results
+                    </button>
+                    <button class="btn btn-secondary" onclick="clearResults()">
+                        <i class="fas fa-trash"></i> Clear Display
+                    </button>
+                </div>
+            </div>
+            <div id="results" class="results-container">
+                <div class="no-results">
+                    <i class="fas fa-info-circle"></i>
+                    <p>Select an agent to view their results</p>
+                </div>
+            </div>
+        </div>
 
         <div class="module-grid">
             <!-- Core Modules -->
@@ -391,7 +706,6 @@
         </div>
 
         <div id="taskStatus"></div>
-        <div id="results"></div>
     </div>
 
     <div id="imageModal" class="modal">
@@ -415,7 +729,7 @@
         async function updateAgentList() {
             try {
                 const response = await fetch('/api/agents');
-                const agents = await response.json();
+                const data = await response.json();
                 const select = document.getElementById('agentSelect');
                 
                 // Clear existing options except the first one
@@ -423,13 +737,19 @@
                     select.remove(1);
                 }
                 
-                // Add new options
-                agents.forEach(agent => {
-                    const option = document.createElement('option');
-                    option.value = agent.agent_id;
-                    option.textContent = `${agent.agent_id} (${agent.hostname || 'Unknown'}) - ${agent.status}`;
-                    select.appendChild(option);
-                });
+                // Check if the response has the expected structure
+                if (data.status === 'success' && data.agents) {
+                    // Add new options
+                    data.agents.forEach(agent => {
+                        const option = document.createElement('option');
+                        option.value = agent.agent_id;
+                        const hostname = agent.system_info?.hostname || 'Unknown';
+                        option.textContent = `${agent.agent_id} (${hostname}) - ${agent.status || 'Unknown'}`;
+                        select.appendChild(option);
+                    });
+                } else {
+                    console.warn('Unexpected API response format:', data);
+                }
             } catch (error) {
                 console.error('Error updating agent list:', error);
                 showStatus('Failed to update agent list', 'error');
@@ -552,33 +872,132 @@
                     let actions = '';
                     
                     try {
-                        // Handle image results
-                        if (result.result && result.result.data && result.result.format && ['png','jpg','jpeg','gif','bmp'].includes(result.result.format.toLowerCase())) {
+                        // Debug: Log the full result structure
+                        if (type === 'surveillance_screenshot') {
+                            console.log('=== SCREENSHOT RESULT DEBUG ===');
+                            console.log('Full result object:', result);
+                            console.log('result.result:', result.result);
+                            console.log('result.data:', result.data);
+                            if (result.result) {
+                                console.log('result.result.image exists:', !!result.result.image);
+                                console.log('result.result.format:', result.result.format);
+                            }
+                            if (result.data) {
+                                console.log('result.data.image exists:', !!result.data.image);
+                                console.log('result.data.format:', result.data.format);
+                            }
+                            console.log('=================================');
+                        }
+                        
+                        // Handle image results - check all possible data structures
+                        let imageData = null;
+                        let imageFormat = null;
+                        
+                        // Check for result.result.image structure (screenshot format)
+                        if (result.result && result.result.image && result.result.format) {
+                            imageData = result.result.image;
+                            imageFormat = result.result.format;
+                        }
+                        // Check for result.result.data structure  
+                        else if (result.result && result.result.data && result.result.format) {
+                            imageData = result.result.data;
+                            imageFormat = result.result.format;
+                        }
+                        // Check for result.data.image structure
+                        else if (result.data && result.data.image && result.data.format) {
+                            imageData = result.data.image;
+                            imageFormat = result.data.format;
+                        }
+                        // Check for top-level result.data/format
+                        else if (result.data && result.format && typeof result.data === 'string') {
+                            imageData = result.data;
+                            imageFormat = result.format;
+                        }
+                        // Special handling for surveillance_screenshot type
+                        else if (type === 'surveillance_screenshot' && result.result) {
+                            const resultData = result.result;
+                            if (resultData.image && resultData.format) {
+                                imageData = resultData.image;
+                                imageFormat = resultData.format;
+                            }
+                        }
+                        
+                        if (imageData && imageFormat && ['png','jpg','jpeg','gif','bmp'].includes(imageFormat.toLowerCase())) {
+                            // Truncate very long base64 strings for preview (keep first 100 chars for validation)
+                            const shortImageData = imageData.length > 1000 ? imageData.substring(0, 100) + '...[truncated]' : imageData;
+                            
                             preview = `
-                                <img src="data:image/${result.result.format.toLowerCase()};base64,${result.result.data}" 
-                                     class="image-preview" 
-                                     onclick="showFullImage(this.src)"
-                                     alt="Result image">
+                                <div style="margin-bottom: 10px;">
+                                    <img src="data:image/${imageFormat.toLowerCase()};base64,${imageData}" 
+                                         class="image-preview" 
+                                         onclick="showFullImage(this.src)"
+                                         alt="Screenshot"
+                                         style="max-width: 300px; max-height: 200px; border-radius: 4px; cursor: pointer;"
+                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                    <div style="display:none; padding: 10px; background: #f0f0f0; border-radius: 4px;">
+                                        <p>📷 Screenshot captured (${imageFormat.toUpperCase()})</p>
+                                        <p>Image data: ${shortImageData}</p>
+                                        <p><em>Click download to view full image</em></p>
+                                    </div>
+                                </div>
                             `;
                             actions = `
                                 <a href="/api/results/download/${taskId}" class="download-btn" download>
-                                    <i class="fas fa-download"></i> Download Image
+                                    <i class="fas fa-download"></i> Download Screenshot
                                 </a>
                             `;
                         }
-                        // Also handle the case where result.data/format are at the top level (not nested)
-                        else if (result.data && result.format && ['png','jpg','jpeg','gif','bmp'].includes(result.format.toLowerCase())) {
-                            preview = `
-                                <img src="data:image/${result.format.toLowerCase()};base64,${result.data}" 
-                                     class="image-preview" 
-                                     onclick="showFullImage(this.src)"
-                                     alt="Result image">
-                            `;
-                            actions = `
-                                <a href="/api/results/download/${taskId}" class="download-btn" download>
-                                    <i class="fas fa-download"></i> Download Image
-                                </a>
-                            `;
+                        // Fallback: if no image was detected but this is a screenshot, force image display
+                        else if (type === 'surveillance_screenshot' && !imageData) {
+                            console.log('FALLBACK: Trying to extract image from screenshot result');
+                            
+                            // Try to find image data anywhere in the result
+                            const searchForImage = (obj, path = '') => {
+                                if (typeof obj === 'object' && obj !== null) {
+                                    for (const [key, value] of Object.entries(obj)) {
+                                        const currentPath = path ? `${path}.${key}` : key;
+                                        
+                                        if (key === 'image' && typeof value === 'string' && value.length > 100) {
+                                            console.log(`Found image data at: ${currentPath}`);
+                                            return { image: value, path: currentPath };
+                                        }
+                                        
+                                        if (typeof value === 'object') {
+                                            const found = searchForImage(value, currentPath);
+                                            if (found) return found;
+                                        }
+                                    }
+                                }
+                                return null;
+                            };
+                            
+                            const foundImage = searchForImage(result);
+                            if (foundImage) {
+                                imageData = foundImage.image;
+                                imageFormat = 'png'; // Default to PNG
+                                console.log(`Using image from: ${foundImage.path}`);
+                                
+                                preview = `
+                                    <div style="margin-bottom: 10px;">
+                                        <p><strong>📷 Screenshot (Found at: ${foundImage.path})</strong></p>
+                                        <img src="data:image/png;base64,${imageData}" 
+                                             class="image-preview" 
+                                             onclick="showFullImage(this.src)"
+                                             alt="Screenshot"
+                                             style="max-width: 300px; max-height: 200px; border-radius: 4px; cursor: pointer;"
+                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                        <div style="display:none; padding: 10px; background: #f0f0f0; border-radius: 4px;">
+                                            <p>📷 Screenshot captured but image failed to display</p>
+                                            <p><em>Click download to view full image</em></p>
+                                        </div>
+                                    </div>
+                                `;
+                                actions = `
+                                    <a href="/api/results/download/${taskId}" class="download-btn" download>
+                                        <i class="fas fa-download"></i> Download Screenshot
+                                    </a>
+                                `;
+                            }
                         }
                         // Handle file results
                         else if (result.data && result.path) {
@@ -689,6 +1108,13 @@
         // Update agent list every 10 seconds
         updateAgentList();
         setInterval(updateAgentList, 10000);
+        
+        // Force reload check - if the page was cached, reload once
+        if (!sessionStorage.getItem('reloaded_v2')) {
+            sessionStorage.setItem('reloaded_v2', 'true');
+            console.log('Forcing reload to clear cache...');
+            location.reload();
+        }
 
         function showFullJson(link, fullJson) {
             const pre = link.previousElementSibling;
@@ -710,6 +1136,37 @@
             if (hash.startsWith('$2y$') || hash.startsWith('$2a$')) return 'bcrypt';
             if (hash.startsWith('$5$')) return 'SHA-256 (Unix)';
             return 'Unknown';
+        }
+
+        async function refreshResults() {
+            const agentId = document.getElementById('agentSelect').value;
+            if (agentId) {
+                await loadAgentResults(agentId);
+            } else {
+                showStatus('Please select an agent first', 'error');
+            }
+        }
+
+        async function clearResults() {
+            const agentId = document.getElementById('agentSelect').value;
+            if (agentId) {
+                try {
+                    const response = await fetch(`/api/results/${agentId}/clear`, {
+                        method: 'POST'
+                    });
+                    const result = await response.json();
+                    if (result.status === 'success') {
+                        showStatus('Results cleared successfully.', 'success');
+                        await loadAgentResults(agentId); // Reload results to show empty state
+                    } else {
+                        showStatus(`Error clearing results: ${result.message}`, 'error');
+                    }
+                } catch (error) {
+                    showStatus(`Error clearing results: ${error.message}`, 'error');
+                }
+            } else {
+                showStatus('Please select an agent first', 'error');
+            }
         }
     </script>
 </body>

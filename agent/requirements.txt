@@ -6,7 +6,7 @@ certifi>=2023.7.22
 
 # Screenshot and image handling
 Pillow>=9.5.0  # For screenshot functionality
-mss>=6.1.0  # Alternative screenshot method
+mss>=10.0.0  # For screenshots (updated from python-mss)
 
 # System interaction
 psutil>=5.9.0  # For process listing
@@ -18,8 +18,6 @@ wmi>=1.5.1; sys_platform == 'win32'  # Windows Management Instrumentation
 # Surveillance and monitoring
 opencv-python>=4.7.0  # For webcam functionality
 keyboard>=0.13.5  # For keylogging functionality
-python-mss>=6.1.0  # For screenshots
-pynput>=1.7.6  # For keyboard monitoring
 
 # Network and security
 dnspython>=2.3.0  # For DNS tunneling

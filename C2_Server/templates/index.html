@@ -3,141 +3,318 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>C2 Server Dashboard</title>
+    <title>Agent Dashboard - C2 Framework</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
-            --bg: #f4f4f4;
-            --text: #333;
-            --card: #fff;
-            --border: #ddd;
-            --primary: #007BFF;
-            --success: #28a745;
-            --danger: #dc3545;
-            --warning: #ffc107;
+            --primary: #2563eb;
+            --secondary: #64748b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #06b6d4;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --border: #e2e8f0;
+            --background: #ffffff;
+            --card-bg: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
         }
 
         [data-theme="dark"] {
-            --bg: #121212;
-            --text: #f4f4f4;
-            --card: #1e1e1e;
-            --border: #333;
-            --primary: #0d6efd;
+            --background: #0f172a;
+            --card-bg: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border: #334155;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
         body {
-            font-family: Arial, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            margin: 0;
-            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background);
+            color: var(--text-primary);
+            line-height: 1.6;
             transition: background-color 0.3s, color 0.3s;
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
-            text-align: center;
+            padding: 20px;
         }
 
-        h1 {
-            color: var(--text);
-            text-align: center;
+        /* Global Navigation */
+        .global-nav {
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border);
+            padding: 0;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .global-nav-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .global-nav-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .global-nav-links {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .global-nav-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 12px 16px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .global-nav-link:hover {
+            background: var(--light);
+            color: var(--text-primary);
+        }
+
+        .global-nav-link.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .global-nav-link i {
+            font-size: 1.1rem;
+        }
+
+        .theme-toggle {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle:hover {
+            background: var(--light);
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, #1d4ed8 100%);
+            color: white;
+            padding: 20px 0;
             margin-bottom: 30px;
-            font-size: 2.5em;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
 
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+            transform: translateY(-1px);
+        }
+
+        /* Navigation */
         nav {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 8px;
             margin-bottom: 30px;
-            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            gap: 10px;
         }
 
         nav a {
-            margin: 0 15px;
+            color: var(--text-secondary);
             text-decoration: none;
-            color: var(--primary);
+            padding: 12px 24px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
             font-weight: 500;
-            font-size: 1.1em;
-            transition: color 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         nav a:hover {
-            color: var(--text);
+            background: var(--light);
+            color: var(--text-primary);
         }
 
+        nav a.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Agent Cards */
         .agent {
-            background-color: var(--card);
-            padding: 20px;
-            margin: 15px 0;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            text-align: left;
-            transition: transform 0.2s, box-shadow 0.2s;
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
         .agent:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
         }
 
-        .task-result {
-            background-color: var(--bg);
-            padding: 15px;
-            margin-top: 15px;
-            border-left: 5px solid var(--primary);
-            white-space: pre-wrap;
-            border-radius: 4px;
-        }
-
-        .toggle-theme {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: none;
-            border: 1px solid var(--border);
-            color: var(--text);
-            padding: 8px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .toggle-theme:hover {
-            background-color: var(--primary);
-            color: white;
-            border-color: var(--primary);
-        }
-
-        #agents {
-            text-align: left;
-            margin-top: 30px;
-        }
-
-        pre {
-            background-color: var(--bg);
-            padding: 10px;
-            border-radius: 4px;
-            overflow-x: auto;
+        .agent strong {
+            color: var(--primary);
         }
 
         .results-block {
-            background: var(--card);
-            margin: 10px 0;
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .results-block pre {
+            background: var(--card-bg);
             padding: 10px;
             border-radius: 6px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+
+        .results-block img {
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+
+        .results-block a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .results-block a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .global-nav-content {
+                flex-direction: column;
+                gap: 15px;
+                padding: 15px 20px;
+            }
+
+            .global-nav-links {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .header-content {
+                flex-direction: column;
+                gap: 20px;
+            }
         }
     </style>
 </head>
 <body>
-    <button class="toggle-theme" onclick="toggleTheme()">🌙 Toggle Dark Mode</button>
-    
+    <!-- Global Navigation -->
+    <nav class="global-nav">
+        <div class="global-nav-content">
+            <a href="/" class="global-nav-brand">
+                <i class="fas fa-shield-alt"></i>
+                C2 Framework
+            </a>
+            <div class="global-nav-links">
+                <a href="/" class="global-nav-link active">
+                    <i class="fas fa-chart-line"></i>
+                    Dashboard
+                </a>
+                <a href="/control" class="global-nav-link">
+                    <i class="fas fa-cogs"></i>
+                    Control Panel
+                </a>
+                <a href="/shellcode" class="global-nav-link">
+                    <i class="fas fa-code"></i>
+                    Shellcode
+                </a>
+                <button class="theme-toggle" onclick="toggleTheme()">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
     <div class="container">
-        <h1>Agent Dashboard</h1>
-        <nav>
-            <a href="/">Dashboard</a>
-            <a href="/shellcode">Shellcode Generator</a>
-            <a href="/control">Task Control Panel</a>
-        </nav>
+        <!-- Header -->
+        <div class="header">
+            <div class="header-content">
+                <h1><i class="fas fa-desktop"></i> Agent Dashboard</h1>
+                <div class="header-actions">
+                    <a href="/control" class="btn btn-primary">
+                        <i class="fas fa-cogs"></i> Control Panel
+                    </a>
+                </div>
+            </div>
+        </div>
+
         <div id="agents">Loading agents...</div>
     </div>
 
