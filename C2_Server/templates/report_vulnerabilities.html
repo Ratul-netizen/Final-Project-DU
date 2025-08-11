@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vulnerability Assessment Report</title>
+  <style>
+    @page { size: A4; margin: 18mm; }
+    body { font-family: 'Segoe UI', Roboto, Arial, sans-serif; color: #0f172a; }
+    h1,h2,h3 { margin: 0 0 8px 0; }
+    .muted { color: #64748b; }
+    .pill { display:inline-block; padding:2px 10px; border-radius:14px; font-size:12px; }
+    .crit { background:#fee2e2; color:#b91c1c; }
+    .high { background:#ffe5d5; color:#c2410c; }
+    .med { background:#fef3c7; color:#92400e; }
+    .low { background:#cffafe; color:#155e75; }
+    .header { display:flex; justify-content:space-between; align-items:flex-end; border-bottom:2px solid #e2e8f0; padding-bottom:8px; }
+    .badge { color:#2563eb; font-weight:600; }
+    .grid { display:grid; grid-template-columns: repeat(12, 1fr); gap: 12px; }
+    .card { border:1px solid #e2e8f0; border-radius:8px; padding:12px; }
+    .card h3 { color:#0f172a; }
+    .kpi { text-align:center; padding:10px 6px; border-radius:8px; background:#f8fafc; border:1px solid #e2e8f0; }
+    .kpi .val { font-size:22px; font-weight:700; color:#0f172a; }
+    .kpi .lbl { font-size:12px; color:#64748b; }
+    table { width:100%; border-collapse: collapse; }
+    th, td { padding:8px; font-size:12px; border-bottom:1px solid #e2e8f0; vertical-align:top; }
+    th { text-align:left; background:#f1f5f9; color:#0f172a; }
+    .footer { margin-top:10px; font-size:11px; color:#64748b; text-align:center; }
+    img.chart { width:100%; max-height:240px; object-fit:contain; border:1px solid #e2e8f0; border-radius:6px; background:#ffffff; }
+  </style>
+  {% set summary = summary or {} %}
+  {% set vuln_counts = vuln_counts or {} %}
+  {% set per_agent = per_agent or [] %}
+  {% set top_findings = top_findings or [] %}
+  {% set findings = findings or [] %}
+</head>
+<body>
+  <!-- Header / Cover -->
+  <div class="header">
+    <div>
+      <h1>Vulnerability Assessment Report</h1>
+      <div class="muted">Generated: {{ generated_at }}</div>
+      {% if filters and filters.agent_id %}
+        <div class="muted">Agents: {{ filters.agent_id }}</div>
+      {% endif %}
+    </div>
+    <div class="badge">Overall Risk Score: {{ summary.overall_risk_score or 0 }}/100</div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="grid" style="margin-top:12px;">
+    <div class="kpi" style="grid-column: span 3;">
+      <div class="val">{{ vuln_counts['Critical'] or 0 }}</div>
+      <div class="lbl">Critical</div>
+    </div>
+    <div class="kpi" style="grid-column: span 3;">
+      <div class="val">{{ vuln_counts['High'] or 0 }}</div>
+      <div class="lbl">High</div>
+    </div>
+    <div class="kpi" style="grid-column: span 3;">
+      <div class="val">{{ vuln_counts['Medium'] or 0 }}</div>
+      <div class="lbl">Medium</div>
+    </div>
+    <div class="kpi" style="grid-column: span 3;">
+      <div class="val">{{ vuln_counts['Low'] or 0 }}</div>
+      <div class="lbl">Low</div>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="grid" style="margin-top:12px;">
+    <div class="card" style="grid-column: span 4;">
+      <h3>Severity Distribution</h3>
+      {% if chart_severity %}
+        <img class="chart" src="data:image/png;base64,{{ chart_severity }}" />
+      {% else %}<div class="muted">No chart data</div>{% endif %}
+    </div>
+    <div class="card" style="grid-column: span 4;">
+      <h3>CVE by Year</h3>
+      {% if chart_cve_year %}
+        <img class="chart" src="data:image/png;base64,{{ chart_cve_year }}" />
+      {% else %}<div class="muted">No chart data</div>{% endif %}
+    </div>
+    <div class="card" style="grid-column: span 4;">
+      <h3>Risk Score Trend</h3>
+      {% if chart_risk_trend %}
+        <img class="chart" src="data:image/png;base64,{{ chart_risk_trend }}" />
+      {% else %}<div class="muted">No chart data</div>{% endif %}
+    </div>
+  </div>
+
+  <!-- Per Agent Summary -->
+  <div class="card" style="margin-top:12px;">
+    <h3>Per-Agent Summary</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Agent</th>
+          <th>Critical</th>
+          <th>High</th>
+          <th>Medium</th>
+          <th>Low</th>
+          <th>Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in per_agent %}
+        <tr>
+          <td>{{ a.id }}</td>
+          <td>{{ a.counts['Critical'] }}</td>
+          <td>{{ a.counts['High'] }}</td>
+          <td>{{ a.counts['Medium'] }}</td>
+          <td>{{ a.counts['Low'] }}</td>
+          <td>{{ a.vulns }}</td>
+        </tr>
+        {% endfor %}
+        {% if per_agent|length == 0 %}
+        <tr><td colspan="6" class="muted">No agent data.</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Top Findings -->
+  <div class="card" style="margin-top:12px;">
+    <h3>Top Findings</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Severity</th>
+          <th>CVE</th>
+          <th>Title / Type</th>
+          <th>Agent</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for v in top_findings %}
+        <tr>
+          <td>
+            {% set s = (v.severity or 'Low') %}
+            <span class="pill {% if s=='Critical' %}crit{% elif s=='High' %}high{% elif s=='Medium' %}med{% else %}low{% endif %}">{{ s }}</span>
+          </td>
+          <td>{{ v.cve or 'N/A' }}</td>
+          <td>{{ v.title or v.name or v.type or 'Unknown' }}</td>
+          <td>{{ v.agent_id }}</td>
+          <td>{{ (v.description or v.details or '')[:180] }}{% if (v.description or v.details) and (v.description|length > 180 or v.details|length > 180) %}...{% endif %}</td>
+        </tr>
+        {% endfor %}
+        {% if top_findings|length == 0 %}
+        <tr><td colspan="5" class="muted">No high-priority findings.</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- All Findings -->
+  <div class="card" style="margin-top:12px;">
+    <h3>All Findings</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Severity</th>
+          <th>CVE</th>
+          <th>Title / Type</th>
+          <th>Agent</th>
+          <th>First Seen</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for v in findings %}
+        <tr>
+          <td>
+            {% set s = (v.severity or 'Low') %}
+            <span class="pill {% if s=='Critical' %}crit{% elif s=='High' %}high{% elif s=='Medium' %}med{% else %}low{% endif %}">{{ s }}</span>
+          </td>
+          <td>{{ v.cve or 'N/A' }}</td>
+          <td>{{ v.title or v.name or v.type or 'Unknown' }}</td>
+          <td>{{ v.agent_id }}</td>
+          <td>{{ v.discovered_at or '' }}</td>
+          <td>{{ (v.description or v.details or '')[:220] }}{% if (v.description or v.details) and (v.description|length > 220 or v.details|length > 220) %}...{% endif %}</td>
+        </tr>
+        {% endfor %}
+        {% if findings|length == 0 %}
+        <tr><td colspan="6" class="muted">No findings.</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="footer">Generated by C2 Server • {{ generated_at }}</div>
+</body>
+</html>
+
+

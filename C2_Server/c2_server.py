@@ -44,6 +44,7 @@ from models import User, users
 
 # Import vulnerability dashboard
 from vulnerability_dashboard import dashboard
+from reporting import generate_pdf_or_html
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -324,45 +325,21 @@ def get_dashboard_data():
 @app.route('/api/export/pdf')
 @login_required
 def export_pdf():
-    """Export vulnerability report as PDF"""
+    """Export vulnerability report as PDF (with safe fallbacks).
+
+    Accepts optional query params:
+      - agent_id: comma-separated agent ids to include
+    """
     try:
-        # Generate PDF report (placeholder)
-        from io import BytesIO
-        import tempfile
-        
-        # Create a simple text report for now
-        report_data = get_dashboard_data().get_json()
-        
-        report_text = f"""
-VULNERABILITY ASSESSMENT REPORT
-Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+        filters = {}
+        if request.args.get('agent_id'):
+            filters['agent_id'] = request.args.get('agent_id')
 
-SUMMARY:
-- Total Vulnerabilities: {report_data['summary']['total_vulnerabilities']}
-- Critical: {report_data['summary']['critical_vulnerabilities']}
-- High: {report_data['summary']['high_vulnerabilities']}
-- Medium: {report_data['summary']['medium_vulnerabilities']}
-- Low: {report_data['summary']['low_vulnerabilities']}
-- Overall Risk Score: {report_data['summary']['overall_risk_score']}/100
-- Active Agents: {report_data['summary']['active_agents']}/{report_data['summary']['total_agents']}
-
-DETAILED FINDINGS:
-"""
-        
-        # Add vulnerability details
-        for agent_id, agent_vulns in report_data['vulnerabilities'].items():
-            report_text += f"\nAgent: {agent_id}\n"
-            report_text += f"Risk Score: {agent_vulns.get('risk_score', 0)}/100\n"
-            for vuln in agent_vulns.get('vulnerabilities', []):
-                report_text += f"- {vuln.get('severity', 'Unknown').upper()}: {vuln.get('title', vuln.get('cve', 'Unknown'))}\n"
-        
-        # Create temporary file
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as f:
-            f.write(report_text)
-            temp_path = f.name
-        
-        return send_file(temp_path, as_attachment=True, download_name='vulnerability_report.txt')
-        
+        # Ensure Flask app context for template rendering inside reporting
+        from flask import current_app
+        with app.app_context():
+            filename, data, mimetype = generate_pdf_or_html(filters)
+        return Response(data, mimetype=mimetype, headers={'Content-Disposition': f'attachment; filename={filename}'})
     except Exception as e:
         logging.error(f"Error exporting PDF: {e}")
         return jsonify({'error': str(e)}), 500
