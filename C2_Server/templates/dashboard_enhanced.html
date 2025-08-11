@@ -1,0 +1,2867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Vulnerability Assessment Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --secondary: #64748b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #06b6d4;
+            --dark: #0f172a;
+            --light: #f8fafc;
+            --border: #e2e8f0;
+            --background: #0f172a;
+            --card-bg: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, var(--dark) 0%, #1a2332 100%);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Navigation */
+        .nav-header {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(52, 65, 85, 0.5);
+            border-radius: 12px;
+            padding: 16px 24px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(37, 99, 235, 0.1);
+            border: 1px solid rgba(37, 99, 235, 0.3);
+            border-radius: 8px;
+            color: var(--text-primary);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .nav-link:hover {
+            background: rgba(37, 99, 235, 0.2);
+            border-color: var(--primary);
+            transform: translateY(-1px);
+        }
+
+        .nav-link.active {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        /* Dashboard Header */
+        .dashboard-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .dashboard-title {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--info));
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .dashboard-subtitle {
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+        }
+
+        /* System Health Indicator */
+        .system-health-indicator {
+            margin-top: 16px;
+            padding: 12px 20px;
+            background: rgba(30, 41, 59, 0.6);
+            border-radius: 12px;
+            border: 1px solid rgba(52, 65, 85, 0.5);
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.9rem;
+        }
+
+        .health-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+        }
+
+        .health-status.healthy {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .health-status.warning {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .health-status.critical {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .health-status.loading {
+            background: rgba(6, 182, 212, 0.2);
+            color: #06b6d4;
+            border: 1px solid rgba(6, 182, 212, 0.3);
+        }
+
+        .health-details {
+            color: var(--text-secondary);
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(52, 65, 85, 0.5);
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--info));
+        }
+
+        .stat-value {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .stat-change {
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .stat-critical { color: var(--danger); }
+        .stat-high { color: #ff6b35; }
+        .stat-medium { color: var(--warning); }
+        .stat-low { color: var(--info); }
+        .stat-success { color: var(--success); }
+
+        /* Dashboard Tabs */
+        .dashboard-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            background: rgba(30, 41, 59, 0.6);
+            border-radius: 12px;
+            padding: 8px;
+        }
+
+        .tab-button {
+            padding: 12px 20px;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab-button.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Content Grid */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .chart-section {
+            display: grid;
+            gap: 24px;
+        }
+
+        .side-panel {
+            display: grid;
+            gap: 24px;
+        }
+
+        .card {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(52, 65, 85, 0.5);
+            border-radius: 16px;
+            padding: 24px;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            border-color: rgba(37, 99, 235, 0.5);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(52, 65, 85, 0.5);
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-action {
+            background: rgba(37, 99, 235, 0.1);
+            border: 1px solid rgba(37, 99, 235, 0.3);
+            color: var(--primary);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .card-action:hover {
+            background: rgba(37, 99, 235, 0.2);
+        }
+
+        /* Chart Containers */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 16px;
+        }
+
+        .chart-large {
+            height: 400px;
+        }
+
+        /* Vulnerability List */
+        .vuln-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .vuln-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            border: 1px solid rgba(52, 65, 85, 0.5);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .vuln-item:hover {
+            background: rgba(37, 99, 235, 0.1);
+            border-color: rgba(37, 99, 235, 0.3);
+        }
+
+        .vuln-info {
+            flex: 1;
+        }
+
+        .vuln-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .vuln-meta {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .severity-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .severity-critical {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+            border: 1px solid var(--danger);
+        }
+
+        .severity-high {
+            background: rgba(255, 107, 53, 0.2);
+            color: #ff6b35;
+            border: 1px solid #ff6b35;
+        }
+
+        .severity-medium {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--warning);
+            border: 1px solid var(--warning);
+        }
+
+        .severity-low {
+            background: rgba(6, 182, 212, 0.2);
+            color: var(--info);
+            border: 1px solid var(--info);
+        }
+
+        /* Agent List */
+        .agent-grid {
+            display: grid;
+            gap: 12px;
+        }
+
+        .agent-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(52, 65, 85, 0.5);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .agent-item:hover {
+            background: rgba(37, 99, 235, 0.1);
+        }
+
+        .agent-status {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .status-online { background: var(--success); }
+        .status-offline { background: var(--text-secondary); }
+
+        .agent-info {
+            flex: 1;
+        }
+
+        .agent-name {
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .agent-meta {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-header {
+                flex-direction: column;
+                gap: 16px;
+            }
+            
+            .nav-links {
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+            
+            .dashboard-title {
+                font-size: 2rem;
+            }
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(37, 99, 235, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Tab Content */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Risk Score Gauge */
+        .risk-gauge {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            margin: 0 auto;
+        }
+
+        .gauge-bg {
+            stroke: rgba(52, 65, 85, 0.3);
+            stroke-width: 20;
+        }
+
+        .gauge-fill {
+            stroke: var(--primary);
+            stroke-width: 20;
+            stroke-linecap: round;
+            transition: stroke-dasharray 1s ease;
+        }
+
+        .gauge-text {
+            text-anchor: middle;
+            font-size: 2rem;
+            font-weight: 700;
+            fill: var(--text-primary);
+        }
+
+        /* Timeline */
+        .timeline {
+            position: relative;
+            padding-left: 24px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: rgba(37, 99, 235, 0.3);
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 24px;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -20px;
+            top: 4px;
+            width: 12px;
+            height: 12px;
+            background: var(--primary);
+            border-radius: 50%;
+        }
+
+        .timeline-content {
+            background: rgba(15, 23, 42, 0.5);
+            padding: 12px 16px;
+            border-radius: 8px;
+            border-left: 3px solid var(--primary);
+        }
+
+        .timeline-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .timeline-meta {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Task List */
+        .task-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .task-item {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .task-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .task-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .task-time {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .task-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .task-status.success {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .task-status.failed {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .task-content {
+            background: rgba(15, 23, 42, 0.3);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .task-action-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .task-action-btn.primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .task-action-btn.primary:hover {
+            background: #1d4ed8;
+            transform: translateY(-1px);
+        }
+
+        .task-action-btn.secondary {
+            background: rgba(37, 99, 235, 0.1);
+            color: var(--primary);
+            border: 1px solid rgba(37, 99, 235, 0.3);
+        }
+
+        .task-action-btn.secondary:hover {
+            background: rgba(37, 99, 235, 0.2);
+        }
+
+        /* Task Filters */
+        .task-filters {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .filter-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 6px;
+            transition: background 0.3s ease;
+        }
+
+        .filter-label:hover {
+            background: rgba(37, 99, 235, 0.1);
+        }
+
+        .filter-label input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--primary);
+        }
+
+        /* Image Preview */
+        .image-preview {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .image-preview:hover {
+            transform: scale(1.05);
+        }
+
+        .image-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+        }
+
+        .image-modal-content {
+            margin: auto;
+            display: block;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90%;
+            object-fit: contain;
+        }
+
+        .image-modal-close {
+            position: absolute;
+            top: 15px;
+            right: 35px;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* Network Activity Monitor */
+        .network-activity {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .network-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            text-align: center;
+            padding: 12px;
+            background: rgba(30, 41, 59, 0.6);
+            border-radius: 12px;
+            border: 1px solid rgba(52, 65, 85, 0.5);
+        }
+
+        .network-stat {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .network-logs {
+            background: rgba(30, 41, 59, 0.6);
+            border-radius: 12px;
+            border: 1px solid rgba(52, 65, 85, 0.5);
+            padding: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .network-log-entry {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            border-bottom: 1px solid rgba(52, 65, 85, 0.3);
+            font-size: 0.9rem;
+            color: var(--text-primary);
+        }
+
+        .network-log-entry:last-child {
+            border-bottom: none;
+        }
+
+        .log-type {
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .log-message {
+            flex: 1;
+            margin-left: 10px;
+            color: var(--text-secondary);
+        }
+
+        .log-timestamp {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        /* No data message styling */
+        .no-data-message {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+        }
+
+        .no-data-message i {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .no-data-message h3 {
+            color: var(--text-primary);
+            margin-bottom: 10px;
+            font-size: 1.5rem;
+        }
+
+        .no-data-message p {
+            margin-bottom: 20px;
+            font-size: 1rem;
+        }
+
+        .no-data-message .agent-help,
+        .no-data-message .vuln-help {
+            text-align: left;
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(52, 65, 85, 0.3);
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .no-data-message .agent-help h4,
+        .no-data-message .vuln-help h4 {
+            color: var(--text-primary);
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .no-data-message .agent-help ul,
+        .no-data-message .vuln-help ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .no-data-message .agent-help li,
+        .no-data-message .vuln-help li {
+            padding: 5px 0;
+            border-left: 3px solid var(--primary);
+            padding-left: 15px;
+            margin: 5px 0;
+        }
+
+        .no-data-message .agent-help li:before,
+        .no-data-message .vuln-help li:before {
+            content: "→";
+            color: var(--primary);
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav-header">
+        <a href="/" class="nav-brand">
+            <i class="fas fa-shield-alt"></i>
+            Advanced Vulnerability Scanner
+        </a>
+        <div class="nav-links">
+            <a href="/" class="nav-link active">
+                <i class="fas fa-chart-line"></i>
+                Dashboard
+            </a>
+            <a href="/control" class="nav-link">
+                <i class="fas fa-cogs"></i>
+                Control Panel
+            </a>
+            <a href="/shellcode" class="nav-link">
+                <i class="fas fa-code"></i>
+                Shellcode
+            </a>
+            <a href="/reports" class="nav-link">
+                <i class="fas fa-file-alt"></i>
+                Reports
+            </a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Dashboard Header -->
+        <div class="dashboard-header">
+            <h1 class="dashboard-title">
+                <i class="fas fa-shield-alt"></i>
+                Vulnerability Assessment Dashboard
+            </h1>
+            <p class="dashboard-subtitle">Real-time security monitoring and vulnerability management</p>
+            <div class="system-health-indicator" id="systemHealthIndicator">
+                <span class="health-status" id="healthStatus">Loading...</span>
+                <span class="health-details" id="healthDetails">Initializing system...</span>
+            </div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value stat-critical" id="criticalCount">0</div>
+                <div class="stat-label">Critical Vulnerabilities</div>
+                <div class="stat-change">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>Requires immediate attention</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value stat-high" id="highCount">0</div>
+                <div class="stat-label">High Risk Issues</div>
+                <div class="stat-change">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>Patch within 24h</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value stat-medium" id="mediumCount">0</div>
+                <div class="stat-label">Medium Priority</div>
+                <div class="stat-change">
+                    <i class="fas fa-clock"></i>
+                    <span>Schedule remediation</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value stat-success" id="activeAgents">0</div>
+                <div class="stat-label">Active Agents</div>
+                <div class="stat-change stat-success">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Online and scanning</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Tabs -->
+        <div class="dashboard-tabs">
+            <button class="tab-button active" onclick="switchTab('overview')">
+                <i class="fas fa-chart-pie"></i>
+                Overview
+            </button>
+            <button class="tab-button" onclick="switchTab('vulnerabilities')">
+                <i class="fas fa-bug"></i>
+                Vulnerabilities
+            </button>
+            <button class="tab-button" onclick="switchTab('agents')">
+                <i class="fas fa-desktop"></i>
+                Agents
+            </button>
+            <button class="tab-button" onclick="switchTab('tasks')">
+                <i class="fas fa-tasks"></i>
+                Recent Tasks
+            </button>
+            <button class="tab-button" onclick="switchTab('network')">
+                <i class="fas fa-network-wired"></i>
+                Network
+            </button>
+            <button class="tab-button" onclick="switchTab('reports')">
+                <i class="fas fa-chart-bar"></i>
+                Reports
+            </button>
+        </div>
+
+        <!-- Overview Tab -->
+        <div id="overview-content" class="tab-content active">
+            <div class="content-grid">
+                <div class="chart-section">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-chart-pie"></i>
+                                Vulnerability Distribution
+                            </h3>
+                            <button class="card-action" onclick="refreshCharts()">
+                                <i class="fas fa-sync-alt"></i>
+                                Refresh
+                            </button>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="vulnerabilityChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-chart-line"></i>
+                                Risk Score Trend (Last 30 Days)
+                            </h3>
+                            <button class="card-action" onclick="exportChart()">
+                                <i class="fas fa-download"></i>
+                                Export
+                            </button>
+                        </div>
+                        <div class="chart-container chart-large">
+                            <canvas id="riskTrendChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="side-panel">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-tachometer-alt"></i>
+                                Overall Risk Score
+                            </h3>
+                        </div>
+                        <div class="risk-gauge">
+                            <svg width="200" height="200" viewBox="0 0 200 200">
+                                <circle cx="100" cy="100" r="80" fill="none" class="gauge-bg"></circle>
+                                <circle cx="100" cy="100" r="80" fill="none" class="gauge-fill" id="riskGauge"
+                                        stroke-dasharray="0 502" transform="rotate(-90 100 100)"></circle>
+                                <text x="100" y="105" class="gauge-text" id="riskScore">0</text>
+                                <text x="100" y="125" style="text-anchor: middle; font-size: 0.9rem; fill: var(--text-secondary);">Risk Score</text>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-clock"></i>
+                                Recent Activity
+                            </h3>
+                            <button class="card-action" onclick="refreshActivityFeed()">
+                                <i class="fas fa-sync-alt"></i>
+                                Refresh
+                            </button>
+                        </div>
+                        <div class="timeline" id="recentActivity">
+                            <div class="timeline-item">
+                                <div class="timeline-content">
+                                    <div class="timeline-title">System scan initiated</div>
+                                    <div class="timeline-meta">Agent monitor_abc123 • 2 minutes ago</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vulnerabilities Tab -->
+        <div id="vulnerabilities-content" class="tab-content">
+            <div class="content-grid">
+                <div class="chart-section">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-list"></i>
+                                Vulnerability List
+                            </h3>
+                            <button class="card-action" onclick="refreshVulnerabilities()">
+                                <i class="fas fa-sync-alt"></i>
+                                Refresh
+                            </button>
+                        </div>
+                        <div class="vuln-list" id="vulnerabilityList">
+                            <!-- Vulnerabilities will be populated here -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="side-panel">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-chart-bar"></i>
+                                CVE Distribution
+                            </h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="cveChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-shield-alt"></i>
+                                Exploit Availability
+                            </h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="exploitChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Agents Tab -->
+        <div id="agents-content" class="tab-content">
+            <div class="content-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-desktop"></i>
+                            Agent Performance
+                        </h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="agentPerformanceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="side-panel">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-users"></i>
+                            Connected Agents
+                        </h3>
+                    </div>
+                    <div class="agent-grid" id="agentList">
+                        <!-- Agents will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tasks Tab -->
+        <div id="tasks-content" class="tab-content">
+            <div class="content-grid">
+                <div class="chart-section">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-tasks"></i>
+                                Recent Task Results
+                            </h3>
+                            <button class="card-action" onclick="refreshTasks()">
+                                <i class="fas fa-sync-alt"></i>
+                                Refresh
+                            </button>
+                        </div>
+                        <div class="task-list" id="taskList">
+                            <!-- Task results will be populated here -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="side-panel">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-chart-line"></i>
+                                Task Statistics
+                            </h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="taskStatsChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-filter"></i>
+                                Task Filters
+                            </h3>
+                        </div>
+                        <div class="task-filters">
+                            <label class="filter-label">
+                                <input type="checkbox" id="filterScreenshots" checked> Screenshots
+                            </label>
+                            <label class="filter-label">
+                                <input type="checkbox" id="filterVulnScans" checked> Vulnerability Scans
+                            </label>
+                            <label class="filter-label">
+                                <input type="checkbox" id="filterSurveillance" checked> Surveillance
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Network Tab -->
+        <div id="network-content" class="tab-content">
+            <div class="content-grid">
+                <div class="chart-section">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-network-wired"></i>
+                                Network Activity Monitor
+                            </h3>
+                            <button class="card-action" onclick="refreshNetworkActivity()">
+                                <i class="fas fa-sync-alt"></i>
+                                Refresh
+                            </button>
+                        </div>
+                        <div class="network-activity" id="networkActivity">
+                            <div class="network-stats">
+                                <div class="network-stat">
+                                    <span class="stat-label">Active Connections</span>
+                                    <span class="stat-value" id="activeConnections">0</span>
+                                </div>
+                                <div class="network-stat">
+                                    <span class="stat-label">Data Transferred</span>
+                                    <span class="stat-value" id="dataTransferred">0 KB</span>
+                                </div>
+                                <div class="network-stat">
+                                    <span class="stat-label">Avg Response Time</span>
+                                    <span class="stat-value" id="avgResponseTime">0ms</span>
+                                </div>
+                            </div>
+                            <div class="network-logs" id="networkLogs">
+                                <!-- Network activity logs will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="side-panel">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-chart-line"></i>
+                                Connection Trends
+                            </h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="connectionTrendChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-shield-alt"></i>
+                                Security Status
+                            </h3>
+                        </div>
+                        <div class="security-status" id="securityStatus">
+                            <!-- Security status will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reports Tab -->
+        <div id="reports-content" class="tab-content">
+            <div class="content-grid">
+                <div class="chart-section">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-chart-area"></i>
+                                Scan History
+                            </h3>
+                        </div>
+                        <div class="chart-container chart-large">
+                            <canvas id="scanHistoryChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="side-panel">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-download"></i>
+                                Export Reports
+                            </h3>
+                        </div>
+                        <div style="display: grid; gap: 12px;">
+                            <button class="card-action" onclick="exportPDF()">
+                                <i class="fas fa-file-pdf"></i>
+                                Export PDF Report
+                            </button>
+                            <button class="card-action" onclick="exportCSV()">
+                                <i class="fas fa-file-csv"></i>
+                                Export CSV Data
+                            </button>
+                            <button class="card-action" onclick="exportJSON()">
+                                <i class="fas fa-file-code"></i>
+                                Export JSON Data
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Modal -->
+    <div id="imageModal" class="image-modal">
+        <span class="image-modal-close" onclick="closeImageModal()">&times;</span>
+        <img class="image-modal-content" id="modalImage">
+    </div>
+
+    <script>
+        // Global variables
+        let vulnerabilityData = {};
+        let agentData = {};
+        let scanHistory = [];
+        let charts = {};
+        let taskData = {};
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeCharts();
+            loadData();
+            
+            // Refresh data every 15 seconds for real-time updates
+            setInterval(loadData, 15000);
+            
+            // Update agent status every 5 seconds
+            setInterval(updateAgentStatus, 5000);
+            
+            // Add filter event listeners
+            document.getElementById('filterScreenshots')?.addEventListener('change', updateTaskDisplay);
+            document.getElementById('filterVulnScans')?.addEventListener('change', updateTaskDisplay);
+            document.getElementById('filterSurveillance')?.addEventListener('change', updateTaskDisplay);
+        });
+
+        // Tab switching
+        function switchTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active class from all tab buttons
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            const tabContent = document.getElementById(tabName + '-content');
+            if (tabContent) {
+                tabContent.classList.add('active');
+            }
+            
+            // Add active class to clicked button
+            event.target.classList.add('active');
+            
+            // Load specific data for certain tabs
+            if (tabName === 'network') {
+                refreshNetworkActivity();
+            }
+        }
+
+        // Initialize charts with agent performance chart
+        function initializeCharts() {
+            // Vulnerability Distribution Chart
+            const vulnCtx = document.getElementById('vulnerabilityChart').getContext('2d');
+            charts.vulnerability = new Chart(vulnCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Critical', 'High', 'Medium', 'Low'],
+                    datasets: [{
+                        data: [0, 0, 0, 0],
+                        backgroundColor: [
+                            '#ef4444',
+                            '#ff6b35',
+                            '#f59e0b',
+                            '#06b6d4'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: '#f1f5f9',
+                                usePointStyle: true,
+                                padding: 20
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Risk Trend Chart
+            const riskCtx = document.getElementById('riskTrendChart').getContext('2d');
+            charts.riskTrend = new Chart(riskCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Risk Score',
+                        data: [],
+                        borderColor: '#2563eb',
+                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#f1f5f9'
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: '#94a3b8' },
+                            grid: { color: 'rgba(148, 163, 184, 0.1)' }
+                        },
+                        y: {
+                            ticks: { color: '#94a3b8' },
+                            grid: { color: 'rgba(148, 163, 184, 0.1)' },
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    }
+                }
+            });
+
+            // Agent Performance Chart
+            const agentPerfCtx = document.getElementById('agentPerformanceChart');
+            if (agentPerfCtx) {
+                charts.agentPerformance = new Chart(agentPerfCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            label: 'CPU Usage (%)',
+                            data: [],
+                            backgroundColor: '#2563eb',
+                            yAxisID: 'y'
+                        }, {
+                            label: 'Memory Usage (%)',
+                            data: [],
+                            backgroundColor: '#10b981',
+                            yAxisID: 'y'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: { color: '#f1f5f9' }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                ticks: { color: '#94a3b8' },
+                                grid: { color: 'rgba(148, 163, 184, 0.1)' }
+                            },
+                            y: {
+                                ticks: { color: '#94a3b8' },
+                                grid: { color: 'rgba(148, 163, 184, 0.1)' },
+                                beginAtZero: true,
+                                max: 100
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Connection Trend Chart
+            const connectionCtx = document.getElementById('connectionTrendChart');
+            if (connectionCtx) {
+                charts.connectionTrend = new Chart(connectionCtx, {
+                    type: 'line',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            label: 'Active Connections',
+                            data: [],
+                            borderColor: '#2563eb',
+                            backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }, {
+                            label: 'Data Transfer (KB)',
+                            data: [],
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            fill: true,
+                            tension: 0.4,
+                            yAxisID: 'y1'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: { color: '#f1f5f9' }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                ticks: { color: '#94a3b8' },
+                                grid: { color: 'rgba(148, 163, 184, 0.1)' }
+                            },
+                            y: {
+                                type: 'linear',
+                                display: true,
+                                position: 'left',
+                                ticks: { color: '#94a3b8' },
+                                grid: { color: 'rgba(148, 163, 184, 0.1)' },
+                                beginAtZero: true
+                            },
+                            y1: {
+                                type: 'linear',
+                                display: true,
+                                position: 'right',
+                                ticks: { color: '#94a3b8' },
+                                grid: { drawOnChartArea: false },
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            }
+
+            // CVE Distribution Chart
+            const cveCtx = document.getElementById('cveChart').getContext('2d');
+            charts.cve = new Chart(cveCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['2024', '2023', '2022', '2021', '2020'],
+                    datasets: [{
+                        label: 'CVEs Found',
+                        data: [0, 0, 0, 0, 0],
+                        backgroundColor: '#2563eb'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#f1f5f9' }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: '#94a3b8' },
+                            grid: { color: 'rgba(148, 163, 184, 0.1)' }
+                        },
+                        y: {
+                            ticks: { color: '#94a3b8' },
+                            grid: { color: 'rgba(148, 163, 184, 0.1)' }
+                        }
+                    }
+                }
+            });
+
+            // Task Statistics Chart
+            const taskCtx = document.getElementById('taskStatsChart');
+            if (taskCtx) {
+                charts.taskStats = new Chart(taskCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Screenshots', 'Vulnerability Scans', 'Surveillance', 'Other'],
+                        datasets: [{
+                            data: [0, 0, 0, 0],
+                            backgroundColor: [
+                                '#10b981',
+                                '#2563eb',
+                                '#f59e0b',
+                                '#64748b'
+                            ],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    color: '#f1f5f9',
+                                    usePointStyle: true,
+                                    padding: 20
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Load data from API
+        async function loadData() {
+            try {
+                console.log('Starting data load...');
+                
+                // Load vulnerability data
+                console.log('Loading vulnerability data...');
+                const vulnResponse = await fetch('/api/vulnerabilities');
+                console.log('Vulnerability response status:', vulnResponse.status);
+                if (vulnResponse.ok) {
+                    vulnerabilityData = await vulnResponse.json();
+                    console.log('Loaded vulnerability data:', vulnerabilityData);
+                    updateVulnerabilityDisplay();
+                } else {
+                    console.error('Failed to load vulnerability data:', vulnResponse.status, vulnResponse.statusText);
+                    vulnerabilityData = {};
+                }
+
+                // Load agent data
+                console.log('Loading agent data...');
+                const agentResponse = await fetch('/api/agents');
+                console.log('Agent response status:', agentResponse.status);
+                if (agentResponse.ok) {
+                    const agentResponseData = await agentResponse.json();
+                    console.log('Raw agent response:', agentResponseData);
+                    
+                    // Handle the new API response format
+                    if (agentResponseData.status === 'success' && agentResponseData.agents) {
+                        // Convert array to object format for compatibility
+                        agentData = {};
+                        agentResponseData.agents.forEach(agent => {
+                            agentData[agent.agent_id] = agent;
+                        });
+                    } else {
+                        agentData = agentResponseData;
+                    }
+                    
+                    console.log('Processed agent data:', agentData);
+                    updateAgentDisplay();
+                } else {
+                    console.error('Failed to load agent data:', agentResponse.status, agentResponse.statusText);
+                    agentData = {};
+                }
+
+                // Load scan history
+                console.log('Loading scan history...');
+                const historyResponse = await fetch('/api/scan-history');
+                console.log('History response status:', historyResponse.status);
+                if (historyResponse.ok) {
+                    scanHistory = await historyResponse.json();
+                    console.log('Loaded scan history:', scanHistory);
+                    updateCharts();
+                } else {
+                    console.error('Failed to load scan history:', historyResponse.status, historyResponse.statusText);
+                    scanHistory = [];
+                }
+
+                // Load task results
+                console.log('Loading task results...');
+                const taskResponse = await fetch('/api/results');
+                console.log('Task response status:', taskResponse.status);
+                if (taskResponse.ok) {
+                    const taskResponseData = await taskResponse.json();
+                    console.log('Raw task response:', taskResponseData);
+                    
+                    // Handle the new API response format
+                    if (taskResponseData.status === 'success' && taskResponseData.results) {
+                        taskData = taskResponseData;
+                    } else {
+                        taskData = taskResponseData;
+                    }
+                    
+                    console.log('Processed task data:', taskData);
+                    updateTaskDisplay();
+                } else {
+                    console.error('Failed to load task data:', taskResponse.status, taskResponse.statusText);
+                    taskData = { results: [] };
+                }
+
+                // Load real-time agent status
+                await updateAgentStatus();
+                
+                // Update activity feed with latest data
+                updateActivityFeed();
+                
+                // Update system health indicator
+                updateSystemHealth();
+                
+                console.log('Data load complete');
+
+            } catch (error) {
+                console.error('Error loading data:', error);
+                // Set default empty data to prevent errors
+                if (!vulnerabilityData) vulnerabilityData = {};
+                if (!agentData) agentData = {};
+                if (!scanHistory) scanHistory = [];
+                if (!taskData) taskData = { results: [] };
+            }
+        }
+
+        // Update agent status in real-time
+        async function updateAgentStatus() {
+            try {
+                // Update agent status indicators
+                Object.entries(agentData).forEach(([agentId, agent]) => {
+                    const lastSeen = new Date(agent.last_seen || agent.timestamp || 0);
+                    const now = new Date();
+                    const timeDiff = now - lastSeen;
+                    
+                    // Consider agent offline if no beacon for more than 30 seconds
+                    const isOnline = timeDiff < 30000; // 30 seconds
+                    
+                    if (agent.status !== 'offline' && !isOnline) {
+                        agent.status = 'offline';
+                    }
+                });
+                
+                // Update active agents count
+                const activeAgentCount = Object.values(agentData).filter(agent => 
+                    agent.status === 'active' || agent.status === 'online'
+                ).length;
+                
+                document.getElementById('activeAgents').textContent = activeAgentCount;
+                
+                // Update agent list with real-time status
+                updateAgentList();
+                
+            } catch (error) {
+                console.error('Error updating agent status:', error);
+            }
+        }
+
+        // Update vulnerability display with enhanced data processing
+        function updateVulnerabilityDisplay() {
+            const counts = {
+                critical: 0,
+                high: 0,
+                medium: 0,
+                low: 0
+            };
+
+            // Check if we have vulnerability data
+            if (!vulnerabilityData || Object.keys(vulnerabilityData).length === 0) {
+                console.log('No vulnerability data available');
+                // Show "No data" message in stat cards
+                document.getElementById('criticalCount').textContent = '0';
+                document.getElementById('highCount').textContent = '0';
+                document.getElementById('mediumCount').textContent = '0';
+                
+                // Update vulnerability chart with zeros
+                if (charts.vulnerability) {
+                    charts.vulnerability.data.datasets[0].data = [0, 0, 0, 0];
+                    charts.vulnerability.update();
+                }
+                
+                // Show no data message in vulnerability list
+                updateVulnerabilityList();
+                updateRiskGauge();
+                return;
+            }
+
+            // Count vulnerabilities by severity from all agents
+            Object.values(vulnerabilityData).forEach(agent => {
+                if (agent.vulnerabilities) {
+                    agent.vulnerabilities.forEach(vuln => {
+                        const severity = vuln.severity?.toLowerCase() || 'low';
+                        if (counts.hasOwnProperty(severity)) {
+                            counts[severity]++;
+                        }
+                    });
+                }
+            });
+
+            console.log('Vulnerability counts:', counts);
+
+            // Update stat cards
+            document.getElementById('criticalCount').textContent = counts.critical;
+            document.getElementById('highCount').textContent = counts.high;
+            document.getElementById('mediumCount').textContent = counts.medium;
+
+            // Update vulnerability chart
+            if (charts.vulnerability) {
+                charts.vulnerability.data.datasets[0].data = [
+                    counts.critical,
+                    counts.high,
+                    counts.medium,
+                    counts.low
+                ];
+                charts.vulnerability.update();
+            }
+
+            // Update vulnerability list
+            updateVulnerabilityList();
+            
+            // Update risk gauge
+            updateRiskGauge();
+        }
+
+        // Update agent display with enhanced information
+        function updateAgentDisplay() {
+            // Check if we have agent data
+            if (!agentData || Object.keys(agentData).length === 0) {
+                console.log('No agent data available');
+                document.getElementById('activeAgents').textContent = '0';
+                updateAgentList();
+                updateAgentPerformanceChart();
+                return;
+            }
+
+            const activeAgentCount = Object.values(agentData).filter(agent => 
+                agent.status === 'active' || agent.status === 'online'
+            ).length;
+            
+            console.log('Active agents count:', activeAgentCount, 'Total agents:', Object.keys(agentData).length);
+            
+            document.getElementById('activeAgents').textContent = activeAgentCount;
+            
+            // Update agent list with detailed information
+            updateAgentList();
+            
+            // Update agent performance chart if available
+            updateAgentPerformanceChart();
+        }
+
+        // Update agent list with detailed information
+        function updateAgentList() {
+            const agentList = document.getElementById('agentList');
+            if (!agentList) return;
+            
+            agentList.innerHTML = '';
+
+            // Check if we have agent data
+            if (!agentData || Object.keys(agentData).length === 0) {
+                agentList.innerHTML = `
+                    <div class="no-data-message">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h3>No Agents Connected</h3>
+                        <p>No agents are currently connected to the C2 server.</p>
+                        <div class="agent-help">
+                            <h4>To connect agents:</h4>
+                            <ul>
+                                <li>Run the agent script on target systems</li>
+                                <li>Ensure the C2 server is accessible from agent systems</li>
+                                <li>Check network connectivity and firewall settings</li>
+                                <li>Verify agent configuration matches server settings</li>
+                            </ul>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            Object.entries(agentData).forEach(([agentId, agent]) => {
+                const agentItem = document.createElement('div');
+                agentItem.className = 'agent-item';
+                
+                const status = agent.status === 'active' || agent.status === 'online' ? 'online' : 'offline';
+                const hostname = agent.system_info?.hostname || agent.system_info?.computer_name || 'Unknown';
+                const platform = agent.system_info?.platform || agent.system_info?.os || 'Unknown';
+                const lastSeen = agent.last_seen || agent.timestamp || 'Unknown';
+                
+                // Calculate uptime and status
+                const lastSeenDate = new Date(lastSeen);
+                const now = new Date();
+                const timeDiff = now - lastSeenDate;
+                const isOnline = timeDiff < 30000; // 30 seconds
+                
+                // Format last seen time
+                let lastSeenText = 'Unknown';
+                if (lastSeen !== 'Unknown') {
+                    if (timeDiff < 60000) { // Less than 1 minute
+                        lastSeenText = 'Just now';
+                    } else if (timeDiff < 3600000) { // Less than 1 hour
+                        const minutes = Math.floor(timeDiff / 60000);
+                        lastSeenText = `${minutes}m ago`;
+                    } else {
+                        lastSeenText = lastSeenDate.toLocaleTimeString();
+                    }
+                }
+                
+                // Add metrics if available
+                let metricsInfo = '';
+                if (agent.metrics) {
+                    const cpu = agent.metrics.cpu_usage || 0;
+                    const memory = agent.metrics.memory_usage || 0;
+                    metricsInfo = `CPU: ${cpu.toFixed(1)}% | RAM: ${memory.toFixed(1)}%`;
+                }
+                
+                agentItem.innerHTML = `
+                    <div class="agent-status status-${isOnline ? 'online' : 'offline'}"></div>
+                    <div class="agent-info">
+                        <div class="agent-name">${hostname}</div>
+                        <div class="agent-meta">
+                            ${agentId.slice(-8)} • ${platform} • ${lastSeenText}
+                            ${metricsInfo ? `<br>${metricsInfo}` : ''}
+                        </div>
+                    </div>
+                `;
+                agentList.appendChild(agentItem);
+            });
+        }
+
+        // Update agent performance chart
+        function updateAgentPerformanceChart() {
+            const chartCtx = document.getElementById('agentPerformanceChart');
+            if (!chartCtx || !charts.agentPerformance) return;
+            
+            const agentIds = Object.keys(agentData);
+            const cpuData = agentIds.map(id => {
+                const agent = agentData[id];
+                return agent.metrics?.cpu_usage || 0;
+            });
+            const memoryData = agentIds.map(id => {
+                const agent = agentData[id];
+                return agent.metrics?.memory_usage || 0;
+            });
+            
+            charts.agentPerformance.data.labels = agentIds.map(id => id.slice(-8));
+            charts.agentPerformance.data.datasets[0].data = cpuData;
+            charts.agentPerformance.data.datasets[1].data = memoryData;
+            charts.agentPerformance.update();
+        }
+
+        // Update vulnerability list with enhanced information
+        function updateVulnerabilityList() {
+            const vulnList = document.getElementById('vulnerabilityList');
+            if (!vulnList) return;
+            
+            vulnList.innerHTML = '';
+
+            // Check if we have vulnerability data
+            if (!vulnerabilityData || Object.keys(vulnerabilityData).length === 0) {
+                vulnList.innerHTML = `
+                    <div class="no-data-message">
+                        <i class="fas fa-shield-alt"></i>
+                        <h3>No Vulnerabilities Found</h3>
+                        <p>No vulnerability data is currently available.</p>
+                        <div class="vuln-help">
+                            <h4>To get vulnerability data:</h4>
+                            <ul>
+                                <li>Connect agents to the C2 server</li>
+                                <li>Run vulnerability scans on connected agents</li>
+                                <li>Ensure agents have permission to perform security scans</li>
+                                <li>Check agent logs for scan execution status</li>
+                            </ul>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            const allVulns = [];
+            Object.entries(vulnerabilityData).forEach(([agentId, agent]) => {
+                if (agent.vulnerabilities) {
+                    agent.vulnerabilities.forEach(vuln => {
+                        allVulns.push({
+                            ...vuln, 
+                            agent: agentId,
+                            agent_hostname: agent.system_info?.hostname || agent.system_info?.computer_name || 'Unknown'
+                        });
+                    });
+                }
+            });
+
+            // Check if we found any vulnerabilities
+            if (allVulns.length === 0) {
+                vulnList.innerHTML = `
+                    <div class="no-data-message">
+                        <i class="fas fa-shield-alt"></i>
+                        <h3>No Vulnerabilities Detected</h3>
+                        <p>No vulnerabilities were found in the current scans.</p>
+                        <div class="vuln-help">
+                            <p>This could mean:</p>
+                            <ul>
+                                <li>Systems are secure and up-to-date</li>
+                                <li>Scans haven't been run yet</li>
+                                <li>Scan results are still being processed</li>
+                            </ul>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            // Sort by severity (Critical > High > Medium > Low)
+            const severityOrder = { 'critical': 4, 'high': 3, 'medium': 2, 'low': 1 };
+            allVulns.sort((a, b) => {
+                const severityA = severityOrder[a.severity?.toLowerCase()] || 0;
+                const severityB = severityOrder[b.severity?.toLowerCase()] || 0;
+                return severityB - severityA;
+            });
+
+            allVulns.slice(0, 20).forEach(vuln => {
+                const vulnItem = document.createElement('div');
+                vulnItem.className = 'vuln-item';
+                
+                const severity = vuln.severity?.toLowerCase() || 'low';
+                const title = vuln.title || vuln.name || vuln.cve || 'Unknown Vulnerability';
+                const description = vuln.description || vuln.details || 'No description available';
+                const cve = vuln.cve || 'N/A';
+                const agentName = vuln.agent_hostname || vuln.agent.slice(-8);
+                
+                vulnItem.innerHTML = `
+                    <div class="vuln-info">
+                        <div class="vuln-title">${title}</div>
+                        <div class="vuln-meta">
+                            ${cve} • Agent: ${agentName} • 
+                            ${description.length > 100 ? description.substring(0, 100) + '...' : description}
+                        </div>
+                    </div>
+                    <div class="severity-badge severity-${severity}">
+                        ${vuln.severity || 'Unknown'}
+                    </div>
+                `;
+                vulnList.appendChild(vulnItem);
+            });
+        }
+
+        // Update risk gauge with real agent data
+        function updateRiskGauge() {
+            let totalRisk = 0;
+            let totalVulns = 0;
+
+            Object.values(vulnerabilityData).forEach(agent => {
+                if (agent.risk_score) {
+                    totalRisk += agent.risk_score;
+                    totalVulns++;
+                }
+            });
+
+            const avgRisk = totalVulns > 0 ? Math.round(totalRisk / totalVulns) : 0;
+            const circumference = 2 * Math.PI * 80;
+            const strokeDasharray = (avgRisk / 100) * circumference;
+
+            document.getElementById('riskScore').textContent = avgRisk;
+            document.getElementById('riskGauge').style.strokeDasharray = `${strokeDasharray} ${circumference}`;
+            
+            // Change color based on risk level
+            const riskGauge = document.getElementById('riskGauge');
+            if (avgRisk >= 80) {
+                riskGauge.style.stroke = '#ef4444';
+            } else if (avgRisk >= 60) {
+                riskGauge.style.stroke = '#f59e0b';
+            } else if (avgRisk >= 40) {
+                riskGauge.style.stroke = '#06b6d4';
+            } else {
+                riskGauge.style.stroke = '#10b981';
+            }
+        }
+
+        // Update activity feed with real agent activities
+        function updateActivityFeed() {
+            const activityContainer = document.getElementById('recentActivity');
+            if (!activityContainer) return;
+            
+            const activities = [];
+            
+            // Collect agent beacon activities
+            Object.entries(agentData).forEach(([agentId, agent]) => {
+                const lastSeen = agent.last_seen || agent.timestamp;
+                if (lastSeen) {
+                    activities.push({
+                        type: 'agent_beacon',
+                        title: `Agent ${agentId.slice(-8)} beacon`,
+                        description: `System: ${agent.system_info?.hostname || agent.system_info?.computer_name || 'Unknown'}`,
+                        timestamp: lastSeen,
+                        agent: agentId
+                    });
+                }
+            });
+            
+            // Collect task results
+            if (taskData && taskData.results) {
+                taskData.results.forEach(task => {
+                    activities.push({
+                        type: 'task_result',
+                        title: `Task completed: ${task.type?.replace(/_/g, ' ').toUpperCase()}`,
+                        description: `Agent: ${task.agent_id?.slice(-8) || 'Unknown'}`,
+                        timestamp: task.timestamp,
+                        agent: task.agent_id
+                    });
+                });
+            }
+            
+            // Collect vulnerability scan activities
+            Object.entries(vulnerabilityData).forEach(([agentId, agent]) => {
+                if (agent.vulnerabilities && agent.vulnerabilities.length > 0) {
+                    activities.push({
+                        type: 'vulnerability_scan',
+                        title: `Vulnerability scan completed`,
+                        description: `Found ${agent.vulnerabilities.length} vulnerabilities on ${agent.system_info?.hostname || agentId.slice(-8)}`,
+                        timestamp: agent.last_seen || agent.timestamp,
+                        agent: agentId
+                    });
+                }
+            });
+            
+            // Sort activities by timestamp (newest first)
+            activities.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            
+            // Display recent activities (last 10)
+            activityContainer.innerHTML = '';
+            activities.slice(0, 10).forEach(activity => {
+                const activityItem = document.createElement('div');
+                activityItem.className = 'timeline-item';
+                
+                const timeDiff = Date.now() - new Date(activity.timestamp);
+                let timeText = 'Just now';
+                if (timeDiff > 60000) { // More than 1 minute
+                    const minutes = Math.floor(timeDiff / 60000);
+                    if (minutes < 60) {
+                        timeText = `${minutes}m ago`;
+                    } else {
+                        const hours = Math.floor(minutes / 60);
+                        timeText = `${hours}h ago`;
+                    }
+                }
+                
+                const iconClass = getActivityIcon(activity.type);
+                
+                activityItem.innerHTML = `
+                    <div class="timeline-content">
+                        <div class="timeline-title">
+                            <i class="${iconClass}"></i>
+                            ${activity.title}
+                        </div>
+                        <div class="timeline-meta">
+                            ${activity.description} • ${timeText}
+                        </div>
+                    </div>
+                `;
+                activityContainer.appendChild(activityItem);
+            });
+        }
+
+        // Update system health indicator
+        function updateSystemHealth() {
+            const healthStatus = document.getElementById('healthStatus');
+            const healthDetails = document.getElementById('healthDetails');
+            
+            if (!healthStatus || !healthDetails) return;
+            
+            let totalVulns = 0;
+            let criticalVulns = 0;
+            let highVulns = 0;
+            let activeAgents = 0;
+            let offlineAgents = 0;
+            
+            // Count vulnerabilities
+            Object.values(vulnerabilityData).forEach(agent => {
+                if (agent.vulnerabilities) {
+                    agent.vulnerabilities.forEach(vuln => {
+                        totalVulns++;
+                        const severity = vuln.severity?.toLowerCase() || 'low';
+                        if (severity === 'critical') criticalVulns++;
+                        if (severity === 'high') highVulns++;
+                    });
+                }
+            });
+            
+            // Count agent status
+            Object.values(agentData).forEach(agent => {
+                const lastSeen = new Date(agent.last_seen || agent.timestamp || 0);
+                const now = new Date();
+                const timeDiff = now - lastSeen;
+                const isOnline = timeDiff < 30000; // 30 seconds
+                
+                if (isOnline) {
+                    activeAgents++;
+                } else {
+                    offlineAgents++;
+                }
+            });
+            
+            // Determine overall health status
+            let healthClass = 'healthy';
+            let statusText = 'Healthy';
+            let detailsText = '';
+            
+            if (criticalVulns > 0) {
+                healthClass = 'critical';
+                statusText = 'Critical';
+                detailsText = `${criticalVulns} critical vulnerabilities detected`;
+            } else if (highVulns > 0) {
+                healthClass = 'warning';
+                statusText = 'Warning';
+                detailsText = `${highVulns} high-risk vulnerabilities detected`;
+            } else if (totalVulns > 0) {
+                healthClass = 'warning';
+                statusText = 'Attention';
+                detailsText = `${totalVulns} vulnerabilities found`;
+            } else if (activeAgents === 0) {
+                healthClass = 'warning';
+                statusText = 'Warning';
+                detailsText = 'No active agents detected';
+            } else {
+                healthClass = 'healthy';
+                statusText = 'Healthy';
+                detailsText = `${activeAgents} agents active, ${totalVulns} vulnerabilities`;
+            }
+            
+            // Update UI
+            healthStatus.className = `health-status ${healthClass}`;
+            healthStatus.textContent = statusText;
+            healthDetails.textContent = detailsText;
+        }
+
+        // Get appropriate icon for activity type
+        function getActivityIcon(activityType) {
+            switch (activityType) {
+                case 'agent_beacon':
+                    return 'fas fa-broadcast-tower';
+                case 'task_result':
+                    return 'fas fa-check-circle';
+                case 'vulnerability_scan':
+                    return 'fas fa-shield-alt';
+                default:
+                    return 'fas fa-info-circle';
+            }
+        }
+
+        // Refresh activity feed
+        function refreshActivityFeed() {
+            updateActivityFeed();
+        }
+
+        // Update charts
+        function updateCharts() {
+            // Update risk trend chart with scan history
+            if (scanHistory.length > 0) {
+                const labels = scanHistory.map(scan => new Date(scan.timestamp).toLocaleDateString());
+                const riskScores = scanHistory.map(scan => scan.risk_score || 0);
+                
+                charts.riskTrend.data.labels = labels;
+                charts.riskTrend.data.datasets[0].data = riskScores;
+                charts.riskTrend.update();
+            }
+        }
+
+        // Update task display
+        function updateTaskDisplay() {
+            const taskList = document.getElementById('taskList');
+            if (!taskList) return;
+            
+            taskList.innerHTML = '';
+            
+            if (!taskData || !taskData.results || taskData.results.length === 0) {
+                taskList.innerHTML = '<div class="task-item"><p>No task results available</p></div>';
+                return;
+            }
+            
+            // Debug: Log screenshot tasks specifically
+            const screenshotTasks = taskData.results.filter(task => 
+                task.type === 'surveillance_screenshot' || 
+                task.type.includes('screenshot')
+            );
+            if (screenshotTasks.length > 0) {
+                console.log('Found screenshot tasks:', screenshotTasks);
+                screenshotTasks.forEach((task, index) => {
+                    console.log(`Screenshot task ${index + 1}:`, {
+                        id: task.id,
+                        type: task.type,
+                        result: task.result,
+                        resultKeys: task.result ? Object.keys(task.result) : 'N/A',
+                        nestedResultKeys: task.result && task.result.result ? Object.keys(task.result.result) : 'N/A'
+                    });
+                });
+            }
+
+            // Sort tasks by timestamp (newest first)
+            const sortedTasks = taskData.results.sort((a, b) => 
+                new Date(b.timestamp) - new Date(a.timestamp)
+            );
+
+            // Apply filters
+            const showScreenshots = document.getElementById('filterScreenshots')?.checked !== false;
+            const showVulnScans = document.getElementById('filterVulnScans')?.checked !== false;
+            const showSurveillance = document.getElementById('filterSurveillance')?.checked !== false;
+
+            const filteredTasks = sortedTasks.filter(task => {
+                const type = task.type || '';
+                if (type.includes('screenshot') && !showScreenshots) return false;
+                if (type.includes('vuln') && !showVulnScans) return false;
+                if (type.includes('surveillance') && !showSurveillance) return false;
+                return true;
+            });
+
+            filteredTasks.slice(0, 20).forEach(task => {
+                const taskItem = createTaskItem(task);
+                taskList.appendChild(taskItem);
+            });
+
+            // Update task statistics chart
+            updateTaskStats();
+        }
+
+        // Create task item element
+        function createTaskItem(task) {
+            const taskItem = document.createElement('div');
+            taskItem.className = 'task-item';
+            
+            const type = task.type || 'Unknown';
+            const time = new Date(task.timestamp).toLocaleString();
+            const status = task.status || 'unknown';
+            const statusClass = status === 'SUCCESS' ? 'success' : 'failed';
+            
+            let content = '';
+            let actions = '';
+            
+            // Handle different task types
+            if (type === 'surveillance_screenshot' && task.result) {
+                content = createScreenshotContent(task);
+                actions = createScreenshotActions(task);
+            } else if (type.includes('vuln') && task.result) {
+                content = createVulnScanContent(task);
+                actions = createVulnScanActions(task);
+            } else {
+                content = createGenericContent(task);
+                actions = createGenericActions(task);
+            }
+            
+            taskItem.innerHTML = `
+                <div class="task-header">
+                    <div class="task-title">${type.replace(/_/g, ' ').toUpperCase()}</div>
+                    <div class="task-time">${time}</div>
+                    <div class="task-status ${statusClass}">${status}</div>
+                </div>
+                <div class="task-content">
+                    ${content}
+                </div>
+                <div class="task-actions">
+                    ${actions}
+                </div>
+            `;
+            
+            return taskItem;
+        }
+
+        // Create screenshot content
+        function createScreenshotContent(task) {
+            const result = task.result;
+            let imageData = null;
+            let imageFormat = 'png';
+            
+            console.log('Creating screenshot content for task:', task);
+            console.log('Task result:', result);
+            
+            // Try to extract image data from different result structures
+            // Priority 1: Direct image format (result.image + result.format)
+            if (result.image && result.format) {
+                imageData = result.image;
+                imageFormat = result.format;
+                console.log('Found image data in result.image');
+            }
+            // Priority 2: Direct data format (result.data + result.format)
+            else if (result.data && result.format && ['png', 'jpg', 'jpeg', 'gif', 'bmp'].includes(result.format.toLowerCase())) {
+                imageData = result.data;
+                imageFormat = result.format;
+                console.log('Found image data in result.data');
+            }
+            // Priority 3: Nested result structure (result.result.image + result.result.format)
+            else if (result.result && result.result.image && result.result.format) {
+                imageData = result.result.image;
+                imageFormat = result.result.format;
+                console.log('Found image data in result.result.image');
+            }
+            // Priority 4: Nested data structure (result.result.data + result.result.format)
+            else if (result.result && result.result.data && result.result.format && 
+                     ['png', 'jpg', 'jpeg', 'gif', 'bmp'].includes(result.result.format.toLowerCase())) {
+                imageData = result.result.data;
+                imageFormat = result.result.format;
+                console.log('Found image data in result.result.data');
+            }
+            // Priority 5: String data that might be base64 image
+            else if (typeof result === 'string' && result.length > 100) {
+                imageData = result;
+                imageFormat = 'png';
+                console.log('Found image data as string');
+            }
+            // Priority 6: Check if result itself is the image data
+            else if (typeof result === 'string' && result.length > 1000) {
+                imageData = result;
+                imageFormat = 'png';
+                console.log('Found image data as result string');
+            }
+            
+            console.log('Final imageData length:', imageData ? imageData.length : 'null');
+            console.log('Final imageFormat:', imageFormat);
+            
+            if (imageData && imageData.length > 100) {
+                return `
+                    <div style="text-align: center;">
+                        <img src="data:image/${imageFormat.toLowerCase()};base64,${imageData}" 
+                             class="image-preview" 
+                             onclick="showFullImage(this.src)"
+                             alt="Screenshot"
+                             style="max-width: 100%; max-height: 200px; border-radius: 8px; cursor: pointer;"
+                             onerror="console.error('Image failed to load:', this.src); this.style.display='none';">
+                        <p style="margin-top: 8px; color: var(--text-secondary);">
+                            📷 Screenshot captured (${imageFormat.toUpperCase()})
+                        </p>
+                    </div>
+                `;
+            } else {
+                return `
+                    <div style="text-align: center; padding: 20px;">
+                        <p>📷 Screenshot task completed</p>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem;">
+                            Image data not available in result
+                        </p>
+                        <details style="text-align: left; margin-top: 10px;">
+                            <summary style="cursor: pointer; color: var(--primary);">Debug Info</summary>
+                            <pre style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 5px;">${JSON.stringify(result, null, 2)}</pre>
+                        </details>
+                    </div>
+                `;
+            }
+        }
+
+        // Create vulnerability scan content
+        function createVulnScanContent(task) {
+            const result = task.result;
+            if (typeof result === 'string') {
+                try {
+                    const parsed = JSON.parse(result);
+                    return `<pre style="color: var(--text-secondary); font-size: 0.9rem;">${JSON.stringify(parsed, null, 2)}</pre>`;
+                } catch (e) {
+                    return `<p>${result}</p>`;
+                }
+            } else if (typeof result === 'object') {
+                return `<pre style="color: var(--text-secondary); font-size: 0.9rem;">${JSON.stringify(result, null, 2)}</pre>`;
+            } else {
+                return `<p>${String(result)}</p>`;
+            }
+        }
+
+        // Create generic content
+        function createGenericContent(task) {
+            const result = task.result;
+            if (typeof result === 'string') {
+                return `<p>${result}</p>`;
+            } else if (typeof result === 'object') {
+                return `<pre style="color: var(--text-secondary); font-size: 0.9rem;">${JSON.stringify(result, null, 2)}</pre>`;
+            } else {
+                return `<p>${String(result)}</p>`;
+            }
+        }
+
+        // Create screenshot actions
+        function createScreenshotActions(task) {
+            const result = task.result;
+            let imageData = null;
+            let imageFormat = 'png';
+            
+            // Extract image data using the same logic as createScreenshotContent
+            if (result.image && result.format) {
+                imageData = result.image;
+                imageFormat = result.format;
+            } else if (result.data && result.format && ['png', 'jpg', 'jpeg', 'gif', 'bmp'].includes(result.format.toLowerCase())) {
+                imageData = result.data;
+                imageFormat = result.format;
+            } else if (result.result && result.result.image && result.result.format) {
+                imageData = result.result.image;
+                imageFormat = result.result.format;
+            } else if (result.result && result.result.data && result.result.format && 
+                     ['png', 'jpg', 'jpeg', 'gif', 'bmp'].includes(result.result.format.toLowerCase())) {
+                imageData = result.result.data;
+                imageFormat = result.result.format;
+            } else if (typeof result === 'string' && result.length > 100) {
+                imageData = result;
+                imageFormat = 'png';
+            }
+            
+            if (imageData && imageData.length > 100) {
+                return `
+                    <button class="task-action-btn secondary" onclick="showFullImage('data:image/${imageFormat.toLowerCase()};base64,${imageData}')">
+                        <i class="fas fa-expand"></i> View Full Size
+                    </button>
+                    <a href="/api/results/download/${task.task_id || task.id}" class="task-action-btn primary" download>
+                        <i class="fas fa-download"></i> Download
+                    </a>
+                `;
+            } else {
+                return `
+                    <a href="/api/results/download/${task.task_id || task.id}" class="task-action-btn primary" download>
+                        <i class="fas fa-download"></i> Download Result
+                    </a>
+                `;
+            }
+        }
+
+        // Create vulnerability scan actions
+        function createVulnScanActions(task) {
+            return `
+                <a href="/api/results/download/${task.task_id || task.id}" class="task-action-btn primary" download>
+                    <i class="fas fa-download"></i> Download Result
+                </a>
+            `;
+        }
+
+        // Create generic actions
+        function createGenericActions(task) {
+            return `
+                <a href="/api/results/download/${task.task_id || task.id}" class="task-action-btn primary" download>
+                    <i class="fas fa-download"></i> Download Result
+                </a>
+            `;
+        }
+
+        // Image modal functions
+        function showFullImage(imageSrc) {
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImage');
+            modal.style.display = 'block';
+            modalImg.src = imageSrc;
+        }
+
+        function closeImageModal() {
+            const modal = document.getElementById('imageModal');
+            modal.style.display = 'none';
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('imageModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // Refresh tasks
+        function refreshTasks() {
+            loadData();
+        }
+
+        // Update task statistics
+        function updateTaskStats() {
+            if (!charts.taskStats || !taskData || !taskData.results) return;
+            
+            const stats = {
+                screenshots: 0,
+                vulnScans: 0,
+                surveillance: 0,
+                other: 0
+            };
+            
+            taskData.results.forEach(task => {
+                const type = task.type || '';
+                if (type.includes('screenshot')) {
+                    stats.screenshots++;
+                } else if (type.includes('vuln')) {
+                    stats.vulnScans++;
+                } else if (type.includes('surveillance')) {
+                    stats.surveillance++;
+                } else {
+                    stats.other++;
+                }
+            });
+            
+            charts.taskStats.data.datasets[0].data = [
+                stats.screenshots,
+                stats.vulnScans,
+                stats.surveillance,
+                stats.other
+            ];
+            charts.taskStats.update();
+        }
+
+        // Refresh functions
+        function refreshCharts() {
+            loadData();
+        }
+
+        function refreshVulnerabilities() {
+            loadData();
+        }
+
+        // Export functions
+        function exportPDF() {
+            window.open('/api/export/pdf', '_blank');
+        }
+
+        function exportCSV() {
+            window.open('/api/export/csv', '_blank');
+        }
+
+        function exportJSON() {
+            window.open('/api/export/json', '_blank');
+        }
+
+        function exportChart() {
+            const link = document.createElement('a');
+            link.download = 'vulnerability_chart.png';
+            link.href = charts.vulnerability.toBase64Image();
+            link.click();
+        }
+
+        // Network Activity Monitor Functions
+        async function refreshNetworkActivity() {
+            try {
+                // For now, we'll simulate network activity data since we don't have a dedicated API
+                // In a real implementation, this would fetch from /api/network-activity
+                const simulatedData = generateNetworkActivityData();
+                updateNetworkActivity(simulatedData);
+                
+                // Update connection trend chart
+                updateConnectionTrendChart();
+                
+                // Update security status
+                updateSecurityStatus();
+                
+            } catch (error) {
+                console.error('Error fetching network activity:', error);
+            }
+        }
+
+        function generateNetworkActivityData() {
+            // Simulate network activity data based on agent connections
+            const activeConnections = Object.values(agentData).filter(agent => {
+                const lastSeen = new Date(agent.last_seen || agent.timestamp || 0);
+                const now = new Date();
+                const timeDiff = now - lastSeen;
+                return timeDiff < 30000; // 30 seconds
+            }).length;
+            
+            // Calculate data transferred (estimate based on task results)
+            let totalData = 0;
+            if (taskData && taskData.results) {
+                taskData.results.forEach(task => {
+                    if (task.result) {
+                        // Estimate data size based on result type
+                        if (task.type === 'surveillance_screenshot') {
+                            totalData += 50; // ~50KB per screenshot
+                        } else if (task.type.includes('vuln')) {
+                            totalData += 5; // ~5KB per vulnerability scan
+                        } else {
+                            totalData += 1; // ~1KB per other task
+                        }
+                    }
+                });
+            }
+            
+            // Calculate average response time (simulated)
+            const avgResponseTime = activeConnections > 0 ? Math.floor(Math.random() * 200) + 50 : 0;
+            
+            // Generate network logs
+            const logs = [];
+            Object.entries(agentData).forEach(([agentId, agent]) => {
+                const lastSeen = new Date(agent.last_seen || agent.timestamp || 0);
+                const now = new Date();
+                const timeDiff = now - lastSeen;
+                
+                if (timeDiff < 30000) { // Online in last 30 seconds
+                    logs.push({
+                        type: 'agent_connected',
+                        message: `Agent ${agentId.slice(-8)} connected`,
+                        timestamp: lastSeen
+                    });
+                } else {
+                    logs.push({
+                        type: 'agent_disconnected',
+                        message: `Agent ${agentId.slice(-8)} disconnected`,
+                        timestamp: lastSeen
+                    });
+                }
+            });
+            
+            // Add recent task activities
+            if (taskData && taskData.results) {
+                taskData.results.slice(0, 5).forEach(task => {
+                    logs.push({
+                        type: 'task_completed',
+                        message: `Task ${task.type} completed by ${task.agent_id?.slice(-8) || 'Unknown'}`,
+                        timestamp: task.timestamp
+                    });
+                });
+            }
+            
+            return {
+                active_connections: activeConnections,
+                total_data_transferred: totalData,
+                average_response_time: avgResponseTime,
+                logs: logs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+            };
+        }
+
+        function updateNetworkActivity(data) {
+            const activeConnections = document.getElementById('activeConnections');
+            const dataTransferred = document.getElementById('dataTransferred');
+            const avgResponseTime = document.getElementById('avgResponseTime');
+            const networkLogs = document.getElementById('networkLogs');
+
+            if (!activeConnections || !dataTransferred || !avgResponseTime || !networkLogs) return;
+
+            activeConnections.textContent = data.active_connections || 0;
+            dataTransferred.textContent = `${data.total_data_transferred || 0} KB`;
+            avgResponseTime.textContent = `${data.average_response_time || 0}ms`;
+
+            networkLogs.innerHTML = '';
+            if (data.logs && data.logs.length > 0) {
+                data.logs.forEach(log => {
+                    const logEntry = document.createElement('div');
+                    logEntry.className = 'network-log-entry';
+                    
+                    const iconClass = getNetworkLogIcon(log.type);
+                    const logType = log.type.replace(/_/g, ' ').toUpperCase();
+                    
+                    logEntry.innerHTML = `
+                        <span class="log-type">
+                            <i class="${iconClass}"></i>
+                            ${logType}
+                        </span>
+                        <span class="log-message">${log.message}</span>
+                        <span class="log-timestamp">${new Date(log.timestamp).toLocaleTimeString()}</span>
+                    `;
+                    networkLogs.appendChild(logEntry);
+                });
+            } else {
+                networkLogs.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">No recent network activity logs.</p>';
+            }
+        }
+
+        function getNetworkLogIcon(logType) {
+            switch (logType) {
+                case 'agent_connected':
+                    return 'fas fa-link text-success';
+                case 'agent_disconnected':
+                    return 'fas fa-unlink text-danger';
+                case 'task_completed':
+                    return 'fas fa-check text-primary';
+                case 'vulnerability_scan':
+                    return 'fas fa-shield-alt text-warning';
+                default:
+                    return 'fas fa-info-circle text-info';
+            }
+        }
+
+        function updateConnectionTrendChart() {
+            if (!charts.connectionTrend) return;
+            
+            // Generate time labels for the last 24 hours
+            const labels = [];
+            const connectionData = [];
+            const dataTransferData = [];
+            
+            for (let i = 23; i >= 0; i--) {
+                const time = new Date();
+                time.setHours(time.getHours() - i);
+                labels.push(time.getHours() + ':00');
+                
+                // Simulate connection data (in real implementation, this would come from historical data)
+                const baseConnections = Object.keys(agentData).length;
+                const randomFactor = 0.8 + Math.random() * 0.4; // ±20% variation
+                connectionData.push(Math.floor(baseConnections * randomFactor));
+                
+                // Simulate data transfer
+                const baseData = 10; // Base KB per hour
+                const randomDataFactor = 0.5 + Math.random() * 1.0; // ±50% variation
+                dataTransferData.push(Math.floor(baseData * randomDataFactor));
+            }
+            
+            charts.connectionTrend.data.labels = labels;
+            charts.connectionTrend.data.datasets[0].data = connectionData;
+            charts.connectionTrend.data.datasets[1].data = dataTransferData;
+            charts.connectionTrend.update();
+        }
+
+        function updateSecurityStatus() {
+            const securityStatus = document.getElementById('securityStatus');
+            if (!securityStatus) return;
+            
+            // Calculate security metrics
+            let totalVulns = 0;
+            let criticalVulns = 0;
+            let highVulns = 0;
+            let activeAgents = 0;
+            
+            Object.values(vulnerabilityData).forEach(agent => {
+                if (agent.vulnerabilities) {
+                    agent.vulnerabilities.forEach(vuln => {
+                        totalVulns++;
+                        const severity = vuln.severity?.toLowerCase() || 'low';
+                        if (severity === 'critical') criticalVulns++;
+                        if (severity === 'high') highVulns++;
+                    });
+                }
+            });
+            
+            Object.values(agentData).forEach(agent => {
+                const lastSeen = new Date(agent.last_seen || agent.timestamp || 0);
+                const now = new Date();
+                const timeDiff = now - lastSeen;
+                if (timeDiff < 30000) activeAgents++;
+            });
+            
+            // Determine security level
+            let securityLevel = 'Secure';
+            let securityClass = 'text-success';
+            let securityDescription = 'All systems are secure';
+            
+            if (criticalVulns > 0) {
+                securityLevel = 'Critical';
+                securityClass = 'text-danger';
+                securityDescription = `${criticalVulns} critical vulnerabilities detected`;
+            } else if (highVulns > 0) {
+                securityLevel = 'At Risk';
+                securityClass = 'text-warning';
+                securityDescription = `${highVulns} high-risk vulnerabilities detected`;
+            } else if (totalVulns > 0) {
+                securityLevel = 'Attention Required';
+                securityClass = 'text-info';
+                securityDescription = `${totalVulns} vulnerabilities found`;
+            }
+            
+            securityStatus.innerHTML = `
+                <div style="text-align: center; padding: 20px;">
+                    <div style="font-size: 2rem; font-weight: 700; margin-bottom: 10px;" class="${securityClass}">
+                        ${securityLevel}
+                    </div>
+                    <div style="color: var(--text-secondary); margin-bottom: 20px;">
+                        ${securityDescription}
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; text-align: left;">
+                        <div>
+                            <strong>Active Agents:</strong> ${activeAgents}
+                        </div>
+                        <div>
+                            <strong>Total Vulnerabilities:</strong> ${totalVulns}
+                        </div>
+                        <div>
+                            <strong>Critical:</strong> ${criticalVulns}
+                        </div>
+                        <div>
+                            <strong>High Risk:</strong> ${highVulns}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

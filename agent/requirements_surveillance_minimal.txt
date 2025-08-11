@@ -1,0 +1,10 @@
+# Minimal surveillance requirements - install these first
+opencv-python>=4.7.0
+numpy>=1.24.0
+Pillow>=9.5.0
+pyautogui>=0.9.53
+pynput>=1.7.6
+psutil>=5.9.0
+
+# Optional but recommended
+opencv-python-headless>=4.7.0  # For headless environments

