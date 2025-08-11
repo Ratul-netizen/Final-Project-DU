@@ -146,51 +146,42 @@ def decrypt_agent_data(encrypted_data, agent_id):
 def get_vulnerabilities():
     """Get all vulnerability data from agents"""
     try:
+        # Use the vulnerability dashboard for processed data
+        dashboard_vulns = dashboard.get_vulnerabilities()
+        
+        # Group vulnerabilities by agent
         vulnerability_data = {}
+        agent_vuln_counts = {}
+        agent_risk_scores = {}
         
-        # Debug logging
-        logging.debug(f"Results structure: {type(results)}")
-        logging.debug(f"Results keys: {list(results.keys()) if isinstance(results, dict) else 'Not a dict'}")
+        for vuln in dashboard_vulns:
+            agent_id = vuln.get('agent_id')
+            if agent_id:
+                if agent_id not in vulnerability_data:
+                    vulnerability_data[agent_id] = {
+                        'agent_id': agent_id,
+                        'vulnerabilities': [],
+                        'risk_score': 0,
+                        'total_vulnerabilities': 0,
+                        'last_scan': datetime.now().isoformat()
+                    }
+                    agent_vuln_counts[agent_id] = 0
+                    agent_risk_scores[agent_id] = 0
+                
+                vulnerability_data[agent_id]['vulnerabilities'].append(vuln)
+                agent_vuln_counts[agent_id] += 1
+                
+                # Calculate risk score based on severity
+                severity = vuln.get('severity', 'Low')
+                severity_scores = {'Critical': 10, 'High': 7, 'Medium': 4, 'Low': 1, 'Info': 0}
+                agent_risk_scores[agent_id] += severity_scores.get(severity, 1)
         
-        # Extract vulnerability data from results
-        for agent_id, agent_results in results.items():
-            logging.debug(f"Processing agent {agent_id}, results type: {type(agent_results)}")
-            logging.debug(f"Agent results: {agent_results}")
-            
-            agent_vulns = []
-            agent_risk_score = 0
-            
-            # agent_results is a dict of task_id -> task_data
-            if isinstance(agent_results, dict):
-                for task_id, task_data in agent_results.items():
-                    logging.debug(f"Processing task {task_id}, task_data type: {type(task_data)}")
-                    logging.debug(f"Task data: {task_data}")
-                    
-                    # Check if this is a vulnerability scan result
-                    scan_type = task_data.get('type', '')
-                    if any(keyword in scan_type.lower() for keyword in ['vuln', 'scan', 'security', 'auto']):
-                        # Get the result data
-                        result_data = task_data.get('result', {}).get('data', {})
-                        
-                        # Extract vulnerabilities
-                        if 'vulnerabilities' in result_data:
-                            agent_vulns.extend(result_data['vulnerabilities'])
-                        
-                        # Get risk score
-                        if 'risk_score' in result_data:
-                            agent_risk_score = max(agent_risk_score, result_data['risk_score'])
-            else:
-                logging.warning(f"Agent results for {agent_id} is not a dict: {type(agent_results)}")
-            
-            if agent_vulns or agent_risk_score > 0:
-                vulnerability_data[agent_id] = {
-                    'agent_id': agent_id,
-                    'vulnerabilities': agent_vulns,
-                    'risk_score': agent_risk_score,
-                    'total_vulnerabilities': len(agent_vulns),
-                    'last_scan': datetime.now().isoformat()
-                }
+        # Update the vulnerability data with counts and risk scores
+        for agent_id in vulnerability_data:
+            vulnerability_data[agent_id]['total_vulnerabilities'] = agent_vuln_counts[agent_id]
+            vulnerability_data[agent_id]['risk_score'] = min(100, agent_risk_scores[agent_id])  # Cap at 100
         
+        logging.info(f"Returning vulnerability data for {len(vulnerability_data)} agents with {sum(agent_vuln_counts.values())} total vulnerabilities")
         return jsonify(vulnerability_data)
         
     except Exception as e:
@@ -249,34 +240,39 @@ def get_agents_api():
 def get_scan_history():
     """Get scan history data"""
     try:
+        # Use the vulnerability dashboard for processed scan data
+        dashboard_scans = dashboard.scans
+        
         scan_history = []
         
-        # Extract scan results from all agents
-        for agent_id, agent_results in results.items():
-            # agent_results is a dict of task_id -> task_data
-            for task_id, task_data in agent_results.items():
-                scan_type = task_data.get('type', '')
-                if any(keyword in scan_type.lower() for keyword in ['vuln', 'scan', 'security', 'auto']):
-                    # Get the result data
-                    result_data = task_data.get('result', {}).get('data', {})
-                    
-                    scan_entry = {
-                        'agent_id': agent_id,
-                        'scan_type': scan_type,
-                        'timestamp': task_data.get('timestamp', datetime.now().isoformat()),
-                        'vulnerability_count': len(result_data.get('vulnerabilities', [])),
-                        'risk_score': result_data.get('risk_score', 0),
-                        'status': task_data.get('status', 'unknown')
-                    }
-                    scan_history.append(scan_entry)
+        # Convert dashboard scans to scan history format
+        for scan_id, scan_data in dashboard_scans.items():
+            scan_entry = {
+                'agent_id': scan_data.get('agent_id', 'Unknown'),
+                'scan_type': scan_data.get('scan_type', 'Unknown'),
+                'timestamp': scan_data.get('timestamp', datetime.now().isoformat()),
+                'vulnerability_count': len([v for v in dashboard.get_vulnerabilities() 
+                                          if v.get('agent_id') == scan_data.get('agent_id') and 
+                                          v.get('scan_source') == scan_data.get('scan_type')]),
+                'risk_score': scan_data.get('severity_breakdown', {}).get('Critical', 0) * 10 + 
+                             scan_data.get('severity_breakdown', {}).get('High', 0) * 7 +
+                             scan_data.get('severity_breakdown', {}).get('Medium', 0) * 4 +
+                             scan_data.get('severity_breakdown', {}).get('Low', 0) * 1,
+                'status': scan_data.get('status', 'unknown'),
+                'severity_breakdown': scan_data.get('severity_breakdown', {})
+            }
+            scan_history.append(scan_entry)
         
         # Sort by timestamp (newest first)
         scan_history.sort(key=lambda x: x['timestamp'], reverse=True)
         
+        logging.info(f"Returning scan history with {len(scan_history)} scans")
         return jsonify(scan_history[:50])  # Return last 50 scans
         
     except Exception as e:
         logging.error(f"Error getting scan history: {e}")
+        import traceback
+        logging.error(f"Traceback: {traceback.format_exc()}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/dashboard')
@@ -284,54 +280,29 @@ def get_scan_history():
 def get_dashboard_data():
     """Get comprehensive dashboard data"""
     try:
-        # Get vulnerability data
-        vuln_response = get_vulnerabilities()
-        vuln_data = vuln_response.get_json() if hasattr(vuln_response, 'get_json') else {}
+        # Use the vulnerability dashboard instance for processed data
+        dashboard_data = dashboard.get_dashboard_data()
         
         # Get agent data  
         agent_response = get_agents_api()
         agent_data = agent_response.get_json() if hasattr(agent_response, 'get_json') else {}
         
-        # Calculate summary statistics
-        total_vulnerabilities = 0
-        critical_count = 0
-        high_count = 0
-        medium_count = 0
-        low_count = 0
-        total_risk_score = 0
-        risk_count = 0
+        # Get vulnerability data from dashboard
+        vuln_data = dashboard.get_vulnerabilities()
         
-        for agent_vulns in vuln_data.values():
-            total_vulnerabilities += len(agent_vulns.get('vulnerabilities', []))
-            if agent_vulns.get('risk_score', 0) > 0:
-                total_risk_score += agent_vulns['risk_score']
-                risk_count += 1
-                
-            # Count by severity
-            for vuln in agent_vulns.get('vulnerabilities', []):
-                severity = vuln.get('severity', 'Low').lower()
-                if severity == 'critical':
-                    critical_count += 1
-                elif severity == 'high':
-                    high_count += 1
-                elif severity == 'medium':
-                    medium_count += 1
-                else:
-                    low_count += 1
-        
-        # Calculate average risk score
-        avg_risk_score = round(total_risk_score / risk_count) if risk_count > 0 else 0
+        # Calculate summary statistics from processed dashboard data
+        summary = dashboard_data.get('summary', {})
         
         # Count active agents
         active_agents = len([a for a in agent_data.values() if a.get('status') == 'online'])
         
         dashboard_summary = {
-            'total_vulnerabilities': total_vulnerabilities,
-            'critical_vulnerabilities': critical_count,
-            'high_vulnerabilities': high_count,
-            'medium_vulnerabilities': medium_count,
-            'low_vulnerabilities': low_count,
-            'overall_risk_score': avg_risk_score,
+            'total_vulnerabilities': summary.get('total_vulnerabilities', 0),
+            'critical_vulnerabilities': dashboard_data.get('vulnerabilities', {}).get('severity_breakdown', {}).get('Critical', 0),
+            'high_vulnerabilities': dashboard_data.get('vulnerabilities', {}).get('severity_breakdown', {}).get('High', 0),
+            'medium_vulnerabilities': dashboard_data.get('vulnerabilities', {}).get('severity_breakdown', {}).get('Medium', 0),
+            'low_vulnerabilities': dashboard_data.get('vulnerabilities', {}).get('severity_breakdown', {}).get('Low', 0),
+            'overall_risk_score': summary.get('overall_risk_score', 0),
             'total_agents': len(agent_data),
             'active_agents': active_agents,
             'last_updated': datetime.now().isoformat()
@@ -340,11 +311,14 @@ def get_dashboard_data():
         return jsonify({
             'summary': dashboard_summary,
             'vulnerabilities': vuln_data,
-            'agents': agent_data
+            'agents': agent_data,
+            'dashboard_data': dashboard_data
         })
         
     except Exception as e:
         logging.error(f"Error getting dashboard data: {e}")
+        import traceback
+        logging.error(f"Traceback: {traceback.format_exc()}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/export/pdf')

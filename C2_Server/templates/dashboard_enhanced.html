@@ -335,8 +335,10 @@
 
         /* Vulnerability List */
         .vuln-list {
-            max-height: 400px;
+            min-height: 400px;
+            max-height: 600px;
             overflow-y: auto;
+            padding: 16px;
         }
 
         .vuln-item {
@@ -367,6 +369,13 @@
         .vuln-meta {
             color: var(--text-secondary);
             font-size: 0.9rem;
+            margin-bottom: 4px;
+        }
+        
+        .vuln-description {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            line-height: 1.4;
         }
 
         .severity-badge {
@@ -1088,6 +1097,9 @@
                                 Refresh
                             </button>
                         </div>
+                        <div class="vuln-summary" id="vulnSummary" style="padding: 16px; border-bottom: 1px solid rgba(52, 65, 85, 0.5);">
+                            <!-- Vulnerability summary will be populated here -->
+                        </div>
                         <div class="vuln-list" id="vulnerabilityList">
                             <!-- Vulnerabilities will be populated here -->
                         </div>
@@ -1102,7 +1114,7 @@
                                 CVE Distribution
                             </h3>
                         </div>
-                        <div class="chart-container">
+                        <div class="chart-container" style="height: 300px;">
                             <canvas id="cveChart"></canvas>
                         </div>
                     </div>
@@ -1114,7 +1126,7 @@
                                 Exploit Availability
                             </h3>
                         </div>
-                        <div class="chart-container">
+                        <div class="chart-container" style="height: 300px;">
                             <canvas id="exploitChart"></canvas>
                         </div>
                     </div>
@@ -1554,6 +1566,78 @@
                 });
             }
 
+            // Reports: Scan History Chart (vulnerabilities vs risk score over time)
+            const scanHistoryCtx = document.getElementById('scanHistoryChart');
+            if (scanHistoryCtx) {
+                charts.scanHistory = new Chart(scanHistoryCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: [],
+                        datasets: [
+                            {
+                                type: 'bar',
+                                label: 'Vulnerabilities Found',
+                                data: [],
+                                backgroundColor: '#2563eb',
+                                yAxisID: 'y'
+                            },
+                            {
+                                type: 'line',
+                                label: 'Risk Score',
+                                data: [],
+                                borderColor: '#f59e0b',
+                                backgroundColor: 'rgba(245, 158, 11, 0.15)',
+                                fill: true,
+                                tension: 0.35,
+                                yAxisID: 'y1'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: { color: '#f1f5f9' }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    title: (items) => items?.[0]?.label || '',
+                                    afterTitle: (items) => {
+                                        const i = items?.[0]?.dataIndex ?? 0;
+                                        const item = (Array.isArray(window.scanHistory) ? window.scanHistory : [])[i] || {};
+                                        const id = item.agent_id ? String(item.agent_id).slice(-8) : 'Unknown';
+                                        return `Agent • ${id}  |  ${item.scan_type || 'scan'}`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                ticks: { color: '#94a3b8' },
+                                grid: { color: 'rgba(148, 163, 184, 0.1)' }
+                            },
+                            y: {
+                                type: 'linear',
+                                position: 'left',
+                                beginAtZero: true,
+                                ticks: { color: '#94a3b8' },
+                                grid: { color: 'rgba(148, 163, 184, 0.1)' }
+                            },
+                            y1: {
+                                type: 'linear',
+                                position: 'right',
+                                beginAtZero: true,
+                                min: 0,
+                                max: 100,
+                                ticks: { color: '#94a3b8' },
+                                grid: { drawOnChartArea: false }
+                            }
+                        }
+                    }
+                });
+            }
+
             // CVE Distribution Chart
             const cveCtx = document.getElementById('cveChart').getContext('2d');
             charts.cve = new Chart(cveCtx, {
@@ -1582,6 +1666,38 @@
                         y: {
                             ticks: { color: '#94a3b8' },
                             grid: { color: 'rgba(148, 163, 184, 0.1)' }
+                        }
+                    }
+                }
+            });
+            
+            // Exploit Availability Chart
+            const exploitCtx = document.getElementById('exploitChart').getContext('2d');
+            charts.exploit = new Chart(exploitCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Available', 'Limited', 'Not Available'],
+                    datasets: [{
+                        data: [0, 0, 0],
+                        backgroundColor: [
+                            '#ef4444',  // Red for available
+                            '#f59e0b',  // Orange for limited
+                            '#10b981'   // Green for not available
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: '#f1f5f9',
+                                usePointStyle: true,
+                                padding: 20
+                            }
                         }
                     }
                 }
@@ -1819,6 +1935,10 @@
             
             // Update risk gauge
             updateRiskGauge();
+            
+            // Update CVE Distribution and Exploit Availability charts
+            updateCVEChart();
+            updateExploitChart();
         }
 
         // Update agent display with enhanced information
@@ -2014,23 +2134,29 @@
                 const severityB = severityOrder[b.severity?.toLowerCase()] || 0;
                 return severityB - severityA;
             });
+            
+            // Update vulnerability summary
+            updateVulnerabilitySummary(allVulns);
 
-            allVulns.slice(0, 20).forEach(vuln => {
+                        allVulns.slice(0, 20).forEach(vuln => {
                 const vulnItem = document.createElement('div');
                 vulnItem.className = 'vuln-item';
                 
                 const severity = vuln.severity?.toLowerCase() || 'low';
-                const title = vuln.title || vuln.name || vuln.cve || 'Unknown Vulnerability';
+                const title = vuln.title || vuln.name || vuln.cve || vuln.type || 'Unknown Vulnerability';
                 const description = vuln.description || vuln.details || 'No description available';
                 const cve = vuln.cve || 'N/A';
-                const agentName = vuln.agent_hostname || vuln.agent.slice(-8);
+                const agentName = vuln.agent_hostname || vuln.agent?.slice(-8) || 'Unknown';
+                const scanSource = vuln.scan_source || vuln.type || 'Unknown';
                 
                 vulnItem.innerHTML = `
                     <div class="vuln-info">
                         <div class="vuln-title">${title}</div>
                         <div class="vuln-meta">
-                            ${cve} • Agent: ${agentName} • 
-                            ${description.length > 100 ? description.substring(0, 100) + '...' : description}
+                            <strong>CVE:</strong> ${cve} • <strong>Agent:</strong> ${agentName} • <strong>Source:</strong> ${scanSource}
+                        </div>
+                        <div class="vuln-description">
+                            ${description.length > 120 ? description.substring(0, 120) + '...' : description}
                         </div>
                     </div>
                     <div class="severity-badge severity-${severity}">
@@ -2039,7 +2165,141 @@
                 `;
                 vulnList.appendChild(vulnItem);
             });
+    }
+    
+    // Update vulnerability summary
+    function updateVulnerabilitySummary(vulnerabilities) {
+        const vulnSummary = document.getElementById('vulnSummary');
+        if (!vulnSummary) return;
+        
+        const counts = {
+            critical: 0,
+            high: 0,
+            medium: 0,
+            low: 0
+        };
+        
+        vulnerabilities.forEach(vuln => {
+            const severity = vuln.severity?.toLowerCase() || 'low';
+            if (counts.hasOwnProperty(severity)) {
+                counts[severity]++;
+            }
+        });
+        
+        vulnSummary.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="font-size: 1.1rem; font-weight: 600;">
+                    Total Vulnerabilities: <span style="color: #f1f5f9;">${vulnerabilities.length}</span>
+                </div>
+                <div style="display: flex; gap: 20px;">
+                    <div style="text-align: center;">
+                        <div style="color: #ef4444; font-weight: 600; font-size: 1.2rem;">${counts.critical}</div>
+                        <div style="color: #94a3b8; font-size: 0.9rem;">Critical</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="color: #f59e0b; font-weight: 600; font-size: 1.2rem;">${counts.high}</div>
+                        <div style="color: #94a3b8; font-size: 0.9rem;">High</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="color: #f59e0b; font-weight: 600; font-size: 1.2rem;">${counts.medium}</div>
+                        <div style="color: #94a3b8; font-size: 0.9rem;">Medium</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="color: #06b6d4; font-weight: 600; font-size: 1.2rem;">${counts.low}</div>
+                        <div style="color: #94a3b8; font-size: 0.9rem;">Low</div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Update CVE Distribution Chart
+    function updateCVEChart() {
+        if (!charts.cve) return;
+        
+        try {
+            // Extract CVE years from vulnerability data
+            const cveYears = {};
+            const allVulns = [];
+            
+            Object.values(vulnerabilityData).forEach(agent => {
+                if (agent.vulnerabilities) {
+                    agent.vulnerabilities.forEach(vuln => {
+                        allVulns.push(vuln);
+                    });
+                }
+            });
+            
+            // Count CVEs by year
+            allVulns.forEach(vuln => {
+                const cve = vuln.cve || '';
+                if (cve.startsWith('CVE-')) {
+                    const year = cve.split('-')[1];
+                    if (year && year.length === 4) {
+                        cveYears[year] = (cveYears[year] || 0) + 1;
+                    }
+                }
+            });
+            
+            // Update chart data
+            const years = ['2024', '2023', '2022', '2021', '2020'];
+            const data = years.map(year => cveYears[year] || 0);
+            
+            charts.cve.data.datasets[0].data = data;
+            charts.cve.update();
+            
+            console.log('CVE Chart updated with data:', data);
+        } catch (error) {
+            console.error('Error updating CVE chart:', error);
         }
+    }
+    
+    // Update Exploit Availability Chart
+    function updateExploitChart() {
+        if (!charts.exploit) return;
+        
+        try {
+            // Count vulnerabilities by exploit availability (simplified)
+            const exploitData = {
+                'Available': 0,
+                'Limited': 0,
+                'Not Available': 0
+            };
+            
+            const allVulns = [];
+            Object.values(vulnerabilityData).forEach(agent => {
+                if (agent.vulnerabilities) {
+                    agent.vulnerabilities.forEach(vuln => {
+                        allVulns.push(vuln);
+                    });
+                }
+            });
+            
+            // Simple logic: Critical/High vulnerabilities are more likely to have exploits
+            allVulns.forEach(vuln => {
+                const severity = vuln.severity?.toLowerCase() || 'low';
+                if (severity === 'critical') {
+                    exploitData['Available']++;
+                } else if (severity === 'high') {
+                    exploitData['Limited']++;
+                } else {
+                    exploitData['Not Available']++;
+                }
+            });
+            
+            // Update chart data
+            charts.exploit.data.datasets[0].data = [
+                exploitData['Available'],
+                exploitData['Limited'],
+                exploitData['Not Available']
+            ];
+            charts.exploit.update();
+            
+            console.log('Exploit Chart updated with data:', exploitData);
+        } catch (error) {
+            console.error('Error updating Exploit chart:', error);
+        }
+    }
 
         // Update risk gauge with real agent data
         function updateRiskGauge() {
@@ -2252,13 +2512,38 @@
         // Update charts
         function updateCharts() {
             // Update risk trend chart with scan history
-            if (scanHistory.length > 0) {
-                const labels = scanHistory.map(scan => new Date(scan.timestamp).toLocaleDateString());
-                const riskScores = scanHistory.map(scan => scan.risk_score || 0);
-                
-                charts.riskTrend.data.labels = labels;
-                charts.riskTrend.data.datasets[0].data = riskScores;
-                charts.riskTrend.update();
+            if (Array.isArray(scanHistory) && scanHistory.length > 0) {
+                const labels = scanHistory.map(scan => new Date(scan.timestamp).toLocaleString());
+                const riskScores = scanHistory.map(scan => Math.min(100, Number(scan.risk_score || 0)));
+                const vulnCounts = scanHistory.map(scan => Number(scan.vulnerability_count || 0));
+
+                // Risk trend on overview
+                if (charts.riskTrend) {
+                    charts.riskTrend.data.labels = labels;
+                    charts.riskTrend.data.datasets[0].data = riskScores;
+                    charts.riskTrend.update();
+                }
+
+                // Reports: combined scan history chart
+                if (charts.scanHistory) {
+                    charts.scanHistory.data.labels = labels;
+                    charts.scanHistory.data.datasets[0].data = vulnCounts; // bar
+                    charts.scanHistory.data.datasets[1].data = riskScores; // line
+                    charts.scanHistory.update();
+                }
+            } else {
+                // Clear charts when no data
+                if (charts.riskTrend) {
+                    charts.riskTrend.data.labels = [];
+                    charts.riskTrend.data.datasets[0].data = [];
+                    charts.riskTrend.update();
+                }
+                if (charts.scanHistory) {
+                    charts.scanHistory.data.labels = [];
+                    charts.scanHistory.data.datasets[0].data = [];
+                    charts.scanHistory.data.datasets[1].data = [];
+                    charts.scanHistory.update();
+                }
             }
         }
 
@@ -2598,6 +2883,11 @@
 
         function refreshVulnerabilities() {
             loadData();
+            // Also refresh the charts specifically
+            setTimeout(() => {
+                updateCVEChart();
+                updateExploitChart();
+            }, 1000); // Small delay to ensure data is loaded
         }
 
         // Export functions
