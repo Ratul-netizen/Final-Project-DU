@@ -1,59 +1,81 @@
-# Core dependencies
-requests>=2.28.0
-cryptography>=41.0.1
-urllib3>=1.26.0
-certifi>=2023.7.22
+# ========================================
+# COMPREHENSIVE REQUIREMENTS FOR STEALTH AGENT
+# ========================================
+# This file contains ALL dependencies needed for the stealth agent
+# Including surveillance, system monitoring, and build tools
 
-# Screenshot and image handling
-Pillow>=9.5.0  # For screenshot functionality
-mss>=10.0.0  # For screenshots (updated from python-mss)
+# ========================================
+# CORE DEPENDENCIES (Required)
+# ========================================
+requests>=2.31.0
+cryptography>=42.0.0
+psutil>=5.9.0
+numpy>=1.24.0
+Pillow>=9.5.0
+mss>=10.0.0
 
-# System interaction
-psutil>=5.9.0  # For process listing
-pynput>=1.7.6  # For keylogging functionality
-pyautogui>=0.9.53  # For GUI automation
-pywin32>=300; sys_platform == 'win32'  # Windows-specific functionality
-wmi>=1.5.1; sys_platform == 'win32'  # Windows Management Instrumentation
+# ========================================
+# SURVEILLANCE & MONITORING
+# ========================================
+opencv-python>=4.7.0  # Webcam functionality
+pynput>=1.7.6  # Keylogging
+pyautogui>=0.9.53  # GUI automation
+keyboard>=0.13.5  # Alternative keylogging
 
-# Surveillance and monitoring - ENHANCED
-numpy>=1.24.0  # Required by OpenCV
-opencv-python>=4.7.0  # For webcam functionality (full version)
-opencv-python-headless>=4.7.0  # Headless version for deployment
-keyboard>=0.13.5  # For keylogging functionality
-
-# Additional image processing (for better compatibility)
-Pillow>=9.5.0  # Enhanced image processing
-imageio>=2.25.0  # Additional image format support
-imageio-ffmpeg>=0.4.8  # Video capture support
-
-# Enhanced system monitoring
-psutil>=5.9.0  # Process and system utilities
-py-cpuinfo>=9.0.0  # CPU information gathering
-GPUtil>=1.4.0  # GPU monitoring (if available)
-
-# Network and security
-dnspython>=2.3.0  # For DNS tunneling
-pycryptodome>=3.18.0  # For encryption
-pyOpenSSL>=23.2.0  # For SSL/TLS support
-
-# File operations
-watchdog>=3.0.0  # For file system monitoring
-
-# Additional surveillance capabilities
-pyaudio>=0.2.11  # For audio capture (if needed)
-sounddevice>=0.4.6  # Alternative audio capture
-scipy>=1.10.0  # Scientific computing (for signal processing)
-
-# Platform-specific optimizations
-# Windows
+# ========================================
+# SYSTEM INTERACTION (Windows)
+# ========================================
 pywin32>=300; sys_platform == 'win32'
 wmi>=1.5.1; sys_platform == 'win32'
 pywinauto>=0.6.8; sys_platform == 'win32'
 
+# ========================================
+# NETWORK & SECURITY
+# ========================================
+dnspython>=2.3.0  # DNS tunneling
+pycryptodome>=3.18.0  # Encryption
+pyOpenSSL>=23.2.0  # SSL/TLS support
+urllib3>=1.26.0
+certifi>=2023.7.22
+
+# ========================================
+# FILE & SYSTEM MONITORING
+# ========================================
+watchdog>=3.0.0  # File system monitoring
+py-cpuinfo>=9.0.0  # CPU information
+GPUtil>=1.4.0  # GPU monitoring
+
+# ========================================
+# AUDIO & MULTIMEDIA
+# ========================================
+pyaudio>=0.2.11  # Audio capture
+sounddevice>=0.4.6  # Alternative audio
+imageio>=2.25.0  # Image format support
+imageio-ffmpeg>=0.4.8  # Video support
+
+# ========================================
+# SCIENTIFIC COMPUTING
+# ========================================
+scipy>=1.10.0  # Signal processing
+
+# ========================================
+# BUILD TOOLS (Development)
+# ========================================
+pyinstaller>=6.0.0  # Executable creation
+
+# ========================================
+# PLATFORM-SPECIFIC (Optional)
+# ========================================
 # Linux
 python-xlib>=0.33; sys_platform == 'linux'
 python-evdev>=1.6.1; sys_platform == 'linux'
 
 # macOS
 pyobjc-framework-Cocoa>=9.2; sys_platform == 'darwin'
-pyobjc-framework-AVFoundation>=9.2; sys_platform == 'darwin' 
+pyobjc-framework-AVFoundation>=9.2; sys_platform == 'darwin'
+
+# ========================================
+# OPTIONAL TOOLS (Uncomment if needed)
+# ========================================
+# upx-ucl>=4.0.0  # Executable compression
+# pyarmor>=8.0.0  # Code obfuscation (commercial) 

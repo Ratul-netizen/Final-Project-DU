@@ -17,37 +17,25 @@ def install_dependencies():
     
     # Check if requirements.txt exists
     if not os.path.exists("requirements.txt"):
-        print("  ✗ requirements.txt not found. Creating minimal requirements...")
-        minimal_requirements = """# Core dependencies for stealth agent
-requests>=2.31.0
-cryptography>=42.0.0
-psutil>=5.9.0
-numpy>=1.24.0
-opencv-python>=4.7.0
-Pillow>=9.5.0
-mss>=10.0.0
-pynput>=1.7.6
-pyautogui>=0.9.53
-pywin32>=300; sys_platform == 'win32'
-wmi>=1.5.1; sys_platform == 'win32'
-keyboard>=0.13.5
-dnspython>=2.3.0
-pycryptodome>=3.18.0
-pyOpenSSL>=23.2.0
-watchdog>=3.0.0
-sounddevice>=0.4.6
-scipy>=1.10.0
-pywinauto>=0.6.8; sys_platform == 'win32'
-"""
-        with open("requirements.txt", "w") as f:
-            f.write(minimal_requirements)
-        print("  ✓ Created minimal requirements.txt")
+        print("  ✗ requirements.txt not found. Please create it first.")
+        return False
+    else:
+        print("  ✓ Found requirements.txt")
+    
+    # Clean up any file locks
+    print("  🧹 Cleaning up pip cache...")
+    try:
+        subprocess.run([sys.executable, "-m", "pip", "cache", "purge"], 
+                      capture_output=True, text=True)
+        print("  ✓ Pip cache cleared")
+    except:
+        print("  ! Cache cleanup skipped")
     
     # Install dependencies
     try:
         print("  📦 Installing packages from requirements.txt...")
         result = subprocess.run([
-            sys.executable, "-m", "pip", "install", "-r", "requirements.txt"
+            sys.executable, "-m", "pip", "install", "--user", "-r", "requirements.txt"
         ], capture_output=True, text=True, check=True)
         
         if result.returncode == 0:
