@@ -875,8 +875,8 @@
                     
                     try {
                         // Debug: Log the full result structure
-                        if (type === 'surveillance_screenshot') {
-                            console.log('=== SCREENSHOT RESULT DEBUG ===');
+                        if (type === 'surveillance_screenshot' || type === 'surveillance_webcam') {
+                            console.log(`=== ${type.toUpperCase()} RESULT DEBUG ===`);
                             console.log('Full result object:', result);
                             console.log('result.result:', result.result);
                             console.log('result.data:', result.data);
@@ -923,21 +923,48 @@
                                 imageFormat = resultData.format;
                             }
                         }
+                        // Special handling for surveillance_webcam type
+                        else if (type === 'surveillance_webcam' && result.data) {
+                            const webcamData = result.data;
+                            console.log('=== WEBCAM DATA DEBUG ===');
+                            console.log('webcamData:', webcamData);
+                            console.log('webcamData.image exists:', !!webcamData.image);
+                            console.log('webcamData.format:', webcamData.format);
+                            console.log('========================');
+                            
+                            if (webcamData.image && webcamData.format) {
+                                imageData = webcamData.image;
+                                imageFormat = webcamData.format;
+                                console.log('Webcam image data extracted successfully');
+                            } else {
+                                console.log('Webcam image data missing or incomplete');
+                            }
+                        }
                         
                         if (imageData && imageFormat && ['png','jpg','jpeg','gif','bmp'].includes(imageFormat.toLowerCase())) {
+                            console.log(`=== IMAGE DISPLAY DEBUG ===`);
+                            console.log('Type:', type);
+                            console.log('Image data length:', imageData.length);
+                            console.log('Image format:', imageFormat);
+                            console.log('==========================');
+                            
                             // Truncate very long base64 strings for preview (keep first 100 chars for validation)
                             const shortImageData = imageData.length > 1000 ? imageData.substring(0, 100) + '...[truncated]' : imageData;
+                            
+                            const imageType = type === 'surveillance_webcam' ? 'Webcam' : 'Screenshot';
+                            const imageAlt = type === 'surveillance_webcam' ? 'Webcam Image' : 'Screenshot';
+                            const downloadText = type === 'surveillance_webcam' ? 'Download Webcam Image' : 'Download Screenshot';
                             
                             preview = `
                                 <div style="margin-bottom: 10px;">
                                     <img src="data:image/${imageFormat.toLowerCase()};base64,${imageData}" 
                                          class="image-preview" 
                                          onclick="showFullImage(this.src)"
-                                         alt="Screenshot"
+                                         alt="${imageAlt}"
                                          style="max-width: 300px; max-height: 200px; border-radius: 4px; cursor: pointer;"
                                          onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
                                     <div style="display:none; padding: 10px; background: #f0f0f0; border-radius: 4px;">
-                                        <p>📷 Screenshot captured (${imageFormat.toUpperCase()})</p>
+                                        <p>📷 ${imageType} captured (${imageFormat.toUpperCase()})</p>
                                         <p>Image data: ${shortImageData}</p>
                                         <p><em>Click download to view full image</em></p>
                                     </div>
@@ -945,13 +972,13 @@
                             `;
                             actions = `
                                 <a href="/api/results/download/${taskId}" class="download-btn" download>
-                                    <i class="fas fa-download"></i> Download Screenshot
+                                    <i class="fas fa-download"></i> ${downloadText}
                                 </a>
                             `;
                         }
-                        // Fallback: if no image was detected but this is a screenshot, force image display
-                        else if (type === 'surveillance_screenshot' && !imageData) {
-                            console.log('FALLBACK: Trying to extract image from screenshot result');
+                        // Fallback: if no image was detected but this is a screenshot or webcam, force image display
+                        else if ((type === 'surveillance_screenshot' || type === 'surveillance_webcam') && !imageData) {
+                            console.log(`FALLBACK: Trying to extract image from ${type} result`);
                             
                             // Try to find image data anywhere in the result
                             const searchForImage = (obj, path = '') => {
@@ -979,24 +1006,27 @@
                                 imageFormat = 'png'; // Default to PNG
                                 console.log(`Using image from: ${foundImage.path}`);
                                 
+                                const imageType = type === 'surveillance_webcam' ? 'Webcam' : 'Screenshot';
+                                const downloadText = type === 'surveillance_webcam' ? 'Download Webcam Image' : 'Download Screenshot';
+                                
                                 preview = `
                                     <div style="margin-bottom: 10px;">
-                                        <p><strong>📷 Screenshot (Found at: ${foundImage.path})</strong></p>
+                                        <p><strong>📷 ${imageType} (Found at: ${foundImage.path})</strong></p>
                                         <img src="data:image/png;base64,${imageData}" 
                                              class="image-preview" 
                                              onclick="showFullImage(this.src)"
-                                             alt="Screenshot"
+                                             alt="${imageType}"
                                              style="max-width: 300px; max-height: 200px; border-radius: 4px; cursor: pointer;"
                                              onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
                                         <div style="display:none; padding: 10px; background: #f0f0f0; border-radius: 4px;">
-                                            <p>📷 Screenshot captured but image failed to display</p>
+                                            <p>📷 ${imageType} captured but image failed to display</p>
                                             <p><em>Click download to view full image</em></p>
                                         </div>
                                     </div>
                                 `;
                                 actions = `
                                     <a href="/api/results/download/${taskId}" class="download-btn" download>
-                                        <i class="fas fa-download"></i> Download Screenshot
+                                        <i class="fas fa-download"></i> ${downloadText}
                                     </a>
                                 `;
                             }

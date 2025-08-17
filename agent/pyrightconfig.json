@@ -1,0 +1,38 @@
+{
+    "include": [
+        ".",
+        "modules"
+    ],
+    "exclude": [
+        "**/node_modules",
+        "**/__pycache__",
+        "**/build",
+        "**/dist",
+        "**/.git"
+    ],
+    "ignore": [
+        "**/__pycache__"
+    ],
+    "reportMissingImports": "warning",
+    "reportMissingTypeStubs": false,
+    "pythonVersion": "3.7",
+    "pythonPlatform": "Windows",
+    "executionEnvironments": [
+        {
+            "root": ".",
+            "pythonVersion": "3.7",
+            "pythonPlatform": "Windows",
+            "extraPaths": [
+                "./modules"
+            ]
+        }
+    ],
+    "typeCheckingMode": "basic",
+    "useLibraryCodeForTypes": true,
+    "autoImportCompletions": true,
+    "reportOptionalMemberAccess": false,
+    "reportOptionalSubscript": false,
+    "reportOptionalIterable": false,
+    "reportOptionalContextManager": false,
+    "reportOptionalOperand": false
+}

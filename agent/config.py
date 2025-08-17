@@ -6,7 +6,7 @@ import os
 import socket
 
 # C2 Server Configuration
-C2_HOST = os.environ.get('C2_HOST', '192.168.0.103')
+C2_HOST = os.environ.get('C2_HOST', '192.168.200.105')
 C2_PORT = int(os.environ.get('C2_PORT', '5000'))
 C2_PROTOCOL = os.environ.get('C2_PROTOCOL', 'http')
 
