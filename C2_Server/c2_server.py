@@ -774,10 +774,29 @@ def receive_result():
             data = encoded_data
         else:
             try:
-                decoded_json = base64.b64decode(encoded_data).decode()
+                # Decode base64 with proper encoding handling
+                decoded_bytes = base64.b64decode(encoded_data)
+                try:
+                    # Try UTF-8 first
+                    decoded_json = decoded_bytes.decode('utf-8')
+                except UnicodeDecodeError:
+                    try:
+                        # Try with error handling
+                        decoded_json = decoded_bytes.decode('utf-8', errors='replace')
+                    except:
+                        # Fallback to latin-1
+                        decoded_json = decoded_bytes.decode('latin-1')
+                
                 data = json.loads(decoded_json)
             except Exception as e:
                 logging.error(f"Error decoding result data: {str(e)}")
+                # Try to provide more helpful error information
+                if 'string argument should contain only ASCII characters' in str(e):
+                    logging.error("Non-ASCII characters detected in credential data - this is normal for credential dumps")
+                    return jsonify({
+                        'status': 'error',
+                        'message': 'Credential data contains non-ASCII characters (normal for Windows credentials)'
+                    }), 400
                 return jsonify({
                     'status': 'error',
                     'message': 'Invalid data format'
